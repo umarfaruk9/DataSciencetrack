@@ -1,0 +1,1914 @@
+INTERACTIVE COURSE
+Machine Learning for Marketing in Python
+
+
+Course Description
+The rise of machine learning (almost sounds like "rise of the machines"?) and applications of statistical methods to marketing have changed the field forever. Machine learning is being used to optimize customer journeys which maximize their satisfaction and lifetime value. This course will give you the foundational tools which you can immediately apply to improve your company’s marketing strategy. You will learn how to use different techniques to predict customer churn and interpret its drivers, measure, and forecast customer lifetime value, and finally, build customer segments based on their product purchase patterns. You will use customer data from a telecom company to predict churn, construct a recency-frequency-monetary dataset from an online retailer for customer lifetime value prediction, and build customer segments from product purchase data from a grocery shop.
+
+1
+Machine learning for marketing basics
+FREE
+0%
+In this chapter, you will explore the basics of machine learning methods used in marketing. You will learn about different types of machine learning, data preparation steps, and will run several end to end models to understand their power.
+
+<_______________________________________________________________________________________________________________________________>
+
+
+Types of machine learning
+Supervised learning
+Given X, can we predict Y?
+Classication - when Y is categorical (e.g.Churned/Not-churned, Yes/No, Fish/Dog/Cat).
+Regression - when Y is continuous (e.g. Purchases,Clicks, Time Spent on Website).
+Unsupervised learning
+Given X, can we detect patterns and clusters that are homogenous?
+Reinforcement learning
+Given a current state and a number potential actions, which path maximizes the reward?
+
+
+Supervised learning data parts and steps
+1. Dene the target (dependent variable orY) - what do we want to predict?
+Example 1 - which customers will churn?[CLASSIFICATION]
+Example 2 - which customers will buy again?[CLASSIFICATION]
+Example 3 - how much will customers spend in the next 30 days?[REGRESSION]
+2. Collect features (independent variables orX) which could have predictive power:
+Example 1 - Purchase patterns prior churning.
+Example 2 - Number of missed loan payments prior defaulting on a loan.
+
+
+Supervised learning data format
+X by N+1 matrix:
+X number of observations (customer, vendor, product)
+N + 1 number of columns (N features + 1 target variable)
+Feature 1 Feature 2 ... Feature N Target Y
+11 21 N1 Y1
+12 22 N2 Y2
+
+
+Unsupervised learning
+Collect usage or purchase data and run modelto identify homogenous groups i.e. clusters or segments of
+data:
+Example 1 - customer segmentation by their product purchases.
+Example 2 - product segmentation for bundling
+
+
+
+Unsupervised learning data format
+X by N matrix:
+X number of observations (customer, vendor, product)
+N number of columns (N features)
+A list ofindependent variables (features) as separate columns for each observation
+Feature 1 Feature 2 ... Feature N
+11 21 N1
+12 22 N2
+
+<_______________________________________________________________________________________________________________________________>
+
+
+Supervised vs. unsupervised learning
+Great work! You now know a lot about the differences between supervised and unsupervised learning. For this exercise, a telecom churn dataset named telco has been loaded for you. The last column called Churn defines whether or not a specific customer has churned. You will explore this dataset and determine whether it fits the supervised or unsupervised data format.
+
+Instructions 1/2
+50 XP
+1
+2
+Print the first 5 rows of the telco dataset by printing its header.
+
+# Print header of telco dataset
+print(telco.head())
+_______________________________________________________________________________________________________________________________
+
+Separate categorical and numerical columns
+Separate the identier and target variable names as lists
+custid = ['customerID']
+target = ['Churn']
+Separate categorical and numeric column names as lists
+categorical = telco_raw.nunique()[telcom.nunique()<10].keys().tolist()
+categorical.remove(target[0])
+numerical = [col for col in telco_raw.columns
+if col not in custid+target+categorical]
+
+
+One-hot encoding categorical variables
+One-hot encoding categorical variables
+telco_raw = pd.get_dummies(data=telco_raw, columns=categorical, drop_first=True)
+
+
+
+Scaling numerical features
+# Import StandardScaler library
+from sklearn.preprocessing import StandardScaler
+# Initialize StandardScaler instance
+scaler = StandardScaler()
+# Fit the scaler to numerical columns
+scaled_numerical = scaler.fit_transform(telco_raw[numerical])
+# Build a DataFrame
+scaled_numerical = pd.DataFrame(scaled_numerical, columns=numerical)
+
+
+
+Bringing it all together
+# Drop non-scaled numerical columns
+telco_raw = telco_raw.drop(columns=numerical, axis=1)
+# Merge the non-numerical with the scaled numerical data
+telco = telco_raw.merge(right=scaled_numerical,
+how=
+'left'
+,
+left_index=True,
+right_index=True
+)
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Investigate the data
+Great work so far! Now you know the key techniques to explore and prepare datasets for supervised machine learning models. You will now test your knowledge in practice. In this exercise, you will explore the key characteristics of the telecom churn dataset. You should run each line separately before submitting the assignment so you get valuable information about the dataset. The pandas module has been loaded for you as pd.
+
+The raw telecom churn dataset telco_raw has been loaded for you as a pandas DataFrame. You can familiarize yourself with the dataset by exploring it in the console.
+
+Instructions
+100 XP
+Print the data types of telco_raw.
+Print the header of telco_raw.
+Print the number of unique values in each telco_raw column.
+
+
+# Print the data types of telco_raw dataset
+print(telco_raw.dtypes)
+
+# Print the header of telco_raw dataset
+print(telco_raw.head())
+
+# Print the number of unique values in each telco_raw column
+print(telco_raw.nunique())
+
+
+<script.py> output:
+    customerID           object
+    gender               object
+    SeniorCitizen        object
+    Partner              object
+    Dependents           object
+    tenure                int64
+    PhoneService         object
+    MultipleLines        object
+    InternetService      object
+    OnlineSecurity       object
+    OnlineBackup         object
+    DeviceProtection     object
+    TechSupport          object
+    StreamingTV          object
+    StreamingMovies      object
+    Contract             object
+    PaperlessBilling     object
+    PaymentMethod        object
+    MonthlyCharges      float64
+    TotalCharges        float64
+    Churn                 int64
+    dtype: object
+       customerID  gender SeniorCitizen Partner Dependents  tenure PhoneService     MultipleLines InternetService OnlineSecurity  ... DeviceProtection TechSupport StreamingTV StreamingMovies        Contract PaperlessBilling              PaymentMethod MonthlyCharges  TotalCharges  Churn
+    0  7590-VHVEG  Female            No     Yes         No       1           No  No phone service             DSL             No  ...               No          No          No              No  Month-to-month              Yes           Electronic check          29.85         29.85      0
+    1  5575-GNVDE    Male            No      No         No      34          Yes                No             DSL            Yes  ...              Yes          No          No              No        One year               No               Mailed check          56.95       1889.50      0
+    2  3668-QPYBK    Male            No      No         No       2          Yes                No             DSL            Yes  ...               No          No          No              No  Month-to-month              Yes               Mailed check          53.85        108.15      1
+    3  7795-CFOCW    Male            No      No         No      45           No  No phone service             DSL            Yes  ...              Yes         Yes          No              No        One year               No  Bank transfer (automatic)          42.30       1840.75      0
+    4  9237-HQITU  Female            No      No         No       2          Yes                No     Fiber optic             No  ...               No          No          No              No  Month-to-month              Yes           Electronic check          70.70        151.65      1
+    
+    [5 rows x 21 columns]
+    customerID          7032
+    gender                 2
+    SeniorCitizen          2
+    Partner                2
+    Dependents             2
+    tenure                72
+    PhoneService           2
+    MultipleLines          3
+    InternetService        3
+    OnlineSecurity         2
+    OnlineBackup           2
+    DeviceProtection       2
+    TechSupport            2
+    StreamingTV            2
+    StreamingMovies        2
+    Contract               3
+    PaperlessBilling       2
+    PaymentMethod          4
+    MonthlyCharges      1584
+    TotalCharges        6530
+    Churn                  2
+    dtype: int64
+
+_______________________________________________________________________________________________________________________________
+
+Separate numerical and categorical columns
+In the last exercise, you have explored the dataset characteristics and are ready to do some data pre-processing. You will now separate categorical and numerical variables from the telco_raw DataFrame with a customized categorical vs. numerical unique value count threshold. The pandas module has been loaded for you as pd.
+
+The raw telecom churn dataset telco_raw has been loaded for you as a pandas DataFrame. You can familiarize with the dataset by exploring it in the console.
+
+Instructions
+0 XP
+Store customerID and Churn column names.
+Assign to categorical the column names that have less than 5 unique values.
+Remove target from the list.
+Assign to numerical all column names that are not in the custid, target and categorical.
+
+
+# Store customerID and Churn column names
+custid = ['customerID']
+target = ['Churn']
+
+# Store categorical column names
+categorical = telco_raw.nunique()[telco_raw.nunique() < 5].keys().tolist()
+
+# Remove target from the list of categorical variables
+categorical.remove(target[0])
+
+# Store numerical column names
+numerical = [x for x in telco_raw.columns if x not in custid + target + categorical]
+
+_______________________________________________________________________________________________________________________________
+
+Encode categorical and scale numerical variables
+In this final step, you will perform one-hot encoding on the categorical variables and then scale the numerical columns. The pandas library has been loaded for you as pd, as well as the StandardScaler module from the sklearn.preprocessing module.
+
+The raw telecom churn dataset telco_raw has been loaded for you as a pandas DataFrame, as well as the lists custid, target, categorical, and numerical with column names you have created in the previous exercise. You can familiarize yourself with the dataset by exploring it in the console.
+
+Instructions
+100 XP
+Perform one-hot encoding on the categorical variables.
+Initialize a StandardScaler instance.
+Fit and transform the scaler on the numerical columns.
+Build a DataFrame from scaled_numerical.
+
+
+# Perform one-hot encoding to categorical variables 
+telco_raw = pd.get_dummies(data = telco_raw, columns = categorical, drop_first=True)
+
+# Initialize StandardScaler instance
+scaler = StandardScaler()
+
+# Fit and transform the scaler on numerical columns
+scaled_numerical = scaler.fit_transform(telco_raw[numerical])
+
+# Build a DataFrame from scaled_numerical
+scaled_numerical = pd.DataFrame(scaled_numerical, columns=numerical)
+
+
+ +100 XP
+Fantastic! Great work in one-hot encoding categorical variables and scaling the numerical ones!
+_______________________________________________________________________________________________________________________________
+
+Split data to training and testing
+You are now ready to build an end-to-end machine learning model by following a few simple steps! You will explore modeling nuances in much more detail in the next chapters, but for now you will practice and understand the key steps.
+
+The independent features have been loaded for you as a pandas DataFrame named X, and the dependent values as a pandas Series named Y.
+
+Also, the train_test_split function has been loaded from the sklearn library. You will now create training and testing datasets, and then make sure the data was correctly split.
+
+Instructions
+100 XP
+Split X and Y into train and test sets with 25% of the data split into testing.
+Ensure that the training dataset has only 75% of original data.
+Ensure that the testing dataset has only 25% of original data.
+
+
+
+# Split X and Y into training and testing datasets
+train_X, test_X, train_Y, test_Y = train_test_split(X, Y, test_size=0.25)
+
+# Ensure training dataset has only 75% of original X data
+print(train_X.shape[0] / X.shape[0])
+
+# Ensure testing dataset has only 25% of original X data
+print(test_X.shape[0] / X.shape[0])
+
+
+<script.py> output:
+    0.7499051952976867
+    0.2500948047023132
+    
+    Good job! You have successfully split the data into training and testing, and are now ready to build machine learning model on them!
+    _______________________________________________________________________________________________________________________________
+    
+    
+    Fit a decision tree
+Now, you will take a stab at building a decision tree model. The decision tree is a list of machine-learned if-else rules that decide in the telecom churn case, whether customers will churn or not. Here's an example decision tree graph built on the famous Titanic survival dataset.
+
+
+
+The train_X, test_X, train_Y, test_Y from the previous exercise have been loaded for you. Also, the tree module and the accuracy_score function have been loaded from the sklearn library. You will now build your model and check its performance on unseen data.
+
+Instructions
+100 XP
+Initialize the decision tree model with max_depth set at 5.
+Fit the model on the training data, first train_X, then train_Y.
+Predict values of the testing data, or in this case test_X.
+Measure your model's performance on the testing data by comparing between your actual test labels and predicted ones.
+
+
+# Initialize the model with max_depth set at 5
+mytree = tree.DecisionTreeClassifier(max_depth = 5)
+
+# Fit the model on the training data
+treemodel = mytree.fit(train_X, train_Y)
+
+# Predict values on the testing data
+pred_Y = treemodel.predict(test_X)
+
+# Measure model performance on testing data
+accuracy_score(test_Y, pred_Y)
+
+Fantastic! You have just built a decision tree predicting churn with 77.7% accuracy!
+    _______________________________________________________________________________________________________________________________
+    
+    
+   Predict churn with decision tree
+Now you will build on the skills you acquired in the earlier exercise, and build a more complex decision tree with additional parameters to predict customer churn. You will dive deep into the churn prediction problem in the next chapter. Here you will run the decision tree classifier again on your training data, predict the churn rate on unseen (test) data, and assess model accuracy on both datasets.
+
+The tree module from the sklearn library has been loaded for you, as well as the accuracy_score function from sklearn.metrics. The features and target variables have also been imported as train_X, train_Y for training data, and test_X, test_Y for test data.
+
+Instructions
+100 XP
+Initialize a Decision tree with maximum depth set to 7 and by using the gini criterion.
+Fit the model to the training data.
+Predict the values on the test dataset.
+Print the accuracy values for both training and test datasets.
+
+# Initialize the Decision Tree
+clf = tree.DecisionTreeClassifier(max_depth = 7, 
+               criterion = 'gini', 
+               splitter  = 'best')
+
+# Fit the model to the training data
+clf = clf.fit(train_X, train_Y)
+
+# Predict the values on test dataset
+pred_Y = clf.predict(test_X)
+
+# Print accuracy values
+print("Training accuracy: ", np.round(clf.score(train_X, train_Y), 3)) 
+print("Test accuracy: ", np.round(accuracy_score(test_Y, pred_Y), 3))
+
+
+Great results! With no parameter tuning you are accurate in around 3/4 of the cases - these are impressive results!
+
+<==============================================================================================================================>
+
+VIEW CHAPTER DETAILS
+2
+Churn prediction and drivers
+0%
+In this chapter you will learn churn prediction fundamentals, then fit logistic regression and decision tree models to predict churn. Finally, you will explore the results and extract insights on what are the drivers of the churn.
+
+
+_______________________________________________________________________________________________________________________________
+
+Churn prediction
+fundamentals
+MA CH IN E LE A RN IN G FOR MA RKETIN G IN PYTH ON
+
+
+Whatis churn?
+Churn happens when a customer stops buying / engaging
+The business context could be contractual or non-contractual
+Sometimes churn can be viewed as either voluntary or involuntary
+
+Types of churn
+Main churn typology is based on two business modeltypes:
+Contractual (phone subscription, TV streaming subscription)
+Non-contractual (grocery shopping, online shopping
+
+
+Modeling differenttypes of churn
+Typically:
+Non-contractual churn is harder to dene and model, as there's no explicit customer decision
+We will model contractual churn in the telecom business model
+
+
+Encoding churn
+Typically 1/0, with 1 =Churn, 0 = No Churn
+Could be a string Churn / No Churn or Yes / No - best practice to transform as 1 and 0
+set(telcom['Churn'])
+{0, 1}
+
+
+Exploring churn distribution
+telcom.groupby(['Churn']).size() / telcom.shape[0] * 100
+Churn
+0 73.421502
+1 26.578498
+dtype: float64
+
+
+Splitto training and testing data
+from sklearn.model_selection import train_test_split
+train, test = train_test_split(telcom, test_size = .25)
+
+
+Separate features and target variables
+Separate column names by data types
+target = ['Churn']
+custid = ['customerID']
+cols = [col for col in telcom.columns if col not in custid + target]
+Build training and testing datasets
+train_X = train[cols]
+train_Y = train[target]
+test_X = test[cols]
+test_Y = test[target]
+
+_______________________________________________________________________________________________________________________________
+
+Explore churn rate and split data
+Building on top of the overview you saw in Chapter 1, in this lesson, you're going to dig deeper into the data preparation needed for using machine learning to perform churn prediction. You will explore the churn distribution and split the data into training and testing before you proceed to modeling. In this step you get to understand how the churn rate is distributed, and pre-process the data so you can build a model on the training set, and measure its performance on unused testing data.
+
+The telecom dataset has been loaded as a pandas DataFrame named telcom. The target variable column is called Churn.
+
+Instructions
+100 XP
+Print the unique values in the Churn column.
+Calculate the ratio size of each churn group.
+Import the function for splitting data to train and test.
+Split the data into 75% train and 25% test.
+
+
+# Print the unique Churn values
+print(set(telcom['Churn']))
+
+# Calculate the ratio size of each churn group
+telcom.groupby(['Churn']).size() / telcom.shape[0] * 100
+
+# Import the function for splitting data to train and test
+from sklearn.model_selection import train_test_split
+
+# Split the data into train and test
+train, test = train_test_split(telcom, test_size = .25)
+
+Great work! You have explored the churn distribution and have split the data into training and testing for our next modeling steps!
+
+_______________________________________________________________________________________________________________________________
+
+Separate features and target variable
+Now that you have split the data intro training and testing, it's time to perform he final step before fitting the model which is to separate the features and target variables into different datasets. You will use the list of columns names that have been loaded for you.
+
+The main dataset is loaded as telcom, and split into training and testing datasets which are loaded as pandas DataFrames into train and test respectively. The target and custid lists contain the names of the target variable and the customer ID respectively. You will have to create the cols list with the names of the remaining columns. Feel free to explore the datasets in the console.
+
+Instructions
+100 XP
+Store the column names of telcom in a list excluding the target variable and customer ID names.
+Extract the training features and target.
+Extract the testing features and target.
+
+
+
+
+
+_______________________________________________________________________________________________________________________________
+
+Predict churn with
+logistic regression
+MA CH IN E LE A RN IN G FOR MA RKETIN G IN PYTH ON
+
+
+
+Introduction to logistic regression
+Statistical classication model for binary responses
+Models log-odds ofthe probability ofthe target
+Assumes linear relationship between log-odds target and predictors
+Returns coefcients and
+
+
+Modeling steps
+1. Split data to training and testing
+2. Initialize the model
+3. Fitthe model on the training data
+4. Predict values on the testing data
+5. Measure model performance on testing data
+
+
+Fitting the model
+Import the LogisticRegression classier
+from sklearn.linear_model import LogisticRegression
+Initialize LogisticRegression instance
+logreg = LogisticRegression()
+Fit the model on the training data
+logreg.fit(train_X, train_Y)
+
+
+Model performance metrics
+Key metrics:
+Accuracy - The % of correctly predicted labels (both Churn and non Churn)
+Precision - The % oftotal model's positive class predictions (here - predicted as Churn) that were
+correctly classied
+Recall- The % oftotal positive class samples (all churned customers) that were correctly
+classied
+
+
+Measuring model accuracy
+from sklearn.metrics import accuracy_score
+pred_train_Y = logreg.predict(train_X)
+pred_test_Y = logreg.predict(test_X)
+train_accuracy = accuracy_score(train_Y, pred_train_Y)
+test_accuracy = accuracy_score(test_Y, pred_test_Y)
+print('Training accuracy:'
+, round(train_accuracy,4))
+print('Test accuracy:'
+, round(test_accuracy, 4))
+Training accuracy: 0.8108
+Test accuracy: 0.8009
+
+
+Measuring precision and recall
+from sklearn.metrics import precision_score, recall_score
+train_precision = round(precision_score(train_Y, pred_train_Y), 4)
+test_precision = round(precision_score(test_Y, pred_test_Y), 4)
+train_recall = round(recall_score(train_Y, pred_train_Y), 4)
+test_recall = round(recall_score(test_Y, pred_test_Y), 4)
+print('Training precision: {}, Training recall: {}'.format(train_precision, train_recall
+print('Test precision: {}, Test recall: {}'.format(train_recall, test_recall))
+Training precision: 0.6725, Training recall: 0.5736
+Test precision: 0.5736, Test recall: 0.4835
+
+
+Regularization
+Introduces penalty coefcient in the model building phase
+Addresses over-tting (when patterns are "memorized by the model")
+Some regularization techniques also perform feature selection e.g. L1
+Makes the model more generalizable to unseen samples
+
+
+L1 regularization and feature selection
+LogisticRegression from sklearn performs L2 regularization by default
+L1 regularization or also called LASSO can be called explicitly, and this approach performs feature
+selection by shrinking some ofthe model coefcients to zero.
+from sklearn.linear_model import LogisticRegression
+logreg = LogisticRegression(penalty=
+'l1'
+, C=0.1, solver=
+'liblinear')
+logreg.fit(train_X, train_Y)
+C parameter needs to be tuned to nd the optimal value
+
+
+Tuning L1 regularization
+C = [1, .5, .25, .1, .05, .025, .01, .005, .0025]
+l1_metrics = np.zeros((len(C), 5))
+l1_metrics[:,0] = C
+for index in range(0, len(C)):
+logreg = LogisticRegression(penalty='l1', C=C[index], solver='liblinear')
+logreg.fit(train_X, train_Y)
+pred_test_Y = logreg.predict(test_X)
+l1_metrics[index,1] = np.count_nonzero(logreg.coef_)
+l1_metrics[index,2] = accuracy_score(test_Y, pred_test_Y)
+l1_metrics[index,3] = precision_score(test_Y, pred_test_Y)
+l1_metrics[index,4] = recall_score(test_Y, pred_test_Y)
+col_names = ['C','Non-Zero Coeffs','Accuracy','Precision','Recall']
+print(pd.DataFrame(l1_metrics, columns=col_names)
+
+
+Let's run some
+logistic regression
+models!
+
+
+_______________________________________________________________________________________________________________________________
+
+Predict churn with
+decision trees
+MA CH IN E LE A RN IN G FOR MA RKETIN G IN PYTH ON
+
+
+Modeling steps
+1. Split data to training and testing
+2. Initialize the model
+3. Fitthe model on the training data
+4. Predict values on the testing data
+5. Measure model performance on testing data
+
+
+Fitting the model
+Import the decision tree module
+from sklearn.tree import DecisionTreeClassifier
+Initialize the Decision Tree model
+mytree = DecisionTreeClassifier()
+Fit the model on the training data
+treemodel = mytree.fit(train_X, train_Y)
+
+
+Measuring model accuracy
+from sklearn.metrics import accuracy_score
+pred_train_Y = mytree.predict(train_X)
+pred_test_Y = mytree.predict(test_X)
+train_accuracy = accuracy_score(train_Y, pred_train_Y)
+test_accuracy = accuracy_score(test_Y, pred_test_Y)
+print('Training accuracy:'
+, round(train_accuracy,4))
+print('Test accuracy:'
+, round(test_accuracy, 4))
+Training accuracy: 0.9973
+Test accuracy: 0.7196
+
+
+Measuring precision and recall
+from sklearn.metrics import precision_score, recall_score
+train_precision = round(precision_score(train_Y, pred_train_Y), 4)
+test_precision = round(precision_score(test_Y, pred_test_Y), 4)
+train_recall = round(recall_score(train_Y, pred_train_Y), 4)
+test_recall = round(recall_score(test_Y, pred_test_Y), 4)
+print('Training precision: {}, Training recall: {}'.format(train_precision, train_recall
+print('Test precision: {}, Test recall: {}'.format(train_recall, test_recall))
+Training precision: 0.9993, Training recall: 0.9906
+Test precision: 0.9906, Test recall: 0.4878
+
+
+Tree depth parameter tuning
+depth_list = list(range(2,15))
+depth_tuning = np.zeros((len(depth_list), 4))
+depth_tuning[:,0] = depth_list
+for index in range(len(depth_list)):
+mytree = DecisionTreeClassifier(max_depth=depth_list[index])
+mytree.fit(train_X, train_Y)
+pred_test_Y = mytree.predict(test_X)
+depth_tuning[index,1] = accuracy_score(test_Y, pred_test_Y)
+depth_tuning[index,2] = precision_score(test_Y, pred_test_Y)
+depth_tuning[index,3] = recall_score(test_Y, pred_test_Y)
+col_names = ['Max_Depth'
+,
+'Accuracy'
+,
+'Precision'
+,
+'Recall']
+print(pd.DataFrame(depth_tuning, columns=col_names))
+
+
+_______________________________________________________________________________________________________________________________
+Identify and
+interpret churn
+drivers
+
+
+Plotting decision tree rules
+from sklearn import tree
+import graphviz
+exported = tree.export_graphviz(
+decision_tree=mytree,
+out_file=None,
+feature_names=cols,
+precision=1,
+class_names=['Not churn'
+,
+'Churn'],
+filled = True)
+graph = graphviz.Source(exported)
+display(graph)
+
+
+Interpreting decision tree chart
+
+
+Logistic regression coefcients
+Logistic regression returns beta coefcients
+Can be interpreted as change in log-odds of churn associated with 1 unit increase in the feature
+
+
+Extracting logistic regression coefcients
+Coefcients can be extracted using .coef_ method on tted LogisticRegression instance
+logreg.coef_
+array([[ 0. , 0.09784772, 0. , -0.03935476, -0.82068131,
+-0.41231806, -0.14319622, -0.01746504, -0.41830733, 0. ,
+0. , 0.07138468, 0. , 0. , 0. ,
+0. , -0.41424363, -0.59539021, 0. , 0.18846525,
+0. , -0.90766135, 0.90151342, 0. ]])
+
+
+Transforming logistic regression coefcients
+Log-odds is difcult to interpret
+Solution - calculate exponent ofthe coefcients
+This gives us the change in odds associated with 1 unit increase in the feature
+coefficients = pd.concat([pd.DataFrame(train_X.columns),
+pd.DataFrame(np.transpose(logit.coef_))],
+axis = 1)
+coefficients.columns = ['Feature'
+,
+'Coefficient']
+coefficients['Exp_Coefficient'] = np.exp(coefficients['Coefficient'])
+coefficients = coefficients[coefficients['Coefficient']!=0]
+print(coefficients.sort_values(by=['Coefficient']))
+
+
+
+Meaning oftransformed coefcients
+_______________________________________________________________________________________________________________________________
+
+Separate features and target variable
+Now that you have split the data intro training and testing, it's time to perform he final step before fitting the model which is to separate the features and target variables into different datasets. You will use the list of columns names that have been loaded for you.
+
+The main dataset is loaded as telcom, and split into training and testing datasets which are loaded as pandas DataFrames into train and test respectively. The target and custid lists contain the names of the target variable and the customer ID respectively. You will have to create the cols list with the names of the remaining columns. Feel free to explore the datasets in the console.
+
+Instructions
+100 XP
+Store the column names of telcom in a list excluding the target variable and customer ID names.
+Extract the training features and target.
+Extract the testing features and target.
+
+# Store column names from `telcom` excluding target variable and customer ID
+cols = [col for col in telcom.columns if col not in custid + target]
+
+# Extract training features
+train_X = train[cols]
+
+# Extract training target
+train_Y = train[target]
+
+# Extract testing features
+test_X = test[cols]
+
+# Extract testing target
+test_Y = test[target]
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Fit logistic regression model
+Logistic regression is a simple yet very powerful classification model that is used in many different use cases. You will now fit a logistic regression on the training part of the telecom churn dataset, and then predict labels on the unseen test set. Afterwards, you will calculate the accuracy of your model predictions.
+
+The accuracy_score function has been imported, and a LogisticRegression instance from sklearn has been initialized as logreg. The training and testing datasets that you've built previously have been loaded as train_X and test_X for features, and train_Y and test_Y for target variables.
+
+Instructions
+100 XP
+Fit a logistic regression on the training data.
+Predict churn labels for the test data.
+Calculate the accuracy score on the testing data.
+Print the test accuracy rounded to 4 decimals.
+
+# Fit logistic regression on training data
+logreg.fit(train_X, train_Y)
+
+# Predict churn labels on testing data
+pred_test_Y = logreg.predict(test_X)
+
+# Calculate accuracy score on testing data
+test_accuracy = accuracy_score(test_Y, pred_test_Y)
+
+# Print test accuracy score rounded to 4 decimals
+print('Test accuracy:', round(test_accuracy, 4))
+
+ +100 XP
+Good job! You have succesfully built a logistic regression model predicting churn, and have measured its accuracy on the unseen dataset!
+
+
+_______________________________________________________________________________________________________________________________
+
+Fit logistic regression with L1 regularization
+You will now run a logistic regression model on scaled data with L1 regularization to perform feature selection alongside model building. In the video exercise you have seen how the different C values have an effect on your accuracy score and the number of non-zero features. In this exercise, you will set the C value to 0.025.
+
+The LogisticRegression and accuracy_score functions from sklearn library have been loaded for you. Also, the scaled features and target variables have been loaded as train_X, train_Y for training data, and test_X, test_Y for test data.
+
+Instructions
+100 XP
+Initialize a logistic regression with L1 regularization and C value of 0.025.
+Fit the model on the training data.
+Predict churn values on the test data.
+Print the accuracy score of your predicted labels on the test data.
+
+# Initialize logistic regression instance 
+logreg = LogisticRegression(penalty='l1', C=0.025, solver='liblinear')
+
+# Fit the model on training data
+logreg.fit(train_X, train_Y)
+
+# Predict churn values on test data
+pred_test_Y = logreg.predict(test_X)
+
+# Print the accuracy score on test data
+print('Test accuracy:', round(accuracy_score(test_Y, pred_test_Y), 4))
+
+<script.py> output:
+    Test accuracy: 0.7969
+    
+   +100 XP
+Great progress! With this knowledge you are now equipped to predict customer churn while simultaneously running feature selection!
+
+_______________________________________________________________________________________________________________________________
+
+Identify optimal L1 penalty coefficient
+You will now tune the C parameter for the L1 regularization to discover the one which reduces model complexity while still maintaining good model performance metrics. You will run a for loop through possible C values and build logistic regression instances on each, as well as calculate performance metrics.
+
+A list C has been created with the possible values. The l1_metrics array has been built with 3 columns, with the first being the C values, and the next two being placeholders for non-zero coefficient counts and the recall score of the model. The scaled features and target variables have been loaded as train_X, train_Y for training, and test_X, test_Y for testing.
+
+Both numpy and pandas are loaded as np and pd as well as the recall_score function from sklearn.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Run a for loop over the range from 0 to the length of the list C.
+For each C candidate, initialize and fit a Logistic Regression and predict churn on test data.
+For each C candidate, store the non-zero coefficients and the recall score in the second and third columns of l1_metrics.
+Create a pandas DataFrame out of l1_metrics with the appropriate column names.
+
+
+
+# Run a for loop over the range of C list length
+for index in range(0, len(C)):
+  # Initialize and fit Logistic Regression with the C candidate
+  logreg = LogisticRegression(penalty='l1', C=C[index], solver='liblinear')
+  logreg.fit(train_X, train_Y)
+  # Predict churn on the testing data
+  pred_test_Y = logreg.predict(test_X)
+  # Create non-zero count and recall score columns
+  l1_metrics[index,1] = np.count_nonzero(logreg.coef_)
+  l1_metrics[index,2] = recall_score(test_Y, pred_test_Y)
+
+# Name the columns and print the array as pandas DataFrame
+col_names = ['C','Non-Zero Coeffs','Recall']
+print(pd.DataFrame(l1_metrics, columns=col_names))
+
+
+<script.py> output:
+            C  Non-Zero Coeffs    Recall
+    0  1.0000             23.0  0.485714
+    1  0.5000             22.0  0.481319
+    2  0.2500             21.0  0.485714
+    3  0.1000             20.0  0.479121
+    4  0.0500             18.0  0.479121
+    5  0.0250             13.0  0.448352
+    6  0.0100              5.0  0.386813
+    7  0.0050              3.0  0.301099
+    8  0.0025              2.0  0.021978
+    
+    
+     +100 XP
+Great! You can now explore the C values and associated count of non-zero coefficients and the recall score to decide which parameter value to choose.
+_______________________________________________________________________________________________________________________________
+
+Fit decision tree model
+Now you will fit a decision tree on the training set of the telecom dataset, and then predict labels on the unseen testing data, and calculate the accuracy of your model predictions. You will see the difference in the performance compared to the logistic regression.
+
+The accuracy_score function has been imported, also the training and testing datasets that you've built previously have been loaded as train_X and test_X for features, and train_Y and test_Y for target variables.
+
+Instructions
+100 XP
+Initialize a decision tree classifier.
+Fit the decision tree on the training data.
+Predict churn labels on the testing data.
+Calculate and print the accuracy score on the testing data.
+
+# Initialize decision tree classifier
+mytree = tree.DecisionTreeClassifier()
+
+# Fit the decision tree on training data
+mytree.fit(train_X, train_Y)
+
+# Predict churn labels on testing data
+pred_test_Y = mytree.predict(test_X)
+
+# Calculate accuracy score on testing data
+test_accuracy = accuracy_score(test_Y, pred_test_Y)
+
+# Print test accuracy
+print('Test accuracy:', round(test_accuracy, 4))
+
+In [1]: # Initialize decision tree classifier
+        mytree = tree.DecisionTreeClassifier()
+        
+        # Fit the decision tree on training data
+        mytree.fit(train_X, train_Y)
+        
+        # Predict churn labels on testing data
+        pred_test_Y = mytree.predict(test_X)
+        
+        # Calculate accuracy score on testing data
+        test_accuracy = accuracy_score(test_Y, pred_test_Y)
+        
+        # Print test accuracy
+        print('Test accuracy:', round(test_accuracy, 4))
+Test accuracy: 0.7275
+
+<script.py> output:
+    Test accuracy: 0.7275
+    
+    
+  +100 XP
+Fantastic! You can now use decision tree to predict churn and compare its performance to logistic regression!   
+_______________________________________________________________________________________________________________________________
+
+
+Identify optimal tree depth
+Now you will tune the max_depth parameter of the decision tree to discover the one which reduces over-fitting while still maintaining good model performance metrics. You will run a for loop through multiple max_depth parameter values and fit a decision tree for each, and then calculate performance metrics.
+
+The list called depth_list with the parameter candidates has been loaded for you. The depth_tuning array has been built for you with 2 columns, with the first one being filled with the depth candidates, and the next one being a placeholder for the recall score. Also, the features and target variables have been loaded as train_X, train_Y for the training data, and test_X, test_Y for the test data. Both numpy and pandas libraries are loaded as np and pd respectively.
+
+Instructions
+100 XP
+Run a for loop over the range from 0 to the length of the list depth_list.
+For each depth candidate, initialize and fit a decision tree classifier and predict churn on test data.
+For each depth candidate, calculate the recall score by using the recall_score() function and store it in the second column of depth_tunning.
+Create a pandas DataFrame out of depth_tuning with the appropriate column names.
+
+
+# Run a for loop over the range of depth list length
+for index in range(0, len(depth_list)):
+  # Initialize and fit decision tree with the `max_depth` candidate
+  mytree = DecisionTreeClassifier(max_depth=depth_list[index])
+  mytree.fit(train_X, train_Y)
+  # Predict churn on the testing data
+  pred_test_Y = mytree.predict(test_X)
+  # Calculate the recall score 
+  depth_tuning[index,1] = recall_score(test_Y, pred_test_Y)
+
+# Name the columns and print the array as pandas DataFrame
+col_names = ['Max_Depth','Recall']
+print(pd.DataFrame(depth_tuning, columns=col_names))
+
+<script.py> output:
+        Max_Depth    Recall
+    0         2.0  0.622449
+    1         3.0  0.365306
+    2         4.0  0.365306
+    3         5.0  0.538776
+    4         6.0  0.481633
+    5         7.0  0.463265
+    6         8.0  0.438776
+    7         9.0  0.457143
+    8        10.0  0.514286
+    9        11.0  0.487755
+    10       12.0  0.475510
+    11       13.0  0.461224
+    12       14.0  0.459184
+
+ +100 XP
+Good job! You can see how the recall scores change with different depth parameter values, and can make a decision on which one to choose.
+_______________________________________________________________________________________________________________________________
+
+Explore logistic regression coefficients
+You will now explore the coefficients of the logistic regression to understand what is driving churn to go up or down. For this exercise, you will extract the logistic regression coefficients from your fitted model, and calculate their exponent to make them more interpretable.
+
+The fitted logistic regression instance is loaded as logreg and the scaled features are loaded as a pandas DataFrame called train_X. The numpy and pandas libraries are loaded as np and pd respectively.
+
+Instructions
+100 XP
+Combine feature names and coefficients into a pandas DataFrame.
+Calculate the exponent of the logistic regression coefficients.
+Remove the coefficients that are equal to zero and print them sorted by the exponent coefficient.
+
+# Combine feature names and coefficients into pandas DataFrame
+feature_names = pd.DataFrame(train_X.columns, columns=['Feature'])
+log_coef = pd.DataFrame(np.transpose(logreg.coef_), columns=['Coefficient'])
+coefficients = pd.concat([feature_names, log_coef], axis = 1)
+
+# Calculate exponent of the logistic regression coefficients
+coefficients['Exp_Coefficient'] = np.exp(coefficients['Coefficient'])
+
+# Remove coefficients that are equal to zero
+coefficients = coefficients[coefficients['Coefficient']!=0]
+
+# Print the values sorted by the exponent coefficient
+print(coefficients.sort_values(by=['Exp_Coefficient']))
+
+
+<script.py> output:
+                               Feature  Coefficient  Exp_Coefficient
+    21                          tenure    -0.907750         0.403431
+    4                 PhoneService_Yes    -0.820517         0.440204
+    17               Contract_Two year    -0.595271         0.551413
+    8                  TechSupport_Yes    -0.418254         0.658195
+    16               Contract_One year    -0.414158         0.660896
+    5               OnlineSecurity_Yes    -0.412228         0.662173
+    6                 OnlineBackup_Yes    -0.143100         0.866667
+    3                   Dependents_Yes    -0.039299         0.961463
+    7             DeviceProtection_Yes    -0.017465         0.982687
+    11            PaperlessBilling_Yes     0.071389         1.073999
+    1                SeniorCitizen_Yes     0.097904         1.102857
+    19  PaymentMethod_Electronic check     0.188533         1.207477
+    22                  MonthlyCharges     0.901454         2.463182
+    
+    
+
+ +0 XP
+Great work! You have extracted and transformed logistic regression coefficients and can now understand which of them increase of decrease the odds of churn!
+
+_______________________________________________________________________________________________________________________________
+
+Break down decision tree rules
+In this exercise you will extract the if-else rules from the decision tree and plot them to identify the main drivers of the churn.
+
+The fitted decision tree instance is loaded as mytree and the scaled features are loaded as a pandas DataFrame called train_X. The tree module from sklearn library and the graphviz library have been already loaded for you.
+
+Note that we've used a proprietary display_image() function instead of display(graph) to make it easier for you to view the output.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Export the graphviz object from the trained decision tree .
+Assign the feature names.
+Set the precision to 1 and add the class names.
+Call the Source() function from graphviz and pass the exported graphviz object.
+
+
+# Export graphviz object from the trained decision tree 
+exported = tree.export_graphviz(decision_tree=mytree, 
+			# Assign feature names
+            out_file=None, feature_names=train_X.columns, 
+			# Set precision to 1 and add class names
+			precision=1, class_names=['Not churn','Churn'], filled = True)
+
+# Call the Source function and pass the exported graphviz object
+graph = graphviz.Source(exported)
+
+# Display the decision tree
+display_image("/usr/local/share/datasets/decision_tree_rules.png")
+
+ +100 XP
+Looks great! Decision tree visualizations is a powerful tool to communicate complex model infromation in an attractive format, great work!
+
+
+
+
+<==============================================================================================================================>
+VIEW CHAPTER DETAILS
+3
+Customer Lifetime Value (CLV) prediction
+0%
+In this chapter, you will learn the basics of Customer Lifetime Value (CLV) and its different calculation methodologies. You will harness this knowledge to build customer level purchase features to predict next month's transactions using linear regression.
+
+_______________________________________________________________________________________________________________________________
+
+
+Build retention and churn tables
+You have learned the main elements of the customer lifetime value calculation and certain variations of it. Now you will use use the monthly cohort activity dataset to calculate retention and churn values, which you will then explore and later use to project average customer lifetime value.
+
+The pandas library has been loaded as pd and the cohorts_counts dataset has been imported. Feel free to explore it in the console.
+
+Instructions
+100 XP
+Extract cohort sizes from the first column of cohort_counts.
+Calculate retention by dividing the cohort counts with the cohort sizes.
+Calculate churn by subtracting 1 and the retention rates.
+Print the retention table.
+
+# Extract cohort sizes from the first column of cohort_counts
+cohort_sizes = cohort_counts.iloc[:,0]
+
+# Calculate retention by dividing the counts with the cohort sizes
+retention = cohort_counts.divide(cohort_sizes, axis=0)
+
+# Calculate churn
+churn = 1 - retention
+
+# Print the retention table
+print(retention)
+
+
+<script.py> output:
+                        1         2         3         4         5         6         7         8         9        10        11        12        13
+    AcquisitionMonth                                                                                                                             
+    2010-12           1.0  0.343575  0.308659  0.350559  0.342179  0.398045  0.347765  0.329609  0.335196  0.370112  0.354749  0.486034  0.240223
+    2011-01           1.0  0.207831  0.246988  0.243976  0.331325  0.271084  0.246988  0.259036  0.313253  0.307229  0.373494  0.135542       NaN
+    2011-02           1.0  0.183544  0.180380  0.262658  0.268987  0.234177  0.253165  0.262658  0.272152  0.300633  0.088608       NaN       NaN
+    2011-03           1.0  0.162371  0.257732  0.195876  0.213918  0.172680  0.252577  0.219072  0.275773  0.097938       NaN       NaN       NaN
+    2011-04           1.0  0.192157  0.203922  0.192157  0.184314  0.203922  0.219608  0.231373  0.066667       NaN       NaN       NaN       NaN
+    2011-05           1.0  0.160643  0.172691  0.144578  0.208835  0.232932  0.244980  0.088353       NaN       NaN       NaN       NaN       NaN
+    2011-06           1.0  0.159420  0.125604  0.198068  0.236715  0.299517  0.091787       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-07           1.0  0.161850  0.179191  0.219653  0.254335  0.098266       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-08           1.0  0.215827  0.201439  0.251799  0.100719       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-09           1.0  0.200717  0.279570  0.121864       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-10           1.0  0.210692  0.094340       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-11           1.0  0.109966       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+    2011-12           1.0       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN       NaN
+
+
+
+_______________________________________________________________________________________________________________________________
+
+Explore retention and churn
+Now that you have calculated the monthly retention and churn metrics for monthly customer cohorts, you can calculate the overall mean retention and churn rates. You will use the .mean() method twice in a row (this is called "chaining") to calculate the overall mean. You will have to exclude the first month values (first column) from this calculation as they are constant given this is the first month the customers have been active therefore their retention will be 100% and churn will be 0% for all cohorts.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The retention and churn monthly datasets that you built in the previous exercises are also imported.
+
+Instructions
+100 XP
+Calculate the mean retention rate.
+Calculate the mean churn rate.
+Print rounded retention and churn rates.
+
+
+
+# Calculate the mean retention rate
+retention_rate = retention.iloc[:,1:].mean().mean()
+
+# Calculate the mean churn rate
+churn_rate = churn.iloc[:,1:].mean().mean()
+
+# Print rounded retention and churn rates
+print('Retention rate: {:.2f}; Churn rate: {:.2f}'.format(retention_rate, churn_rate))
+
+
+<script.py> output:
+    Retention rate: 0.21; Churn rate: 0.79
+
+
+ +100 XP
+Good work! Exploring these rates is critical in customer lifetime value calculation as it gives you insight into the customer behavior.
+
+_______________________________________________________________________________________________________________________________
+
+
+The goal of CLV
+Measure customer value in revenue / prot
+Benchmark customers
+Identify maximum investment into customer acquisition
+In our case - we'll skip the prot margin for simplicity and use revenue-based CLV formulas
+
+
+
+Basic CLV calculation
+# Calculate monthly spend per customer
+monthly_revenue = online.groupby(['CustomerID'
+,
+'InvoiceMonth'])['TotalSum'].sum().mean()
+# Calculate average monthly spend
+monthly_revenue = np.mean(monthly_revenue)
+# Define lifespan to 36 months
+lifespan_months = 36
+# Calculate basic CLV
+clv_basic = monthly_revenue * lifespan_months
+# Print basic CLV value
+print('Average basic CLV is {:.1f} USD'.format(clv_basic))
+Average basic CLV is 4774.6 USD
+
+
+Granular CLV calculation
+# Calculate average revenue per invoice
+revenue_per_purchase = online.groupby(['InvoiceNo'])['TotalSum'].mean().mean()
+# Calculate average number of unique invoices per customer per month
+freq = online.groupby(['CustomerID','InvoiceMonth'])['InvoiceNo'].nunique().mean()
+# Define lifespan to 36 months
+lifespan_months = 36
+# Calculate granular CLV
+clv_granular = revenue_per_purchase * freq * lifespan_months
+# Print granular CLV value
+print('Average granular CLV is {:.1f} USD'.format(clv_granular))
+Average granular CLV is 1635.2 USD
+Revenue per purchase: 34.8 USD
+Frequency per month: 1.3
+
+
+Traditional CLV calculation
+# Calculate monthly spend per customer
+monthly_revenue = online.groupby(['CustomerID','InvoiceMonth'])['TotalSum'].sum().mean()
+# Calculate average monthly retention rate
+retention_rate = retention_rate = retention.iloc[:,1:].mean().mean()
+# Calculate average monthly churn rate
+churn_rate = 1 - retention_rate
+# Calculate traditional CLV
+clv_traditional = monthly_revenue * (retention_rate / churn_rate)
+# Print traditional CLV and the retention rate values
+print('Average traditional CLV is {:.1f} USD at {:.1f} % retention_rate'.format(
+clv_traditional, retention_rate*100))
+Average traditional CLV is 49.9 USD at 27.3 % retention_rate
+Monthly average revenue: 132.6 USD
+
+
+Which method to use?
+Depends on the business model.
+Traditional CLV model - assumes churn is denitive = customer "dies".
+Traditional model is not robust at low retention values - will under-report theCLV.
+Hardest thing to predict - frequency in the future.
+
+_______________________________________________________________________________________________________________________________
+
+Calculate basic CLV
+You are now ready to calculate average customer lifetime with three different methods! In this exercise you will calculate the basic CLV which multiplies average monthly spent with the projected customer lifespan.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The online dataset has been imported for you.
+
+Instructions
+100 XP
+Group by CustomerID and calculate monthly spend per customer.
+Calculate average monthly spend.
+Define lifespan to 36 months.
+Calculate basic CLV by multiplying monthly average spend with the lifespan.
+
+# Calculate monthly spend per customer
+monthly_revenue = online.groupby(['CustomerID','InvoiceMonth'])['TotalSum'].sum()
+
+# Calculate average monthly spend
+monthly_revenue = np.mean(monthly_revenue)
+
+# Define lifespan to 36 months
+lifespan_months = 36
+
+# Calculate basic CLV
+clv_basic = monthly_revenue * lifespan_months
+
+# Print the basic CLV value
+print('Average basic CLV is {:.1f} USD'.format(clv_basic))
+
+<script.py> output:
+    Average basic CLV is 4774.6 USD
+    
+   Congratulations! You have successfully calculated the basic customer lifetime value. 
+
+_______________________________________________________________________________________________________________________________
+
+Calculate granular CLV
+In this scenario you will use more granular data points at the invoice level. This approach uses more granular data and can give a better customer lifetime value estimate. Make sure you compare the results with the one from the basic CLV model.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The online dataset has been imported for you.
+
+Instructions
+100 XP
+Group by InvoiceNo and calculate the mean of the TotalSum column.
+Group by CustomerID and InvoiceMonth and calculate the mean number of unique monthly invoices per customer.
+Define lifespan to 36 months.
+Calculate the granular CLV by multiplying the three previous metrics.
+
+# Calculate average revenue per invoice
+revenue_per_purchase = online.groupby(['InvoiceNo'])['TotalSum'].mean().mean()
+
+# Calculate average number of unique invoices per customer per month
+frequency_per_month = online.groupby(['CustomerID','InvoiceMonth'])['InvoiceNo'].nunique().mean()
+
+# Define lifespan to 36 months
+lifespan_months = 36
+
+# Calculate granular CLV
+clv_granular = revenue_per_purchase * frequency_per_month * lifespan_months
+
+# Print granular CLV value
+print('Average granular CLV is {:.1f} USD'.format(clv_granular))
+
+<script.py> output:
+    Average granular CLV is 1635.2 USD
+    
+    
+ +100 XP
+Good job! You can see how the granular approach gets you a different lifetime value estimate than the basic one.
+
+_______________________________________________________________________________________________________________________________
+
+Calculate traditional CLV
+Now you will calculate one of the most popular descriptive CLV models that accounts for the retention and churn rates. This gives a more robust estimate, but comes with certain assumptions that have to be validated. Make sure you review the video slides before you apply this method to your own use case.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The online and retention datasets have been imported for you.
+
+Instructions
+100 XP
+Group by CustomerID and InvoiceMonth and calculate monthly spend per customer.
+Calculate average monthly retention rate.
+Calculate average monthly churn rate.
+Calculate traditional CLV by multiplying monthly average spend with retention to churn ratio.
+
+# Calculate monthly spend per customer
+monthly_revenue = online.groupby(['CustomerID','InvoiceMonth'])['TotalSum'].sum().mean()
+
+# Calculate average monthly retention rate
+retention_rate = retention.iloc[:,1:].mean().mean()
+
+# Calculate average monthly churn rate
+churn_rate = 1 - retention_rate
+
+# Calculate traditional CLV 
+clv_traditional = monthly_revenue * (retention_rate / churn_rate)
+
+# Print traditional CLV and the retention rate values
+print('Average traditional CLV is {:.1f} USD at {:.1f} % retention_rate'.format(clv_traditional, retention_rate*100))
+
+<script.py> output:
+    Average traditional CLV is 34.7 USD at 20.7 % retention_rate
+
+ +100 XP
+Looks great! As you can see, the traditional CLV formula yields a much lower estimate as it accounts for monthly retention which is quite low for this company.
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Data preparation for
+purchase prediction
+MA CH IN E LE A RN IN G FOR MA RKETIN G IN PYTH ON
+
+
+
+Regression - predicting continuous variable
+Regression - type of supervised learning
+Target variable - continuous or count variable
+Simplest version - linear regression
+Count data (e.g. number of days active) sometimes better predicted by Poisson or Negative Binomial
+regression
+
+
+
+Recency, frequency, monetary (RFM) features
+RFM - approach that underlies many feature engineering methods
+Recency - time since last customer transaction
+Frequency - number of purchases in the observed period
+Monetary value - total amount spent in the observed period
+
+
+Separate feature data
+# Exclude target variable
+online_X = online[online['InvoiceMonth']!='2011-11']
+# Define snapshot date
+NOW = dt.datetime(2011,11,1)
+# Build the features
+features = online_X.groupby('CustomerID').agg({
+'InvoiceDate': lambda x: (NOW - x.max()).days,
+'InvoiceNo': pd.Series.nunique,
+'TotalSum': np.sum,
+'Quantity': ['mean', 'sum']
+}).reset_index()
+features.columns = ['CustomerID', 'recency', 'frequency',
+'monetary', 'quantity_avg', 'quantity_total']
+
+
+Review features
+print(features.head())
+
+
+Calculate target variable
+# Build pivot table with monthly transactions per customer
+cust_month_tx = pd.pivot_table(data=online, index=['CustomerID'],
+values='InvoiceNo',
+columns=['InvoiceMonth'],
+aggfunc=pd.Series.nunique, fill_value=0)
+print(cust_month_tx.head())
+
+
+
+Finalize data preparation and splitto train/test
+# Store identifier and target variable column names
+custid = ['CustomerID']
+target = ['2011-11']
+# Extract target variable
+Y = cust_month_tx[target]
+# Extract feature column names
+cols = [col for col in features.columns if col not in custid]
+# Store features
+X = features[cols]
+
+
+Split data to training and testing
+# Randomly split 25% of the data to testing
+from sklearn.model_selection import train_test_split
+train_X, test_X, train_Y, test_Y = train_test_split(X, Y,
+test_size=0.25,
+random_state=99)
+# Print shapes of the datasets
+print(train_X.shape, train_Y.shape, test_X.shape, test_Y.shape)
+_______________________________________________________________________________________________________________________________
+
+Build features
+You are now fully equipped to build recency, frequency, monetary value and other customer level features for your regression model. Feature engineering is the most important step in the machine learning process. In this exercise you will create five customer-level features that you will then use in predicting next month's customer transactions. These features capture highly predictive customer behavior patterns.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The online_X dataset has been imported for you. The datetime object NOW depicting the snapshot date you will use to calculate recency has been created for you.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Calculate recency by subtracting the current date from the latest InvoiceDate.
+Calculate frequency by counting the unique number of invoices.
+Calculate monetary value by summing all spend values.
+Calculate average and total quantity.
+
+
+# Define the snapshot date
+NOW = dt.datetime(2011,11,1)
+
+# Calculate recency by subtracting current date from the latest InvoiceDate
+features = online_X.groupby('CustomerID').agg({
+  'InvoiceDate': lambda x: (NOW - x.max()).days,
+  # Calculate frequency by counting unique number of invoices
+  'InvoiceNo': pd.Series.nunique,
+  # Calculate monetary value by summing all spend values
+  'TotalSum': np.sum,
+  # Calculate average and total quantity
+  'Quantity': ['mean', 'sum']}).reset_index()
+
+# Rename the columns
+features.columns = ['CustomerID', 'recency', 'frequency', 'monetary', 'quantity_avg', 'quantity_total']
+
+
+ +100 XP
+Fantastic! You have successfully built the features for purchase prediction.
+
+_______________________________________________________________________________________________________________________________
+
+Define target variable
+Here, you'll build a pandas pivot table with customers as rows, invoice months as columns, and number of invoice counts as values. You will use the last month's value as the target variable. The remaining variables can be used as the so-called lagged features in the model. You will not use them, but are highly encouraged to check if adding these variables will improve your model performance beyond what you'll see in the upcoming exercises.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The online dataset has been imported for you.
+
+Instructions
+100 XP
+Build a pivot table using the pivot_table() function counting invoices.
+Store November 2011 sales data column name as a list.
+Store the target value as Y.
+
+# Build a pivot table counting invoices for each customer monthly
+cust_month_tx = pd.pivot_table(data=online, values='InvoiceNo',
+                               index=['CustomerID'], columns=['InvoiceMonth'],
+                               aggfunc=pd.Series.nunique, fill_value=0)
+
+# Store November 2011 data column name as a list
+target = ['2011-11']
+
+# Store target value as `Y`
+Y = cust_month_tx[target]
+
+ +100 XP
+Perfect! Now with the target variable defined and the features built previously, you are ready to split the data into training and testing.
+_______________________________________________________________________________________________________________________________
+
+Split data to training and testing
+Final step before we move to building the regression model! Here, you will follow the steps of identifying the names of the target variable and the feature columns, extract the data, and split them into training and testing.
+
+The pandas and numpy libraries have been loaded as pd as np respectively. The input features are imported as the features dataset, and the target variable you built in the previous exercise has been imported for you as Y.
+
+Instructions
+100 XP
+Store the customer identifier column name as a list.
+Select the feature column names excluding the customer identifier.
+Extract the features as X.
+Split the data to training and testing by using the train_test_split() function.
+
+# Store customer identifier column name as a list
+custid = ['CustomerID']
+
+# Select feature column names excluding customer identifier
+cols = [col for col in features.columns if col not in custid]
+
+# Extract the features as `X`
+X = features[cols]
+
+# Split data to training and testing
+train_X, test_X, train_Y, test_Y = train_test_split(X, Y, test_size=0.25, random_state=99)
+
+
+ +100 XP
+Good job! The data is now fully prepared to be used for predicting next month transactions.
+
+_______________________________________________________________________________________________________________________________
+
+
+Predict next month transactions
+You are finally in the stage of predicting next month's transaction with linear regression. Here you will use the input features you've previously built, train the model on them and the target variable, and predict the values on the unseen testing data. In the next exercise you will measure the model performance.
+
+The LinearRegression function from sklearn library has been loaded for you. The training and testing features are loaded as train_X and test_X respectively, and the training and testing target variables are loaded as train_Y and test_Y.
+
+Instructions
+100 XP
+Initialize a linear regression instance.
+Fit the model to the training dataset.
+Predict the target variable for the training data.
+Predict the target variable for the testing data.
+
+# Initialize linear regression instance
+linreg = LinearRegression()
+
+# Fit the model to training dataset
+linreg.fit(train_X, train_Y)
+
+# Predict the target variable for training data
+train_pred_Y = linreg.predict(train_X)
+
+# Predict the target variable for testing data
+test_pred_Y = linreg.predict(test_X)
+
+ +100 XP
+Great! You have built the model on the training data, and predicted values on testing data. Next, you will explore model fit.
+
+_______________________________________________________________________________________________________________________________
+
+Measure model fit
+Now you will measure the regression performance on both training and testing data with two metrics - root mean squared error and mean absolute error. This is a critical step where you are measuring how "close" are the model predictions compared to actual values.
+
+The numpy library has been loaded as np. The mean_absolute_error and mean_squared_error functions have been loaded. The training and testing target variables are loaded as train_Y and test_Y, and the predicted training and testing values are imported as train_pred_Y and test_pred_Y respectively.
+
+Instructions
+100 XP
+Calculate the root mean squared error on the training data by using the np.sqrt() function.
+Calculate the mean absolute error on the training data.
+Calculate the root mean squared error on the testing data.
+Calculate the mean absolute error on the testing data.
+
+# Calculate root mean squared error on training data
+rmse_train = np.sqrt(mean_squared_error(train_Y, train_pred_Y))
+
+# Calculate mean absolute error on training data
+mae_train = mean_absolute_error(train_Y, train_pred_Y)
+
+# Calculate root mean squared error on testing data
+rmse_test = np.sqrt(mean_squared_error(test_Y, test_pred_Y))
+
+# Calculate mean absolute error on testing data
+mae_test = mean_absolute_error(test_Y, test_pred_Y)
+
+# Print the performance metrics
+print('RMSE train: {}; RMSE test: {}\nMAE train: {}, MAE test: {}'.format(rmse_train, rmse_test, mae_train, mae_test))
+
+
+<script.py> output:
+    RMSE train: 0.7167503307950375; RMSE test: 1.2156885786624645
+    MAE train: 0.5138783671689997, MAE test: 0.5548888276615969
+
+ +100 XP
+Looks great! You have successfully calculated the root mean squared error and mean absolute error of the model performance on both training and testing datasets.
+_______________________________________________________________________________________________________________________________
+
+Explore model coefficients
+You will now explore the model performance from a different angle, and only on the training data. One thing you learned in the latest lesson is that not all model coefficients are statistically significant and we should look at the model summary table to explore their significance. Fortunately, the statsmodels library provides this functionality. Once you print the model summary table, explore which variables have the p-value lower than 0.05 (i.e. lower than 5%) to make sure the coefficient is significant.
+
+The training features are loaded as train_X, and the target variable as train_Y which was converted to a numpy array.
+
+Instructions
+100 XP
+Import the statsmodels.api module.
+Initialize a model instance on the training data using the OLS() function.
+Fit the model.
+Print model summary using the .summary() method.
+
+
+# Import `statsmodels.api` module
+import statsmodels.api as sm
+
+# Initialize model instance on the training data
+olsreg = sm.OLS(train_Y, train_X)
+
+# Fit the model
+olsreg = olsreg.fit()
+
+# Print model summary
+print(olsreg.summary())
+
+
+ +100 XP
+Perfect! As you can see, the summary table provides many details about the model fit and gives you insight into model drivers as well as statistical significance of each of the coefficients.
+
+
+<script.py> output:
+                                     OLS Regression Results                                
+    =======================================================================================
+    Dep. Variable:                      y   R-squared (uncentered):                   0.488
+    Model:                            OLS   Adj. R-squared (uncentered):              0.487
+    Method:                 Least Squares   F-statistic:                              480.3
+    Date:                Thu, 28 Nov 2019   Prob (F-statistic):                        0.00
+    Time:                        04:03:53   Log-Likelihood:                         -2769.8
+    No. Observations:                2529   AIC:                                      5550.
+    Df Residuals:                    2524   BIC:                                      5579.
+    Df Model:                           5                                                  
+    Covariance Type:            nonrobust                                                  
+    ==================================================================================
+                         coef    std err          t      P>|t|      [0.025      0.975]
+    ----------------------------------------------------------------------------------
+    recency            0.0002      0.000      1.701      0.089   -2.92e-05       0.000
+    frequency          0.1316      0.003     38.000      0.000       0.125       0.138
+    monetary        1.001e-06   3.59e-05      0.028      0.978   -6.95e-05    7.15e-05
+    quantity_avg       0.0001      0.000      0.803      0.422      -0.000       0.000
+    quantity_total    -0.0001   5.74e-05     -2.562      0.010      -0.000   -3.45e-05
+    ==============================================================================
+    Omnibus:                      987.494   Durbin-Watson:                   1.978
+    Prob(Omnibus):                  0.000   Jarque-Bera (JB):             5536.657
+    Skew:                           1.762   Prob(JB):                         0.00
+    Kurtosis:                       9.334   Cond. No.                         249.
+    ==============================================================================
+    
+    Warnings:
+    [1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+
+
+
+
+<==============================================================================================================================>
+VIEW CHAPTER DETAILS
+4
+Customer segmentation
+0%
+This final chapter dives into customer segmentation based on product purchase history. You will explore two different models that provide insights into purchasing patterns of customers and group them into well separated and interpretable customer segments.
+
+VIEW CHAPTER DETAILS
+
+
+_______________________________________________________________________________________________________________________________
+
+Explore customer product purchase dataset
+You have explored the customer by product purchase dataset in the video exercise and are now ready to plot some exploratory charts to understand the distribution of the variables and relationships between them. Here, you will explore the wholesale dataset and plot the pairwise relationships as well as the estimated distributions for each variable with the pairplot function from the seaborn library. It's an important step to explore the distribution types, and the relationships between the variables to inform the need for further data preprocessing.
+
+The pandas library is loaded as pd, seaborn as sns, and matplotlib.pyplot as plt. Also, the wholesale dataset has been loaded as a pandas DataFrame.
+
+Instructions
+100 XP
+Print the header of the wholesale dataset
+Plot the pairwise relationships between the variables
+Display the chart.
+
+
+# Print the header of the `wholesale` dataset
+print(wholesale.head())
+
+# Plot the pairwise relationships between the variables
+sns.pairplot(wholesale, diag_kind='kde')
+
+# Display the chart
+plt.show()
+
+<script.py> output:
+       Fresh  Milk  Grocery  Frozen  Detergents_Paper  Delicassen
+    0  12669  9656     7561     214              2674        1338
+    1   7057  9810     9568    1762              3293        1776
+    2   6353  8808     7684    2405              3516        7844
+    3  13265  1196     4221    6404               507        1788
+    4  22615  5410     7198    3915              1777        5185
+
+ +100 XP
+Good! You can see that most variables have non-symmetrical distributions i.e. they are skewed.
+
+
+_______________________________________________________________________________________________________________________________
+
+Understand differences in variables
+Now, you will analyze the averages and standard deviations of each variable by plotting them in a barplot. This is a complementary step to the one before, as you will visually explore the differences in variable scales and variances.
+
+The pandas library is loaded as pd and matplotlib.pyplot as plt. Also, the wholesale dataset has been loaded as a pandas DataFrame, while the averages and standard deviations for each column of the wholesale dataset are loaded as pandas Series named averages and std_devs respectively. Make sure you explore them in the console.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Create a list with wholesale's column names and another one with sorted values from 0 to the number of columns in wholesale.
+Plot averages in grey and std_devs in orange, adjust the x-axis by 0.2
+Add x_ix as ticks and x_names as labels and make sure you rotate them by 90 degrees.
+Add the legend and display the chart.
+
+# Create column names list and same length integer list
+x_names = wholesale.columns
+x_ix = np.arange(wholesale.shape[1])
+
+# Plot the averages data in gray and standard deviations in orange 
+plt.bar(x=x_ix-0.2, height=averages, color='grey', label='Average', width=0.4)
+plt.bar(x=x_ix+0.2, height=std_devs, color='orange', label='Standard Deviation', width=0.4)
+
+# Add x-axis labels and rotate
+plt.xticks(ticks=x_ix, labels=x_names, rotation=90)
+
+# Add the legend and display the chart
+plt.legend()
+plt.show()
+
+
+ +100 XP
+Great! This plot gives you a visual sense of the differences in averages and standard deviations.
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Unskew the variables
+You will now transform the wholesale columns using Box-Cox transformation, and then explore the pairwise relationships plot to make sure the skewness of the distributions has been reduced to make them more normal. This is a critical step to make sure the K-means algorithm converges and discovers homogeneous groups (a.k.a. clusters or segments) of observations.
+
+The stats module is loaded from the scipy library, and the wholesale dataset has been imported as a pandas DataFrame.
+
+Instructions
+100 XP
+Define a custom Box Cox transformation function that could be applied to a pandas DataFrame.
+Apply the function to the wholesale dataset.
+Plot the pairwise relationships between the transformed variables.
+Display the chart.
+
+# Define custom Box Cox transformation function
+def boxcox_df(x):
+    x_boxcox, _ = stats.boxcox(x)
+    return x_boxcox
+
+# Apply the function to the `wholesale` dataset
+wholesale_boxcox = wholesale.apply(boxcox_df, axis=0)
+
+# Plot the pairwise relationships between the transformed variables 
+sns.pairplot(wholesale_boxcox, diag_kind='kde')
+
+# Display the chart
+plt.show()
+
+
+ +100 XP
+Fantastic! By using Box-Cox transformation you have successfully unskewed the variables and they now are almost normally distributed.
+
+_______________________________________________________________________________________________________________________________
+
+Normalize the variables
+Now, for the last step in data preparation. You will transform the unskewed dataset wholesale_boxcox to the same scale, meaning all columns have a mean of zero, and standard deviation of 1. You will use the StandardScaler function from the sklearn.preprocessing module.
+
+The unskewed wholesale_coxbox dataset you have transformed in the previous exercise has been imported as a pandas DataFrame. Also, the StandardScaler() instance has been initialized as scaler.
+
+Instructions
+100 XP
+Fit the initialized scaler instance on the Box-Cox transformed dataset.
+Transform and store the scaled dataset as wholesale_scaled.
+Create a pandas DataFrame from the scaled dataset.
+Print the mean and standard deviation for all columns.
+
+# Fit the initialized `scaler` instance on the Box-Cox transformed dataset
+scaler.fit(wholesale_boxcox)
+
+# Transform and store the scaled dataset as `wholesale_scaled`
+wholesale_scaled = scaler.transform(wholesale_boxcox)
+
+# Create a `pandas` DataFrame from the scaled dataset
+wholesale_scaled_df = pd.DataFrame(data=wholesale_scaled,
+                                       index=wholesale_boxcox.index,
+                                       columns=wholesale_boxcox.columns)
+
+# Print the mean and standard deviation for all columns
+print(wholesale_scaled_df.agg(['mean','std']).round())
+
+<script.py> output:
+          Fresh  Milk  Grocery  Frozen  Detergents_Paper  Delicassen
+    mean    0.0   0.0      0.0     0.0               0.0         0.0
+    std     1.0   1.0      1.0     1.0               1.0         1.0
+    
+    
+
+ +100 XP
+That looks correct! As you can see, the averages are roughly zero, and the standard deviations are around one, which is what we wanted!
+
+_______________________________________________________________________________________________________________________________
+
+
+Determine the optimal number of clusters
+Here, you will use the elbow criterion method to identify the optimal number of clusters where the squared sum of error decrease becomes marginal. This is an important step to get a mathematical ball-park number of clusters to start testing. You will iterate through multiple k number of clusters and run a KMeans algorithm for each, then plot the errors against each k to identify the "elbow" where the decrease in errors slows downs.
+
+The KMeans module is loaded from sklearn.cluster, the seaborn library is loaded as sns, and the matplotlib.pyplot module is loaded as plt. Also, the scaled dataset is loaded as wholesale_scaled_df as a pandas DataFrame.
+
+Instructions
+100 XP
+Create an empty sse dictionary.
+Fit a KMeans algorithm on k values between 1 and 11 and store the errors in the sse dictionary.
+Add the title to the plot.
+Create a scatter plot with keys on X-axis and values on the Y-axis and display the chart.
+
+# Create empty sse dictionary
+sse = {}
+
+# Fit KMeans algorithm on k values between 1 and 11
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, random_state=333)
+    kmeans.fit(wholesale_scaled_df)
+    sse[k] = kmeans.inertia_
+
+# Add the title to the plot
+plt.title('Elbow criterion method chart')
+
+# Create and display a scatter plot
+sns.pointplot(x=list(sse.keys()), y=list(sse.values()))
+plt.show()
+
+
+ +100 XP
+Good job! You can see that the "elbow" is somewhere around 2 or 3 clusters, which means you should start cluster with +1 number of clusters i.e. with 3 or 4.
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Build segmentation with k-means clustering
+In this exercise, you will build the customer segmentation with KMeans algorithm. As you've identified in the previous step, the mathematically optimal number of clusters is somewhere around 3 and 4. Here, you will build one with 4 segments.
+
+The pre-processed dataset has been loaded as wholesale_scaled_df. You will use it to run the KMeans algorithm, and the raw un-processed dataset as wholesale - you will later use it to explore the average column values for the 4 segments you'll build.
+
+Instructions
+100 XP
+Import the KMeans algorithm from sklearn.cluster module.
+Initialize KMeans algorithm with 4 clusters and a random state set to 123.
+Fit the model on the pre-processed wholesale_scaled_df dataset.
+Assign the generated labels to a new column called segment in the raw wholesale dataset
+
+
+# Import `KMeans` module
+from sklearn.cluster import KMeans
+
+# Initialize `KMeans` with 4 clusters
+kmeans=KMeans(n_clusters=4, random_state=123)
+
+# Fit the model on the pre-processed dataset
+kmeans.fit(wholesale_scaled_df)
+
+# Assign the generated labels to a new column
+wholesale_kmeans4 = wholesale.assign(segment = kmeans.labels_)
+
+ +100 XP
+Great job! You have created a 3-segment solution with K-means clustering and have assigned labels the the original dataset.
+
+
+_______________________________________________________________________________________________________________________________
+
+
+Alternative segmentation with NMF
+In this exercise, you will analyze product purchase data and identify meaningful segments using non-negative matrix factorization algorithm (NMF). It works well with sparse customer by product matrices that are typical in the e-commerce or retail space. Finally, you will extract the components that you will then explore in the upcoming exercise.
+
+We have loaded pandas as pd and numpy as np. Also, the raw customer by product purchase dataset has been loaded as wholesale.
+
+Instructions
+100 XP
+Import the non-negative matrix factorization function from sklearn.decomposition.
+Initialize NMF instance with 4 components.
+Fit the model on the wholesale sales data.
+Extract and store the components as a pandas DataFrame.
+
+
+# Import the non-negative matrix factorization module
+from sklearn.decomposition import NMF
+
+# Initialize NMF instance with 4 components
+nmf = NMF(4)
+
+# Fit the model on the wholesale sales data
+nmf.fit(wholesale)
+
+# Extract the components 
+components = pd.DataFrame(data=nmf.components_, columns=wholesale.columns)
+
+
+ +100 XP
+Great job! You have extracted the components from a 3-segment solution with non-negative matrix factorization.
+
+_______________________________________________________________________________________________________________________________
+
+
+K-means segmentation averages
+In this exercise, you will explore the average column values for a 3-segment solution with K-means. As part of the test & learn exploration process, visually inspecting the segmentation solutions is critical to identify the most business relevant option.
+
+The seaborn as sns, and matplotlib.pyplot as plt. Also, we have run a 3-segment solution with K-means and loaded the dataset with assigned segment labels as wholesale_kmeans3 DataFrame.
+
+Instructions
+100 XP
+Group by the segment label and calculate average column values.
+Print the average column values per each segment.
+Create a heatmap on the average column values per each segment.
+Display the chart.
+
+
+# Group by the segment label and calculate average column values
+kmeans3_averages = wholesale_kmeans3.groupby(['segment']).mean().round(0)
+
+# Print the average column values per each segment
+print(kmeans3_averages)
+
+# Create a heatmap on the average column values per each segment
+sns.heatmap(kmeans3_averages.T, cmap='YlGnBu')
+
+# Display the chart
+plt.show()
+
+<script.py> output:
+               Fresh     Milk  Grocery  Frozen  Detergents_Paper  Delicassen
+    segment                                                                 
+    0         6363.0  10004.0  15539.0  1236.0            6904.0      1362.0
+    1        10526.0   2012.0   2576.0  2543.0             471.0       771.0
+    2        26244.0   7767.0   7769.0  7836.0            1653.0      3770.0
+    
+    
+  +100 XP
+Looks good! You can see how different are the 3 segments from each other - can you try to name each segment by their purchase patters?   
+
+_______________________________________________________________________________________________________________________________
+
+NMF segmentation averages
+Finally, you will visually explore the average values of the 3-segment solution built by NMF and can compare it to the K-means one. Here you will extract the features matrix W which we will use to extract the hard segment assignment by choosing the column value (segment) with highest associated value in this matrix for each customer.
+
+We have loaded pandas library as pd and seaborn library as sns. The raw wholesale dataset has been imported, and the already fitted 3-segment NMF instance as nmf. The components dataset has been loaded as pandas DataFrame.
+
+Instructions
+100 XP
+Create the W matrix by passing the transformed values as data, and components index as column values.
+Assign the segment value by selecting the column name where the corresponding value is the largest.
+Calculate the average column values per each segment.
+Plot the average values as a heatmap.
+
+
+# Create the W matrix
+W = pd.DataFrame(data=nmf.transform(wholesale), columns=components.index)
+W.index = wholesale.index
+
+# Assign the column name where the corresponding value is the largest
+wholesale_nmf3 = wholesale.assign(segment = W.idxmax(axis=1))
+
+# Calculate the average column values per each segment
+nmf3_averages = wholesale_nmf3.groupby('segment').mean().round(0)
+
+# Plot the average values as heatmap
+sns.heatmap(nmf3_averages.T, cmap='YlGnBu')
+
+# Display the chart
+plt.show()
+
+
+ +100 XP
+Looks beautiful! You can see that this solution is different from the K-means 3-segment results - can you name the segments from this solution and spot the difference?
+

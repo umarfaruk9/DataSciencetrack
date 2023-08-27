@@ -1,0 +1,985 @@
+Course Description
+
+Data is all around us and can help us to understand many things. Making a pretty graph is great, but how can we tell the difference between a few outliers on a graph and a real, reliable effect? Is a trend that we see on a graph a reliable result or just random chance playing tricks? In this course, you will learn how to interrogate datasets in a rigorous way, giving clear answers to your questions. You will learn a range of statistical tests, how to apply them, how to understand their results, and how to deal with their shortcomings. Along the way, you will explore Olympic athlete data and the differences between populations of continents.
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+The Basics of Statistical Hypothesis Testing
+FREE
+0%
+In this chapter, you will learn how to explore your data and ask meaningful questions. Then, you will discover how to answer these question by using your first statistical hypothesis tests: the t-test, the Chi-Square test, the Fisher exact test, and the Pearson correlation test.
+
+
+Your first t-test
+Now you will perform your first statistical test! We want to compare the mean heights in cm of the Sample_A group with a given value. We want to see whether the mean weight of the people in this sample is significantly different from the chosen cut-off point of 65 kg. You'll use a one-sample t-test, which allows you to compare the mean of a sample with a chosen value. You'll perform this test on the sample provided versus the crucial value of 65 kg, and test its significance by comparing the value of alpha to the p-value. scipy.stats has been loaded into the workspace as stats
+
+Perform a one-sample t-test comparing the mean of Sample_A to 65; assign the output to t_result and print it.
+Using a standard alpha value of 0.05, test the statistical significance of the result by comparing the p-value to alpha and print the appropriate message.
+
+# Perform t-test and print result
+t_result=stats.ttest_1samp(Sample_A, 65)
+print(t_result)
+
+# Test significance
+alpha= 0.05
+if (t_result[1] < alpha):
+    print("mean value of Sample A differs from given value")
+else:
+	print("No significant difference found")
+------------------------------------------------------------------------------------------------------------------------------------
+One-sample t-test
+In this exercise, you will perform a one-sample t-test using the ttest_1sample() function. Using eudata, a dataset of country-level statistics, you'll be looking at the sex ratios found in the population of European countries. You'll use a one sample t-test to determine if the mean sex ratio found among European countries differs significantly from 50-50. First, you'll make some plots, then you'll perform your test. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9.
+
+Instructions 1/2
+50 XP
+1
+2
+Run the provided code, specifying the correct DataFrame, to print a density plot of Sex_ratio.
+# Create the density plot
+print(p9.ggplot(eudata)+ p9.aes(x='Sex_ratio')+ p9.geom_density(alpha=0.5))
+
+
+
+Perform a one-sample t-test to see if the mean Sex_ratio of European countries is significantly different from 100. assigning the result to t_result and printing it.
+Print a message regarding the statistical significance of the result.
+
+# Create the density plot
+(p9.ggplot(eudata)+ p9.aes('Sex_ratio')+ p9.geom_density(alpha=0.5))
+
+# Perform the one-sample t-test
+t_result= stats.ttest_1samp(eudata['Sex_ratio'], 100)
+print(t_result)
+
+# Test significance
+alpha = 0.05
+if t_result[1] < alpha:
+    print("Sex ratios are significantly biased")
+else:
+    print("No significant bias found")
+  
+  ------------------------------------------------------------------------------------------------------------------------------------
+  
+  Two-sample t-test
+Now we'll compare two sets of samples. Again, we'll be looking at the Sex_ratio found in different countries, but we're going to compare the Sex_ratio of European countries with Asian countries. Does the mean sex ratio differ between the two continents? A two-sample t-test can tell us whether the means of two samples differ significantly. The dataset is provided as euasdata. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9. You'll do some exploratory data analysis, then compare the groups via a statistical test.
+
+Instructions 1/2
+50 XP
+1
+2
+Using ggplot() with geom_density(), create a density plot of Sex_ratio on the x-axis, with each Continent assigned a fill color.
+
+# Create the density plot
+print(p9.ggplot(euasdata)+ p9.aes('Sex_ratio', fill='Continent')+ p9.geom_density(alpha=0.5))
+
+Create two arrays, Europe_Sex_ratio and Asia_Sex_ratio, containing the Sex_ratio for each continent.
+Use ttest_ind() to compare Europe and Asia, assign the result to t_result, and print it.
+Print the message regarding the result.
+
+# Create the density plot
+print(p9.ggplot(euasdata)+ p9.aes('Sex_ratio', fill="Continent")+ p9.geom_density(alpha=0.5))
+
+# Create two arrays
+Europe_Sex_ratio = euasdata[euasdata.Continent == "Europe"].Sex_ratio
+Asia_Sex_ratio = euasdata[euasdata.Continent == "Asia"].Sex_ratio
+
+# Perform the two-sample t-test
+t_result= stats.ttest_ind(Europe_Sex_ratio, Asia_Sex_ratio)
+print(t_result)
+
+# Test significance
+alpha= 0.05
+if (t_result[1] < alpha):
+    print("Europe and Asia have different mean sex ratios")
+else: print("No significant difference found")
+  
+  ------------------------------------------------------------------------------------------------------------------------------------
+  
+  
+  Chi-square test
+In this exercise, you will be working with the Olympics dataset. Here, we're going to look at the sex ratio of the American Olympic squads. Is a bias present? That is to say, does the ratio of male to female athletes significantly depart from 50-50? To test this, you'll need to perform a Chi-square test on the Sex data. Data on American athletes is provided as athletes. pandas, and plotnine have been loaded into the workspace as pd and p9.
+
+Instructions
+100 XP
+Using value_counts(), extract the number of individuals of each Sex from athletes, saving the result as sexratio.
+Perform a chisquare() test on sexratio and print the result.
+Compare the p-value to the given alpha and print the message.
+
+# Extract sex ratio
+sexratio = athletes['Sex'].value_counts()
+
+# Perform Chi-square test
+chi= stats.chisquare(sexratio)
+print(chi)
+
+# Test significance
+alpha= 0.05
+if chi[1] < alpha:
+    print("Difference between sexes is statistically significant")
+else:
+    print("No significant difference between sexes found")
+  
+  <script.py> output:
+    Power_divergenceResult(statistic=568.4776119402985, pvalue=1.2035877899749622e-125)
+    Difference between sexes is statistically significant
+    
+    
+    ------------------------------------------------------------------------------------------------------------------------------------
+    Fisher's exact test
+Now, you'll work with the Olympics dataset to look at the relative success of the American swimming and athletics teams. Whether each athlete received a medal is coded as True or False in the MedalTF column of athletes. Do a larger proportion of swimming or athletics participants come home with medals? A Fisher exact test is a useful way to compare proportions of samples falling into discrete categories. To test this, you'll need to perform a Fisher exact test on MedalTF in relation to Sport. pandas and plotnine have already been imported as pd and p9.
+
+Instructions
+100 XP
+Using crosstab(), produce a cross-tabulation of MedalTF and Sport, saving the result as table and printing it.
+Perform a fisher_exact() test on table and print the result.
+Compare the p-value to the given alpha and print the message.
+
+# Create a table of cross-tabulations
+table = pd.crosstab(athletes.MedalTF, athletes.Sport)
+print(table)
+
+# Perform the Fisher exact test
+fisher = stats.fisher_exact(table, alternative='two-sided')
+print(fisher)
+
+# Is the result significant?
+alpha = 0.05
+if fisher[1] < alpha:
+    print("Proportions of medal winners differ significantly")
+else:
+    print("No significant difference in proportions of medal winners found")
+    
+    
+    <script.py> output:
+    Sport    Athletics  Swimming
+    MedalTF                     
+    False         2131       556
+    True          1071      1066
+    (3.8148405645231716, 2.4220956742371155e-101)
+    Proportions of medal winners differ significantly
+    
+------------------------------------------------------------------------------------------------------------------------------------
+Pearson correlation
+In this exercise, you will be using the Olympic athletes dataset and focusing on just one event, the men's 100 meter running race. The dataset is provided in your workspace as athletes. You're going to be looking at how the weights of competitors have changed over time. A Pearson correlation test allows us to determine whether a linear relationship exists between two variables. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9, respectively. First, you'll make some plots, then you'll see how the sprinters' weights have changed over time.
+
+Instructions 1/2
+50 XP
+1
+2
+Using geom_point(), create and print a scatter plot of Weight (y-axis) in relation to Year (x-axis), with a different color according to Event, using the athletes DataFrame.
+
+# Create the scatter plot
+print(p9.ggplot(athletes)+ p9.aes(x='Year', y='Weight', color='Event')+  p9.geom_point())
+
+
+Instructions 2/2
+50 XP
+2
+Perform a pearsonr() correlation test between athletes.Weight and athletes.Year and print the result.
+Compare the p-value to the given alpha and print the message.
+
+
+# Create the scatterplot
+print(p9.ggplot(athletes)+ p9.aes('Year', 'Weight', color='Event')+  p9.geom_point())
+
+# Run the correlation test
+pearson = stats.pearsonr(athletes.Weight, athletes.Year)
+print(pearson)
+
+# Test if p-value is bigger or smaller than alpha
+alpha = 0.05
+if pearson[1] < alpha:
+    print("Weights and year are significantly correlated")
+else:
+    print("No significant correlation found")
+------------------------------------------------------------------------------------------------------------------------------------
+
+2
+Design Considerations in Experimental Design
+0%
+In this chapter, you will learn how to examine and multiple factors at once, controlling for the effect of confounding variables and examining interactions between variables. You will learn how to use randomization and blocking to build robust tests and how to use the powerful ANOVA method.
+
+------------------------------------------------------------------------------------------------------------------------------------
+Random sampling
+In this exercise, we're going to look at random sampling. You have been provided with a large dataset (athletes) containing the details of a large number of American athletes. For the purposes of this exercise, we are interested in differences between the body Weight of competitors in swimming and athletics. In order to test this, you'll be using a two-sample t-test. However, you will be performing this test on a random sample of the data. By playing with the random subset chosen, you'll see how randomness affects our results. You will need to extract a random subset of athletes from both events in order to run your test. pandas, scipy.stats, plotnine, and random have been loaded into the workspace as pd, stats, p9, and ran, respectively.
+
+Instructions 1/2
+0 XP
+1
+2
+Set seed to 0000.
+Create two subset DataFrames (subsetathl and subsetswim) from athletes, with 30 random samples in each.
+Perform a two-sample t-test on the Weight column of each subset DataFrame, save it to t_result, then print it.
+
+
+# Define random seed
+seed = 0000
+
+# Create subsets
+subsetathl = athletes[athletes.Sport == "Athletics"].sample(n=30, random_state= seed)
+subsetswim = athletes[athletes.Sport == "Swimming"].sample(n=30, random_state= seed)
+
+# Perform the two-sample t-test
+t_result = stats.ttest_ind(subsetathl.Weight, subsetswim.Weight) 
+print(t_result)
+
+Change the seed value to 2397 and re-run the code.
+
+# Define random seed
+seed = 2397
+
+# Create subsets
+subsetathl = athletes[athletes.Sport == "Athletics"].sample(n=30, random_state= seed)
+subsetswim = athletes[athletes.Sport == "Swimming"].sample(n=30, random_state= seed)
+
+# Perform the two-sample t-test
+t_result = stats.ttest_ind(subsetathl.Weight, subsetswim.Weight) 
+print(t_result)
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Blocking
+We're going to have another look at the same data but, this time, we'll use blocking to improve our approach. Like last time, you'll be using a two-sample t-test on athlete Weight within your DataFrame, athletes. This time, however, you will control for Sex as a blocking factor, sampling equally from male and female participants. You will need to extract a random subset of athletes from both events to run your test. pandas, scipy.stats, plotnine, and random have been loaded into the workspace as pd, stats, p9, and ran, respectively.
+
+Instructions
+100 XP
+Create four subset DataFrames from athletes, with 15 randomly chosen samples in each, corresponding to the four possible combinations of Sex and Sport.
+Concatenate the two Athletics blocks and the two Swimming blocks to create two DataFrames to compare, each containing 30 samples.
+Perform a two-sample t-test on the Weight columns and print the output.
+
+seed = 9000
+
+# Create subset blocks
+subsetathlm = athletes[(athletes.Sport == "Athletics") & (athletes.Sex == "M")].sample(n=15, random_state= seed)
+subsetathlf = athletes[(athletes.Sport == "Athletics") & (athletes.Sex == "F")].sample(n=15, random_state= seed)
+subsetswimm = athletes[(athletes.Sport == "Swimming") & (athletes.Sex == "M")].sample(n=15, random_state= seed)
+subsetswimf = athletes[(athletes.Sport == "Swimming") & (athletes.Sex == "F")].sample(n=15, random_state= seed)
+
+# Combine blocks
+subsetathl = pd.concat([subsetathlm, subsetathlf])
+subsetswim = pd.concat([subsetswimm, subsetswimf])
+
+# Perform the two-sample t-test
+print(stats.ttest_ind(subsetathl.Weight, subsetswim.Weight) )
+
+  <script.py> output:
+    Ttest_indResult(statistic=-2.9477612234116326, pvalue=0.004605461953501264)
+    
+    
+Very good. Your t-test is significant, with a p-value under 0.05. This blocked design has resolved the issue you had in the last exercise. You can see how this type of blocking approach can be a useful way to improve your experimental design when a confounding variable is present.    
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Paired t-test
+Think back to the potato field example that we dealt with previously. Here, you've been provided with a small DataFrame (podataframe) containing information on 10 Fields. We are interested in potato yield in tons/hectare. For each Field, we have a value for its Yield2018, before the application of a new fertilizer, and its Yield2019, after the application of the new fertilizer. You'll need to perform two t-tests, a standard two-sample test, and a paired t-test. A paired t-test will control for the variation between fields. Do the two tests give the same result? scipy.stats is loaded as stats.
+
+Instructions 1/2
+50 XP
+1
+Do a standard two-sample t-test, comparing 2018 and 2019 potato yield, save the result to ttestind and print it.
+
+------------------------------------------------------------------------------------------------------------------------------------
+One-way ANOVA
+Let's have another look at some data from our Olympic dataset. How does the Weight of athletes vary between teams from different countries? In this exercise, you're going to use a one-way ANOVA to check for the presence of significant variation in Weight of Olympic athletes. You have been provided with the athletes DataFrame, containing details about male athletes from the Team of the United States, France, and China. Here is a set of boxplots of Weight for the athletes from those three countries.
+
+Density plot of the body weights of Olympic athletes from three competing countries
+
+A one-way ANOVA will allow you to see whether any differences between these groups of values are significant. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9, respectively.
+
+Instructions
+100 XP
+Create three arrays, France_athletes, US_athletes, and China_athletes, for the athletes' Weights from each country.
+Using f_oneway(), perform a one-way ANOVA on the arrays, save the result as anova, and print it.
+
+# Create arrays
+France_athletes = athletes[athletes.Team == 'France'].Weight
+US_athletes = athletes[athletes.Team == 'United States'].Weight
+China_athletes = athletes[athletes.Team == 'China'].Weight
+
+# Perform one-way ANOVA
+anova = stats.f_oneway(France_athletes, US_athletes, China_athletes)
+print(anova)
+
+# Create arrays
+France_athletes = athletes[athletes.Team == 'France'].Weight
+US_athletes = athletes[athletes.Team == 'United States'].Weight
+China_athletes = athletes[athletes.Team == 'China'].Weight
+
+# Perform one-way ANOVA
+anova = stats.f_oneway(France_athletes, US_athletes, China_athletes)
+print(anova)
+------------------------------------------------------------------------------------------------------------------------------------
+Two-way ANOVA
+Let's have another look at some data from our Olympic dataset. How does the Weight of athletes vary between teams from different countries and of different sexes? In this exercise, you're going to use a two-way ANOVA to check for the presence of significant variation in the Weight of Olympic sprinters. You have been provided with the athletes DataFrame, containing details about athletes from the Team of the United States, and China, from both sexes.
+
+Density plot of athlete weight in relation to sex and country
+
+A two-way ANOVA will allow you to see which of these two factors, Sex and Team, have a significant effect on Weight. pandas, statsmodels, and plotnine have been loaded into the workspace as pd, sm, and p9, respectively.
+
+Instructions
+100 XP
+Create a model, using the provided formula for Weight as a function of Team and Sex.
+Perform a two-way ANOVA, testing for the effect of both Team and Sex on Weight, and print the ANOVA table.
+
+
+# Create model
+formula = 'Weight ~ Sex + Team'
+model = sm.api.formula.ols(formula, data=athletes).fit()
+
+# Perform ANOVA and print table
+aov_table = sm.api.stats.anova_lm(model, typ=2)
+print(aov_table)
+
+# Create model
+formula = 'Weight ~ Sex + Team'
+model = sm.api.formula.ols(formula, data=athletes).fit()
+
+# Perform ANOVA and print table
+aov_table = sm.api.stats.anova_lm(model, typ=2)
+print(aov_table)
+
+Good work! According to the results of your ANOVA, Sex has a significant effect, while Team has no significant effect. ANOVA is a very powerful method, as it allows us to separate out the effects of multiple factors.
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+wo-way ANOVA with interactive effects
+Once again, you're going to look at our dataset of Olympic athletes. As in previous exercises, you'll be looking at the variation in athlete Weight. You're going to look at athletes of either Sex competing in one of two Events: the 100 meter and 10,000 meter run. Have a look at these data in the boxplots below.
+
+Density plot of athlete weight in relation to sex and event
+
+This dataset is provided in your workspace as athletes. An ANOVA will allow you to work out which of these variables affect Weight and whether an interactive effect is present. pandas, statsmodels, and plotnine have been loaded into the workspace as pd, sm, and p9, respectively.
+
+Instructions
+100 XP
+Perform a two-way ANOVA to test whether Sex, Event, or the interaction between the two has a significant effect on Weight.
+Using anova_lm() on your model, extract and print the table of results produced by your ANOVA.
+
+
+# Run the ANOVA
+model = sm.api.formula.ols('Weight ~ Sex + Event + Sex:Event', data = athletes).fit()
+
+# Extract our table
+aov_table = sm.api.stats.anova_lm(model, typ=2)
+
+# Print the table
+print(aov_table)
+
+<script.py> output:
+                      sum_sq      df            F        PR(>F)
+    Sex        141607.485844     1.0  3191.693293  0.000000e+00
+    Event       83295.483535     1.0  1877.398179  0.000000e+00
+    Sex:Event    1551.609798     1.0    34.971757  3.680613e-09
+    Residual   148986.100430  3358.0          NaN           NaN
+    
+    
+Good work! Can you interpret the AOV table? Look at the p-values for the effects of Sex, Event, and Sex:Event. Using a standard alpha of 0.05, Sex, Event, and Sex:Event have a significant effect on Weight. This means that both factors influence Weight, and the effect of one factor is dependent on the other.
+------------------------------------------------------------------------------------------------------------------------------------
+
+Choosing an appropriate test
+Let's look at another problem from the Olympic dataset, focusing on the Height of the competitors. Here, you've been provided with athletes data on the Norwegian and Colombian Team for each Sex. With those two factors, you'll have four separate groups. First, look at the boxplots below, then choose an appropriate statistical test.
+
+Density plot of athlete height in relation to sex and country
+
+Finally, carry out the test. pandas, statsmodels, and plotnine have been loaded into the workspace as pd, sm, and p9, respectively.
+
+Create a formula and model, examining Height as a function of Sex, Team, and their interaction.
+Perform a two-way ANOVA, testing for the effect of Sex, Team, and an interactive effect on Weight, and print the ANOVA table.
+
+# Create model
+formula = 'Height ~ Sex + Team + Sex:Team'
+model = sm.api.formula.ols(formula, data=athletes).fit()
+
+# Perform ANOVA and print table
+aov_table = sm.api.stats.anova_lm(model, typ=2)
+print(aov_table)
+Nice. According to the results of your two-way ANOVA, both of the factors, Sex and Team, have a significant effect on Weight. However, no significant interactive effect is present.
+
+
+<script.py> output:
+                    sum_sq     df           F        PR(>F)
+    Sex       11975.530932    1.0  159.038723  7.512939e-33
+    Team      12274.160018    1.0  163.004609  1.506805e-33
+    Sex:Team    107.335230    1.0    1.425445  2.329344e-01
+    Residual  50149.444322  666.0         NaN           NaN
+------------------------------------------------------------------------------------------------------------------------------------
+
+3
+Sample size, Power analysis, and Effect size
+
+In this chapter, you will focus on ways to avoid drawing false conclusions, whether false positives (type I errors) or false negatives (type II errors). Central to avoiding false negatives is understanding the interplay between sample size, power analysis, and effect size.
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Bonferroni correction
+Improved nutrition and healthcare has lead to increased human heights in most societies over the past century. But is this trend also reflected amongst elite athletes? To examine this, we'll be looking at another slice from our Olympic dataset and performing multiple tests.
+
+You have been provided with the athletes dataset containing information about American male Olympic athletes from three years: 1924, 1952, and 2016. You will perform two-sample t-tests to compare the three timepoints, seen in boxplots. Between which times do significant differences exist? As you'll be performing multiple non-independent tests, you will need to perform Bonferroni correction on the results. statsmodels, scipy.stats, and pandas have been loaded for you as sm, stats, and pd.
+
+Boxplots of athlete heights from three chosen years
+
+Instructions
+100 XP
+Perform three two-sample t-tests, comparing each possible pair of years.
+Create an array containing the p-values from your three t-tests and print it.
+Perform a Bonferroni correction on the p-values and print the result.
+
+# Perform t-tests 
+t_result_1924v2016= stats.ttest_ind(athletes[athletes.Year == "1924"].Height,athletes[athletes.Year == "2016"].Height)
+t_result_1952v2016= stats.ttest_ind(athletes[athletes.Year == "1952"].Height,athletes[athletes.Year == "2016"].Height)
+t_result_1924v1952= stats.ttest_ind(athletes[athletes.Year == "1924"].Height,athletes[athletes.Year == "1952"].Height)
+
+# Create array of p-values
+pvals_array = [t_result_1924v2016[1],t_result_1952v2016[1],t_result_1924v1952[1]]
+print(pvals_array)
+
+# Perform Bonferroni correction
+adjustedvalues = sm.stats.multitest.multipletests(pvals_array, alpha=0.05, method='b')
+print(adjustedvalues)
+
+
+<script.py> output:
+    [2.0995273280295586e-16, 4.484419167217926e-05, 0.00013562429334889784]
+    (array([ True,  True,  True]), array([6.29858198e-16, 1.34532575e-04, 4.06872880e-04]), 0.016952427508441503, 0.016666666666666666)
+
+Nice. See how the Bonferroni correction affects your values? This correction method is quite conservative.
+----------------------------------------------------------------------------------------------------------------------------------------
+Šídák correction
+We're looking at how the Height of Olympic athletes from the athletes dataset has changed over time. In this exercise, we're considering three events, the 100 meter, the High Jump, and the Marathon. You'll be examining the correlation between Height and Year separately for each Event. As you did before, you'll need to correct for multiple hypothesis tests, but, since these tests are independent, you can use the less-strict Šídák correction.
+
+Scatter plots of athlete heights in relation to year for three Olympic events
+
+Instructions
+100 XP
+Perform three Pearson correlations, examining the correlation between Height and Year for each of the three Events.
+Create an array containing the p-values from your three tests and print it.
+
+Perform a Šídák correction on the p-values and print the result.
+
+# Perform Pearson correlations
+pearson100 = stats.pearsonr(athletes[athletes.Event == "100 meters"].Height, athletes[athletes.Event == "100 meters"].Year)
+pearsonHigh = stats.pearsonr(athletes[athletes.Event == "High Jump"].Height, athletes[athletes.Event == "High Jump"].Year)
+pearsonMara = stats.pearsonr(athletes[athletes.Event == "Marathon"].Height, athletes[athletes.Event == "Marathon"].Year)
+
+# Create array of p-values
+pvals_array = [pearson100[1],pearsonHigh[1],pearsonMara[1]]
+print(pvals_array)
+
+# Perform Šídák correction
+adjustedvalues=  sm.stats.multitest.multipletests(pvals_array, alpha=0.05, method='s')
+print(adjustedvalues)
+----------------------------------------------------------------------------------------------------------------------------------------
+Exploring sample size
+Now we'll explore the effect of sample size on the results of statistical tests. Here, we'll be comparing the Weight of American Athletics and Swimming competitors in the athletes dataset. The boxplots show the difference between these two groups.
+
+Boxplots of body weights of Olympic athletes from two sports
+
+Using a defined seed and varying sample sizes, you will perform t-tests comparing the Weight of samples from both Sports. random, scipy.stats, and pandas have been loaded for you as random, stats, and pd.
+
+Instructions 1/3
+35 XP
+Instructions 1/3
+35 XP
+1
+Create a subset using the provided seed for 1000 samples; perform and print a t-test to compare Weight between Sports.
+
+# Create sample with defined random seed and perform t-test
+subset = athletes.sample(n=1000, random_state= 1007)
+print(stats.ttest_ind(subset[subset.Sport == "Athletics"].Weight, subset[subset.Sport == "Swimming"].Weight))
+
+<script.py> output:
+    Ttest_indResult(statistic=-4.5957029380768635, pvalue=4.865150456250805e-06)
+    
+    
+Change the sample size to 200, repeat the t-test to compare Weight between Sports, and print the results.
+
+# Create sample with defined random seed and perform t-test
+subset = athletes.sample(n=200,random_state= 1007)
+print(stats.ttest_ind(subset[subset.Sport=="Athletics"].Weight, subset[subset.Sport=="Swimming"].Weight))
+
+<script.py> output:
+    Ttest_indResult(statistic=-2.015353197866729, pvalue=0.045219679216043834)
+    
+    
+    
+Create a subset using the same seed for 50 samples; perform and print a t-test to compare Weight between Sports.
+
+# Create sample with defined random seed and perform t-test
+subset = athletes.sample(n=50, random_state= 1007)
+print(stats.ttest_ind(subset[subset.Sport == "Athletics"].Weight, 
+                      subset[subset.Sport == "Swimming"].Weight))
+		      
+		      
+		      
+Great! Look how smaller samples affected your p-value. With sample sizes of 1000, 200 and 50, you got p-values of 0.0000045, 0.045 and 0.68, respectively. The smallest sample size didn't give a significant result. Now you see how much difference sample size can make.		      
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Sample size for a t-test
+Now that we've seen the importance of sample size, let's have another look at the same athletes dataset and see if we can determine the sample size we would need to get a significant result.
+
+Boxplots of body weights of Olympic athletes from two sports
+
+The boxplot shows the difference in body weight between sports, using all 2830 rows from the athletes dataset. The difference between the groups looks quite small. Determine the sample size we would need to have an 80% chance of detecting a small (0.4) difference between these two samples. statsmodels.stats.power and pandas have been loaded for you as pwr and pd.
+
+Instructions
+100 XP
+Set effect, power, and alpha to 0.4, 0.8 and 0.05, respectively.
+Calculate the ratio using the relative lengths of the series for swimming (swimmercount) compared to athletics (athletecount) competitors.
+Initialize the analysis, solve the equation for sample size, and print the output.
+
+# Set parameters
+effect = 0.4
+power = 0.8
+alpha = 0.05
+
+# Calculate ratio
+swimmercount = float(len(athletes[athletes.Sport == "Swimming"].index))
+athletecount = float(len(athletes[athletes.Sport == "Athletics"].index))
+ratio = swimmercount/athletecount
+
+# Initialize analysis and calculate sample size
+analysis = pwr.TTestIndPower()
+ssresult = analysis.solve_power(effect_size=effect, power=power, alpha=alpha, nobs1=None, ratio=ratio)
+print(ssresult)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Effect size for a t-test
+Now, we're going to have a look at effect sizes. We are examining the same slice from the atheletes dataset, comparing the body weights of competitors from swimming and athletics events. The boxplots are included.
+
+Boxplots of body weights of Olympic athletes from two sports
+
+You're going to calculate the effect sizes we are able to detect for a couple of different sampling strategies. First, you'll determine the smallest effect size detectable using the complete dataset. Then, you'll determine the size effect we could detect using 300 samples from each Sport. statsmodels.stats.power and pandas have been loaded for you as pwr and pd.
+
+Instructions 1/2
+50 XP
+Instructions 1/2
+50 XP
+1
+Set parameters for sampling the entire dataset.
+Initialize analysis, solve for effect size, and print the result.
+
+# Set parameters
+alpha = 0.05
+power = 0.8
+ratio = float(len(athletes[athletes.Sport == "Swimming"]) )/ len(athletes[athletes.Sport == "Athletics"])
+samp_size = len(athletes[athletes.Sport == "Athletics"])
+
+# Initialize analysis & calculate sample size
+analysis = pwr.TTestIndPower()
+esresult = analysis.solve_power(effect_size=None, power=power, nobs1=samp_size, ratio=ratio, alpha=alpha)
+print(esresult)
+
+
+Change parameters for a sample of 300 competitors from each group.
+Repeat effect size analysis and print result.
+
+
+# Set parameters
+alpha = 0.05
+power = 0.8
+ratio = 1
+samp_size = 300
+
+# Initialize analysis & calculate sample size
+analysis = pwr.TTestIndPower()
+esresult = analysis.solve_power(effect_size=None, power=power, nobs1=samp_size, ratio=ratio, alpha=alpha)
+print(esresult)
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Computing Cohen's d
+Now, using the same comparison of Weight difference between Sports, let's calculate the actual effect size for this comparison. As a reminder, these data are summarized in the boxplot below.
+
+Boxplots of body weights of Olympic athletes from two sports
+
+Using the formula seen in the previous video, calculate Cohen's d for the difference in Weight between each Sport. Your data is contained in athletes. pandas and math are loaded into your workspace as pd and ma.
+
+Instructions
+100 XP
+Create two series, one for the samples from each Sport.
+Calculate diff, the difference between the mean of each sample, and pooledstdev, the pooled standard deviation.
+Calculate Cohen's d and print it.
+
+
+# Create series
+athl = athletes[athletes.Sport=="Athletics"].Weight
+swim = athletes[athletes.Sport=="Swimming"].Weight
+
+# Calculate difference between means and pooled standard deviation
+diff = swim.mean() - athl.mean()
+pooledstdev = ma.sqrt((athl.std()**2 + swim.std()**2)/2 )
+
+# Calculate Cohen's d
+cohend = diff / pooledstdev
+print(cohend)
+
+<script.py> output:
+    0.42144949362633766
+    
+    Great! This is a moderate sized effect size. As the effect size is bigger than the minimum effect size calculated in the last exercise, you would expect that the parameters from the last exercise would allow you to detect a difference like this.
+    
+    
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Effect size for a Fisher exact test
+In this exercise, you'll use the athletes dataset to examine whether American athletes are more successful in athletics or in swimming events. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9, respectively. For the purposes of this exercise, an extra column has been added to the dataset, MedalTF, which gives a True or False value for whether each athlete won any type of medal. First, you'll cross-tabulate MedalTF with Sport. Then you'll perform a Fisher exact test. Finally, you'll examine the significance and effect size of this result.
+
+Instructions
+100 XP
+Use pd.crosstab() to create a table of cross-tabulations between MedalTF and Sport and print the table.
+Using the fisher_exact() function, perform a two-sided Fisher exact test to test whether the proportion of medal winners differs significantly between Sports.
+Print the p-value to the console.
+Print the odds ratio to the console.
+
+
+# Create a table of cross-tabulations
+table = pd.crosstab(athletes.MedalTF,athletes.Sport)
+print(table)
+
+# Perform the Fisher exact test
+chi = stats.fisher_exact(table, alternative='two-sided')
+
+# Print p-value
+print("p-value of test: " + str(round(chi[1], 5))  )
+
+# Print odds ratio  
+print("Odds ratio between groups: " + str(round(chi[0], 1))  )
+
+
+<script.py> output:
+    Sport    Athletics  Swimming
+    MedalTF                     
+    False         2131       556
+    True          1071      1066
+    p-value of test: 0.0
+    Odds ratio between groups: 3.8
+
+Great work! This p-value is well below a standard value for alpha, making it significant. Furthermore, the effect size is large.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Effect sizes for Pearson correlation
+Now we're going to look at effect sizes for Pearson correlations. In a previous exercise, we used Pearson correlation to examine the link between Weight and Height for athletes from our Olympic dataset. Now, we're going to focus a single event, the 10,000 meter run, and compare the results we obtain for Pearson tests of correlation for competitors from two Teams, Kenya (ken DataFrame) and Ethiopia (eth DataFrame). Which has a higher effect strength? These data are graphed below as scatterplots. scipy and pandas have been loaded as sp and pd.
+
+Scatter plot of height versus weight for Kenyan 10k runners
+
+Scatter plot of height versus weight for Ethiopian 10k runners
+1) Perform a Pearson correlation between the Weight and Height of Kenyan athletes and print the result.
+
+# Perform Pearson correlation
+pearsonken = stats.pearsonr(ken.Weight, ken.Height)
+print(pearsonken)
+
+<script.py> output:
+    (0.7453064505495948, 6.497110521502846e-07)
+    
+2) Perform a Pearson correlation between the Weight and Height of Ethiopian athletes and print the result.
+
+# Perform Pearson correlation
+pearsoneth = stats.pearsonr(eth.Weight, eth.Height)
+print(pearsoneth)
+
+
+<script.py> output:
+    (0.3728450639500469, 0.03885112030532914)
+
+Nice. Look at the Pearson correlation coefficient you have obtained in each case. The Kenyan dataset gives a higher value than that obtained for the Ethiopian samples. This makes sense, as the scatterplot for the former looks much less noisy.
+----------------------------------------------------------------------------------------------------------------------------------------
+Power analysis for a t-test
+Now we're going to have another look at the same example, drawn from our Olympic dataset (Weight difference between Sports). A random subset of 100 samples from each group in this data yields these boxplots.
+
+Boxplots of body weights of Olympic athletes from different sports (100 sampled for each)
+
+Knowing the effect size of the difference between these two groups (see the relevant exercise for a refresher), you need to work out what the odds are that your t-test will pick up this difference. Your data is contained in athletesample. pandas and statsmodels.stats.power are loaded into your workspace as pd and pwr.
+
+Instructions
+100 XP
+Set the parameters as follows: an effect size of 0.42145, 100 samples from each group and a standard alpha value of 0.05.
+Run and print the power analysis.
+
+# Set parameters
+effect_size = 0.42145
+alpha = 0.05
+samp_size = 100
+ratio = 1
+
+# Initialize analysis & calculate power
+analysis = pwr.TTestIndPower()
+pwresult = analysis.solve_power(effect_size=effect_size, power=None, alpha=alpha, nobs1=samp_size, ratio=ratio)
+print(pwresult)
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+4
+Testing Normality: Parametric and Non-parametric Tests
+0%
+In this final chapter, you will examine the assumptions underlying statistical tests and learn about how that influences your experimental design. This will include learning whether a variable follows a normal distribution and when you should use non-parametric statistical tests like the Wilcoxon rank-sum test and the Spearman correlation test.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Exploring distributions with summary stats
+Let's return to our UN demographic data, countrydata, to examine distributions using summary statistics. For each Country, you have information about the GDP per capita in USD (GDP_per_cap) and the unemployment rate (Unemployment). How close to normality is each?
+
+For a perfect normal distribution, the mean, median, and mode will be identical, and the density plot will show a classic, symmetrical bell curve. pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9.
+
+Create and print a density plot of Unemployment and print its mean(), median(), and mode().
+
+# Print density plot, mean, median, and mode of Unemployment
+print(p9.ggplot(countrydata)+ p9.aes(x="Unemployment")+ p9.geom_density())
+print(countrydata.Unemployment.mean())
+print(countrydata.Unemployment.median())
+print(countrydata.Unemployment.mode())
+
+
+<script.py> output:
+    <ggplot: (-9223363299595837247)>
+    8.72910052910053
+    6.7
+    0    6.6
+    dtype: float64
+
+
+
+Create and print a density plot of GDP per capita and print its mean(), median(), and mode().
+
+# Print density plot, mean, median, and mode of GDP per capita
+print(p9.ggplot(countrydata)+ p9.aes(x="GDP_per_cap")+ p9.geom_density())
+print(countrydata.GDP_per_cap.mean())
+print(countrydata.GDP_per_cap.median())
+print(countrydata.GDP_per_cap.mode())
+
+
+Nice work. Neither of these variables are normally distributed. Note that the mean, median, and mode are different each time and that a couple of modes are present. GDP per capita departs farther from normality than Unemployment.
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Q-Q plot
+Another way to examine the normality of a distribution is with a Q-Q (quantile-quantile) plot. For this exercise, you will create a Q-Q plot for the country-level Unemployment data you saw in the last exercise (available in your workspace as countrydata). The Q-Q plot compares the theoretical quantiles expected under a normal distribution to the actual observed values (ordered). When a distribution is normally distributed, you will see a straight line. The more crooked the line is, the farther the distribution departs from normality. pandas and scipy.stats have been loaded into the workspace as pd and stats.
+
+Instructions
+100 XP
+Calculate the theoretical quantiles for a normal distribution.
+Create a DataFrame including your theoretical quantiles and the ordered values for Unemployment.
+Create and print a Q-Q plot using your DataFrame.
+
+# Calculate theoretical quantiles
+tq = stats.probplot(countrydata.Unemployment, dist="norm")
+
+# Create Dataframe
+df = pd.DataFrame(data= {'Theoretical Quantiles': tq[0][0], 
+                         "Ordered Values": countrydata.Unemployment.sort_values() })
+
+# Create Q-Q plot
+print(p9.ggplot(df)+ p9.aes('Theoretical Quantiles', "Ordered Values") +p9.geom_point())
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Shapiro-Wilk test
+Previously, you looked at country-level Unemployment and GDP per capita (GDP_per_cap) data (available in your workspace as countrydata). Now, you will use a Shapiro-Wilk test to examine whether the distribution of values seen in these samples, as seen in the Q-Q plots below, departs significantly from the normal distribution. This test tells us how closely a given sample fits the patterns expected from a normal distribution.
+
+Density plot of life expectancy per country and GDP per country
+
+pandas and scipy.stats have been loaded into the workspace as pd and stats.
+
+# Perform Shapiro-Wilk test on Unemployment and print result
+shapiroUnem = stats.shapiro(countrydata.Unemployment)
+print(shapiroUnem)
+
+Perform a Shapiro-Wilk test on the GDP_per_cap figures and print the output.
+# Perform Shapiro-Wilk test on Unemployment and print result
+shapiroGDP = stats.shapiro(countrydata.GDP_per_cap)
+print(shapiroGDP)
+
+<script.py> output:
+    (0.8698258399963379, 1.0958185747700355e-11)
+
+<script.py> output:
+    (0.7056940793991089, 5.4421862725185734e-18)
+    
+    
+Nice work. Both distributions are non-normal. Compare the test statistic at index[0] for the two tests. The GDP per capita value is lower, which makes sense if you think about how much more skewed those figures were.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Choosing tests and normality
+In which of the following situations is it acceptable to use a parametric test to compare group means, like a t-test or ANOVA?
+
+
+When comparing normally distributed samples or non-normally distributed samples with large sample sizes.
+
+Correct! While the t-test and ANOVA are designed with normal distributions in mind, they can be used for somewhat non-normal distributions where sample sizes are large enough.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+Wilcoxon rank-sum test
+In a previous exercise, you compared the sex ratio of European countries (Europe_Sex_ratio) with the sex ratio of Asian countries (Asia_Sex_ratio). These data are shown below.
+
+Density plot of sex ratio per country for European vs Asian countries
+
+You used a t-test to compare these two samples and found a significant difference (t_result). However, given that these samples are not normally distributed, a Wilcoxon rank-sum test would be more appropriate. Does the sex ratio differ between continents?
+
+Instructions
+100 XP
+Print the result of the t-test comparing Asian and European sex ratios, which is saved as t_result.
+Perform a Wilcoxon rank-sum test to compare Asian and European sex ratios and print the result.
+
+# Print t-test result
+print(t_result)
+
+# Perform Wilcoxon rank-sum test
+wilc = stats.ranksums(Europe_Sex_ratio, Asia_Sex_ratio)
+print(wilc)
+
+
+<script.py> output:
+    Ttest_indResult(statistic=-2.5733616618110706, pvalue=0.011918352437410103)
+    RanksumsResult(statistic=-3.581345008436675, pvalue=0.0003418299016685048)
+
+Great! Look at the p-values from the Wilcoxon test. Note that they are actually lower (more significant) than those for the t-test. This is because the rank-sum test is less sensitive to outliers.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Wilcoxon signed-rank test
+Here, you've been provided with a small DataFrame (podataframe) containing information on 15 Fields. We are interested in potato yield in tons/hectare, as seen in previous lessons. For each Field, we have a value for Yield2018, before the application of a new fertilizer, and Yield2019, after the application of the new fertilizer. However, the variation between fields is very large and the difference between the years seems small, as seen below.
+
+Boxxplots of potato production from two different years
+
+A paired t-test has been performed and its result is stored as ttestpair. A Shapiro-Wilks test has been performed on each Year's yield, shap2018 and shap2019. Does the yield differ significantly between years? scipy.stats is loaded into the workspace as stats.
+
+Instructions
+100 XP
+Print the paired t-test result.
+Print the result of the two Shapiro-Wilk tests.
+Perform a Wilcoxon signed-rank test to compare Yield2018 and Yield2019.
+
+# Print t-test result
+print(ttestpair)
+
+# Print Shapiro-Wilk test results
+print(shap2018)
+print(shap2019)
+
+# Perform Wilcoxon Signed-Rank test
+wilcsr = stats.wilcoxon(podataframe.Yield2018,podataframe.Yield2019)
+print(wilcsr)
+
+<script.py> output:
+    Ttest_relResult(statistic=-5.321922343517074, pvalue=0.00010779689593392289)
+    (0.8356321454048157, 0.010941825807094574)
+    (0.8435457348823547, 0.014089250937104225)
+    WilcoxonResult(statistic=1.0, pvalue=0.000801353534356698)
+    
+    Nice work. Note that both of your Shapiro-Wilks tests gave significant results, indicating non-normal distributions. The Wilcoxon test gives a higher p-value for the same data, due to its lower sensitivity. However, due to the low sample sizes and non-normal distributions, the Wilcoxon test is a better choice of test for this dataset.
+    
+    
+    ----------------------------------------------------------------------------------------------------------------------------------------
+    Parametric vs non-parametric tests
+Once again we'll be using the Olympic dataset. Here we're going to compare the Height of athletes from both the Norwegian and Chinese 1996 Teams. The data are provided in your workspace as athletes. Do they differ?
+
+Density plot of height of Norwegian and Chinese 1996 Olympians
+
+Do these two distributions look normal or not? First, we'll test whether these sets of samples follow a normal distribution, via a couple of Shapiro-Wilks tests. Then we'll choose what statistical test to use. Finally, we'll test the difference between the Norwegian and Chinese samples.
+
+pandas, scipy.stats, and plotnine have been loaded into the workspace as pd, stats, and p9, respectively.
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Create two series, named NorwayHeights and ChinaHeights, each of which contains all the values of Height for the members of their respective Team.
+Perform a Shapiro-Wilks test of NorwayHeights and ChinaHeights and print the p-values.
+
+
+# Separate the heights by country
+NorwayHeights = athletes[athletes['Team'] == "Norway"].Height
+ChinaHeights = athletes[athletes['Team'] == "China"].Height
+
+# Shapiro-wilks test on the heights
+print(stats.shapiro(NorwayHeights)[1])
+print(stats.shapiro(ChinaHeights)[1])
+
+
+Using a Wilcoxon rank-sum test, compare the heights of Chinese and Norwegian athletes and print the output of the test to the console.
+
+# Separate the heights by country
+NorwayHeights = athletes[athletes['Team'] == "Norway"].Height
+ChinaHeights = athletes[athletes['Team'] == "China"].Height
+
+# Shapiro-wilks test on the heights
+print(stats.shapiro(NorwayHeights)[1])
+print(stats.shapiro(ChinaHeights)[1])
+
+# Perform the Wilcoxon rank-sum test
+wilc = stats.ranksums(NorwayHeights, ChinaHeights)
+print(wilc)
+
+Great work! With a p-value less than 0.05, this difference is statistically significant. Now you understand how to compare the distributions of non-normally distributed groups.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Spearman correlation
+We're going to return to our Olympic dataset, where, as in previous exercises, we'll be looking at the correlation between Height and Weight amongst athletics competitors since 2000. This relationship is seen below for both men (athletesM DataFrame) and women (athletesF DataFrame).
+
+Scatter plot of height vs weight of Olympians
+
+Note that the trend seen in each panel, represented by the line, isn't perfectly linear, particularly for the female samples. How will this affect correlation test results? scipy.stats is loaded as stats.
+
+Instructions 1/2
+50 XP
+1
+Perform and print both a Pearson and Spearman correlation test of Height and Weight for females.
+
+# Perform Pearson and Spearman correlations
+pearcorr = stats.pearsonr(athletesF.Height,athletesF.Weight)
+print(pearcorr)
+spearcorr = stats.spearmanr(athletesF.Height,athletesF.Weight)
+print(spearcorr)
+
+<script.py> output:
+    (0.5930310490498099, 2.707039411572877e-33)
+    SpearmanrResult(correlation=0.7058111482287492, pvalue=6.064659243649471e-52)
+
+
+
+Perform and print both a Pearson and Spearman correlation test of Height and Weight for males.
+    
+# Perform Pearson and Spearman correlations
+pearcorr = stats.pearsonr(athletesM.Height,athletesM.Weight)
+print(pearcorr)
+spearcorr = stats.spearmanr(athletesM.Height,athletesM.Weight)
+print(spearcorr)    
+
+
+<script.py> output:
+    (0.5752961832067202, 7.608365617782777e-33)
+    SpearmanrResult(correlation=0.6643675704250841, pvalue=8.225675205162906e-47)
+    
+    
+    Good work! In both cases, a strong correlation is found, as evidenced by the high correlation coefficients at index[0] of each output. Notice how the Spearman correlation outperforms the Pearson correlation (by finding stronger correlation) in both cases, particularly among the female samples, which show a non-linear trend. Non-parametric Spearman correlation works well for non-linear relationships.
+    
+    
+    ----------------------------------------------------------------------------------------------------------------------------------------
+    
+    Choosing the correct correlation test
+Think back to our potato growing examples. Here, you've been provided with a DataFrame (podataframe) containing information data on potato Production and Fertilizer used. We are interested in a possible correlation between these two values. The relationship between these two variables is seen below. scipy.stats is loaded into the workspace as stats.
+
+Scatter plot of potato production as a function of fertilizer level
+
+Instructions 1/2
+50 XP
+1
+2
+Question
+What type of correlation test is best suited to examining the possible link between Fertilizer and Production?
+
+# Perform Spearman correlation
+spearcorr = stats.spearmanr(podataframe.Production, podataframe.Fertilizer)
+print(spearcorr)
+
+<script.py> output:
+    SpearmanrResult(correlation=0.9950541817171439, pvalue=7.112594135852277e-60)
+Good work! These two variables are strongly correlated, as seen by the very high correlation coefficient, over 0.99. Spearman correlation is a useful way to capture these non-linear relationships.
+    

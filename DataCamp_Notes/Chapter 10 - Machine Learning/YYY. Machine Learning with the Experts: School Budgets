@@ -1,0 +1,2128 @@
+Course Description
+
+
+Data science isn't just for predicting ad-clicks-it's also useful for social impact! This course is a case study from a machine learning competition on DrivenData. You'll explore a problem related to school district budgeting. By building a model to automatically classify items in a school's budget, it makes it easier and faster for schools to compare their spending with other schools. In this course, you'll begin by building a baseline model that is a simple, first-pass approach. In particular, you'll do some natural language processing to prepare the budgets for modeling. Next, you'll have the opportunity to try your own techniques and see how they compare to participants from the competition. Finally, you'll see how the winner was able to combine a number of expert techniques to build the most accurate model.
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+1
+Exploring the raw data
+FREE
+0%
+In this chapter, you'll be introduced to the problem you'll be solving in this course. How do you accurately classify line-items in a school budget based on what that money is being used for? You will explore the raw text and numeric values in the dataset, both quantitatively and visually. And you'll learn how to measure success when trying to predict class labels for each row of the dataset.
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Introducing the challenge
+● Learn from the expert who won DrivenData’s challenge
+● Natural language processing
+● Feature engineering
+● Efficiency boosting hashing tricks
+● Use data to have a social impact
+
+
+
+Introducing the challenge
+● Budgets for schools are huge, complex, and not standardized
+● Hundreds of hours each year are spent manually labelling
+● Goal: Build a machine learning algorithm that can automate
+the process
+● Budget data
+● Line-item: “Algebra books for 8th grade students”
+● Labels: “Textbooks”, “Math”, “Middle School”
+● This is a supervised learning problem
+
+
+
+Over 100 target variables!
+● Pre_K:
+● NO_LABEL
+● Non PreK
+● PreK
+● Reporting:
+● NO_LABEL
+● Non-School
+● School
+● Sharing:
+● Leadership &
+Management
+● NO_LABEL
+● School Reported
+● Student_Type:
+● Alternative
+● At Risk
+● … 
+
+
+
+How we can help
+● Predictions will be probabilities for each label
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+Exploring the data
+
+
+A column for each possible value
+
+
+Load and preview the data
+In [1]: import pandas as pd
+In [2]: sample_df = pd.read_csv('sample_data.csv')
+In [3]: sample_df.head()
+Out[3]:
+ label numeric text with_missing
+0 a -4.167578 bar -4.084883
+1 a -0.562668 2.043464
+2 a -21.361961 -33.315334
+3 b 16.402708 foo bar 30.884604
+4 a -17.934356 foo -27.488405
+
+
+
+
+Summarize the data
+In [4]: sample_df.info()
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 100 entries, 0 to 99
+Data columns (total 4 columns):
+label 100 non-null object
+numeric 100 non-null float64
+text 100 non-null object
+with_missing 95 non-null float64
+dtypes: float64(2), object(2)
+memory usage: 3.9+ KB 
+
+
+
+Summarize the data
+In [5]: sample_df.describe()
+Out[5]:
+ numeric with_missing
+count 100.000000 95.000000
+mean -1.037411 1.275189
+std 10.422602 17.386723
+min -26.594495 -42.210641
+25% -6.952244 -8.312870
+50% -0.653688 1.733997
+75% 5.398819 11.777888
+max 22.922080 41.967536 
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Loading the data
+Now it's time to check out the dataset! You'll use pandas (which has been pre-imported as pd) to load your data into a DataFrame and then do some Exploratory Data Analysis (EDA) of it.
+
+The training data is available as TrainingData.csv. Your first task is to load it into a DataFrame in the IPython Shell using pd.read_csv() along with the keyword argument index_col=0.
+
+Use methods such as .info(), .head(), and .tail() to explore the budget data and the properties of the features and labels.
+
+Some of the column names correspond to features - descriptions of the budget items - such as the Job_Title_Description column. The values in this column tell us if a budget item is for a teacher, custodian, or other employee.
+
+Some columns correspond to the budget item labels you will be trying to predict with your model. For example, the Object_Type column describes whether the budget item is related classroom supplies, salary, travel expenses, etc.
+
+Use df.info() in the IPython Shell to answer the following questions:
+
+How many rows are there in the training data?
+How many columns are there in the training data?
+How many non-null entries are in the Job_Title_Description column?
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+Summarizing the data
+You'll continue your EDA in this exercise by computing summary statistics for the numeric data in the dataset. The data has been pre-loaded into a DataFrame called df.
+
+You can use df.info() in the IPython Shell to determine which columns of the data are numeric, specifically type float64. You'll notice that there are two numeric columns, called FTE and Total.
+
+FTE: Stands for "full-time equivalent". If the budget item is associated to an employee, this number tells us the percentage of full-time that the employee works. A value of 1 means the associated employee works for the school full-time. A value close to 0 means the item is associated to a part-time or contracted employee.
+Total: Stands for the total cost of the expenditure. This number tells us how much the budget item cost.
+After printing summary statistics for the numeric data, your job is to plot a histogram of the non-null FTE column to see the distribution of part-time and full-time employees in the dataset.
+
+Instructions
+100 XP
+Print summary statistics of the numeric columns in the DataFrame df using the .describe() method.
+Import matplotlib.pyplot as plt.
+Create a histogram of the non-null 'FTE' column. You can do this by passing df['FTE'].dropna() to plt.hist().
+The title has been specified and axes have been labeled, so hit 'Submit Answer' to see how often school employees work full-time!
+
+# Print the summary statistics
+print(df.describe())
+
+# Import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+# Create the histogram
+plt.hist(df['FTE'].dropna())
+
+# Add title and labels
+plt.title('Distribution of %full-time \n employee works')
+plt.xlabel('% of full-time')
+plt.ylabel('num employees')
+
+# Display the histogram
+plt.show()
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+Looking
+at the
+datatypes
+
+
+
+Objects instead of categories
+In [1]: sample_df['label'].head()
+Out[1]:
+0 a
+1 a
+2 a
+3 b
+4 a
+Name: label, dtype: object 
+
+
+
+ ML algorithms work on numbers, not strings
+● Need a numeric representation of these strings
+● Strings can be slow compared to numbers
+● In pandas, ‘category’ dtype encodes categorical data
+numerically
+● Can speed up code
+
+
+
+Encode labels as categories (sample data)
+In [1]: sample_df.label.head(2)
+Out[1]:
+0 a
+1 b
+Name: label, dtype: object
+In [2]: sample_df.label = sample_df.label.astype('category')
+In [3]: sample_df.label.head(2)
+Out[3]:
+0 a
+1 b
+Name: label, dtype: category
+Categories (2, object): [a, b]
+
+
+
+Dummy variable encoding
+In [4]: dummies = pd.get_dummies(sample_df[['label']], prefix_sep='_')
+In [5]: dummies.head(2)
+Out[5]:
+ label_a label_b
+0 1 0
+1 0 1
+● Also called a ‘binary indicator’ representation 
+
+
+Lambda functions
+In [6]: square = lambda x: x*x
+In [6]: square(2)
+Out[6]: 4
+
+
+Encode labels as categories
+● In the sample dataframe, we only have one relevant column
+● In the budget data, there are multiple columns that need to be
+made categorical 
+
+
+Encode labels as categories
+In [7]: categorize_label = lambda x: x.astype('category')
+In [8]: sample_df.label = sample_df[['label']].apply(categorize_label,
+ ...: axis=0)
+In [9]: sample_df.info()
+<class 'pandas.core.frame.DataFrame'>
+Int64Index: 100 entries, 0 to 99
+Data columns (total 4 columns):
+label 100 non-null category
+numeric 100 non-null float64
+text 100 non-null object
+with_missing 95 non-null float64
+dtypes: category(1), float64(2), object(1)
+memory usage: 3.2+ KB
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Encode the labels as categorical variables
+Remember, your ultimate goal is to predict the probability that a certain label is attached to a budget line item. You just saw that many columns in your data are the inefficient object type. Does this include the labels you're trying to predict? Let's find out!
+
+There are 9 columns of labels in the dataset. Each of these columns is a category that has many possible values it can take. The 9 labels have been loaded into a list called LABELS. In the Shell, check out the type for these labels using df[LABELS].dtypes.
+
+You will notice that every label is encoded as an object datatype. Because category datatypes are much more efficient your task is to convert the labels to category types using the .astype() method.
+
+Note: .astype() only works on a pandas Series. Since you are working with a pandas DataFrame, you'll need to use the .apply() method and provide a lambda function called categorize_label that applies .astype() to each column, x.
+
+Instructions
+100 XP
+Define the lambda function categorize_label to convert column x into x.astype('category').
+Use the LABELS list provided to convert the subset of data df[LABELS] to categorical types using the .apply() method and categorize_label. Don't forget axis=0.
+Print the converted .dtypes attribute of df[LABELS].
+Take Hint (-30 XP)
+
+
+# Define the lambda function: categorize_label
+categorize_label = lambda x: x.astype('category')
+
+# Convert df[LABELS] to a categorical type
+df[LABELS] = df[LABELS].apply(categorize_label, axis=0)
+
+# Print the converted dtypes
+print(df[LABELS].dtypes)
+
+<script.py> output:
+    Function            category
+    Use                 category
+    Sharing             category
+    Reporting           category
+    Student_Type        category
+    Position_Type       category
+    Object_Type         category
+    Pre_K               category
+    Operating_Status    category
+    dtype: object
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Counting unique labels
+As Peter mentioned in the video, there are over 100 unique labels. In this exercise, you will explore this fact by counting and plotting the number of unique values for each category of label.
+
+The dataframe df and the LABELS list have been loaded into the workspace; the LABELS columns of df have been converted to category types.
+
+pandas, which has been pre-imported as pd, provides a pd.Series.nunique method for counting the number of unique values in a Series.
+
+Instructions
+100 XP
+Create the DataFrame num_unique_labels by using the .apply() method on df[LABELS] with pd.Series.nunique as the argument.
+Create a bar plot of num_unique_labels using pandas' .plot(kind='bar') method.
+The axes have been labeled for you, so hit 'Submit Answer' to see the number of unique values for each label.
+
+
+# Import matplotlib.pyplot
+import matplotlib.pyplot as plt
+
+# Calculate number of unique values for each label: num_unique_labels
+num_unique_labels = df[LABELS].apply(pd.Series.nunique)
+
+# Plot number of unique values for each label
+num_unique_labels.plot(kind='bar')
+
+# Label the axes
+plt.xlabel('Labels')
+plt.ylabel('Number of unique values')
+
+# Display the plot
+plt.show()
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+How do
+we
+measure
+success?
+
+● Accuracy can be misleading when classes are imbalanced
+● Legitimate email: 99%, Spam: 1%
+● Model that never predicts spam will be 99% accurate!
+● Metric used in this problem: log loss
+● It is a loss function
+● Measure of error
+● Want to minimize the error (unlike accuracy)
+
+
+
+Log loss binary classification
+● Log loss for binary classification
+● Actual value: y = {1=yes, 0=no}
+● Prediction (probability that the value is 1): p
+
+
+Log loss binary classification: example
+logloss(N=1) = y log(p) + (1 − y) log(1 − p)
+● True label = 0
+● Model confidently predicts 1 (with p = 0.90)
+● Log loss =
+● = log(1 - 0.9)
+● = log(0.1)
+● = 2.30
+
+Log loss binary classification: example
+logloss(N=1) = y log(p) + (1 − y) log(1 − p)
+True label = 1
+● Model predicts 0 (with p = 0.50)
+● Log loss = 0.69
+● Be"er to be less confident than confident and wrong
+
+
+Computing log loss with NumPy
+import numpy as np
+def compute_log_loss(predicted, actual, eps=1e-14):
+ """ Computes the logarithmic loss between predicted and
+ actual when these are 1D arrays.
+
+ :param predicted: The predicted probabilities as floats between 0-1
+ :param actual: The actual binary labels. Either 0 or 1.
+ :param eps (optional): log(0) is inf, so we need to offset our
+ predicted values slightly by eps from 0 or 1.
+ """
+ predicted = np.clip(predicted, eps, 1 - eps)
+ loss = -1 * np.mean(actual * np.log(predicted)
+ + (1 - actual)
+ * np.log(1 - predicted))
+
+ return loss
+
+
+Computing log loss with NumPy
+In [1]: compute_log_loss(predicted=0.9, actual=0)
+Out[1]: 2.3025850929940459
+In [2]: compute_log_loss(predicted=0.5, actual=1)
+Out[2]: 0.69314718055994529
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Computing log loss with NumPy
+To see how the log loss metric handles the trade-off between accuracy and confidence, we will use some sample data generated with NumPy and compute the log loss using the provided function compute_log_loss(), which Peter showed you in the video.
+
+5 one-dimensional numeric arrays simulating different types of predictions have been pre-loaded: actual_labels, correct_confident, correct_not_confident, wrong_not_confident, and wrong_confident.
+
+Your job is to compute the log loss for each sample set provided using the compute_log_loss(predicted_values, actual_values). It takes the predicted values as the first argument and the actual values as the second argument.
+
+Instructions
+100 XP
+Using the compute_log_loss() function, compute the log loss for the following predicted values (in each case, the actual values are contained in actual_labels):
+correct_confident.
+correct_not_confident.
+wrong_not_confident.
+wrong_confident.
+actual_labels.
+
+
+# Compute and print log loss for 1st case
+correct_confident = compute_log_loss(correct_confident, actual_labels)
+print("Log loss, correct and confident: {}".format(correct_confident)) 
+
+# Compute log loss for 2nd case
+correct_not_confident = compute_log_loss(correct_not_confident, actual_labels)
+print("Log loss, correct and not confident: {}".format(correct_not_confident)) 
+
+# Compute and print log loss for 3rd case
+wrong_not_confident = compute_log_loss(wrong_not_confident, actual_labels)
+print("Log loss, wrong and not confident: {}".format(wrong_not_confident)) 
+
+# Compute and print log loss for 4th case
+wrong_confident = compute_log_loss(wrong_confident,actual_labels)
+print("Log loss, wrong and confident: {}".format(wrong_confident)) 
+
+# Compute and print log loss for actual labels
+actual_labels = compute_log_loss(actual_labels, actual_labels)
+print("Log loss, actual labels: {}".format(actual_labels)) 
+
+<script.py> output:
+    Log loss, correct and confident: 0.05129329438755058
+    Log loss, correct and not confident: 0.4307829160924542
+    Log loss, wrong and not confident: 1.049822124498678
+    Log loss, wrong and confident: 2.9957322735539904
+    Log loss, actual labels: 9.99200722162646e-15
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+2
+Creating a simple first model
+0%
+In this chapter, you'll build a first-pass model. You'll use numeric data only to train the model. Spoiler alert - throwing out all of the text data is bad for performance! But you'll learn how to format your predictions. Then, you'll be introduced to natural language processing (NLP) in order to start working with the large amounts of text in the data.
+
+-------------------------------------------------------------------------------------------------------------------------------------
+It's time to build a model
+● Always a good approach to start with a very simple model
+● Gives a sense of how challenging the problem is
+● Many more things can go wrong in complex models
+● How much signal can we pull out using basic methods?
+
+
+
+
+It's time to build a model
+● Train basic model on numeric data only
+● Want to go from raw data to predictions quickly
+● Multi-class logistic regression
+● Train classifier on each label separately and
+use those to predict
+● Format predictions and save to csv
+● Compute log loss score
+
+
+
+
+Spli!ing the multi-class dataset
+● Recall: Train-test split
+● Will not work here
+● May end up with labels in test set that never
+appear in training set
+● Solution: StratifiedShuffleSplit
+● Only works with a single target variable
+● We have many target variables
+● multilabel_train_test_split()
+
+
+
+
+Spli!ing the data
+In [1]: data_to_train = df[NUMERIC_COLUMNS].fillna(-1000)
+In [2]: labels_to_use = pd.get_dummies(df[LABELS])
+In [3]: X_train, X_test, y_train, y_test = multilabel_train_test_split(
+ data_to_train, labels_to_use,
+ size=0.2, seed=123
+
+
+
+
+Training the model
+In [4]: from sklearn.linear_model import LogisticRegression
+In [5]: from sklearn.multiclass import OneVsRestClassifier
+In [6]: clf = OneVsRestClassifier(LogisticRegression())
+In [7]: clf.fit(X_train, y_train)
+
+● OneVsRestClassifier:
+● Treats each column of y independently
+● Fits a separate classifier for each of the columns
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Setting up a train-test split in scikit-learn
+Alright, you've been patient and awesome. It's finally time to start training models!
+
+The first step is to split the data into a training set and a test set. Some labels don't occur very often, but we want to make sure that they appear in both the training and the test sets. We provide a function that will make sure at least min_count examples of each label appear in each split: multilabel_train_test_split.
+
+Feel free to check out the full code for multilabel_train_test_split here.
+
+You'll start with a simple model that uses just the numeric columns of your DataFrame when calling multilabel_train_test_split. The data has been read into a DataFrame df and a list consisting of just the numeric columns is available as NUMERIC_COLUMNS.
+
+Instructions
+100 XP
+Create a new DataFrame named numeric_data_only by applying the .fillna(-1000) method to the numeric columns (available in the list NUMERIC_COLUMNS) of df.
+Convert the labels (available in the list LABELS) to dummy variables. Save the result as label_dummies.
+In the call to multilabel_train_test_split(), set the size of your test set to be 0.2. Use a seed of 123.
+Fill in the .info() method calls for X_train, X_test, y_train, and y_test.
+
+
+# Create the new DataFrame: numeric_data_only
+numeric_data_only = df[NUMERIC_COLUMNS].fillna(-1000)
+
+# Get labels and convert to dummy variables: label_dummies
+label_dummies = pd.get_dummies(df[LABELS])
+
+# Create training and test sets
+X_train, X_test, y_train, y_test = multilabel_train_test_split(numeric_data_only,
+                                                               label_dummies,
+                                                               size=0.2, 
+                                                               seed=123)
+
+# Print the info
+print("X_train info:")
+print(X_train.info())
+print("\nX_test info:")  
+print(X_test.info())
+print("\ny_train info:")  
+print(y_train.info())
+print("\ny_test info:")  
+print(y_test.info()) 
+
+
+<script.py> output:
+    X_train info:
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 1040 entries, 198 to 101861
+    Data columns (total 2 columns):
+    FTE      1040 non-null float64
+    Total    1040 non-null float64
+    dtypes: float64(2)
+    memory usage: 24.4 KB
+    None
+    
+    X_test info:
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 520 entries, 209 to 448628
+    Data columns (total 2 columns):
+    FTE      520 non-null float64
+    Total    520 non-null float64
+    dtypes: float64(2)
+    memory usage: 12.2 KB
+    None
+    
+    y_train info:
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 1040 entries, 198 to 101861
+    Columns: 104 entries, Function_Aides Compensation to Operating_Status_PreK-12 Operating
+    dtypes: float64(104)
+    memory usage: 853.1 KB
+    None
+    
+    y_test info:
+    <class 'pandas.core.frame.DataFrame'>
+    Int64Index: 520 entries, 209 to 448628
+    Columns: 104 entries, Function_Aides Compensation to Operating_Status_PreK-12 Operating
+    dtypes: float64(104)
+    memory usage: 426.6 KB
+    None
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Training a model
+With split data in hand, you're only a few lines away from training a model.
+
+In this exercise, you will import the logistic regression and one versus rest classifiers in order to fit a multi-class logistic regression model to the NUMERIC_COLUMNS of your feature data.
+
+Then you'll test and print the accuracy with the .score() method to see the results of training.
+
+Before you train! Remember, we're ultimately going to be using logloss to score our model, so don't worry too much about the accuracy here. Keep in mind that you're throwing away all of the text data in the dataset - that's by far most of the data! So don't get your hopes up for a killer performance just yet. We're just interested in getting things up and running at the moment.
+
+All data necessary to call multilabel_train_test_split() has been loaded into the workspace.
+
+Instructions
+100 XP
+Import LogisticRegression from sklearn.linear_model and OneVsRestClassifier from sklearn.multiclass.
+Instantiate the classifier clf by placing LogisticRegression() inside OneVsRestClassifier().
+Fit the classifier to the training data X_train and y_train.
+Compute and print the accuracy of the classifier using its .score() method, which accepts two arguments: X_test and y_test.
+
+# Import classifiers
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+
+# Create the DataFrame: numeric_data_only
+numeric_data_only = df[NUMERIC_COLUMNS].fillna(-1000)
+
+# Get labels and convert to dummy variables: label_dummies
+label_dummies = pd.get_dummies(df[LABELS])
+
+# Create training and test sets
+X_train, X_test, y_train, y_test = multilabel_train_test_split(numeric_data_only,
+                                                               label_dummies,
+                                                               size=0.2, 
+                                                               seed=123)
+
+# Instantiate the classifier: clf
+clf = OneVsRestClassifier(LogisticRegression())
+
+# Fit the classifier to the training data
+clf.fit(X_train, y_train)
+
+# Print the accuracy
+print("Accuracy: {}".format(clf.score(X_test, y_test)))
+
+<script.py> output:
+    Accuracy: 0.0
+    
+Ok! The good news is that your workflow didn't cause any errors. The bad news is that your model scored the lowest possible accuracy: 0.0! But hey, you just threw away ALL of the text data in the budget. Later, you won't. Before you add the text data, let's see how the model does when scored by log loss.    
+    
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Making
+predictions
+
+
+Predicting on holdout data
+In [1]: holdout = pd.read_csv('HoldoutData.csv', index_col=0)
+In [2]: holdout = holdout[NUMERIC_COLUMNS].fillna(-1000)
+In [3]: predictions = clf.predict_proba(holdout)
+
+● If .predict() was used instead:
+● Output would be 0 or 1
+● Log loss penalizes being confident and wrong
+● Worse performance compared
+to .predict_proba()
+
+
+
+Submi!ing your predictions as a csv
+● All forma"ing can be done with the pandas to_csv
+function
+
+
+Format and submit predictions
+In [4]: prediction_df = pd.DataFrame(columns=pd.get_dummies(df[LABELS],
+ ...: prefix_sep='__').columns,
+ ...: index=holdout.index,
+ ...: data=predictions)
+In [5]: prediction_df.to_csv('predictions.csv')
+In [6]: score = score_submission(pred_path='predictions.csv')
+
+
+DrivenData leaderboard
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Use your model to predict values on holdout data
+You're ready to make some predictions! Remember, the train-test-split you've carried out so far is for model development. The original competition provides an additional test set, for which you'll never actually see the correct labels. This is called the "holdout data."
+
+The point of the holdout data is to provide a fair test for machine learning competitions. If the labels aren't known by anyone but DataCamp, DrivenData, or whoever is hosting the competition, you can be sure that no one submits a mere copy of labels to artificially pump up the performance on their model.
+
+Remember that the original goal is to predict the probability of each label. In this exercise you'll do just that by using the .predict_proba() method on your trained model.
+
+First, however, you'll need to load the holdout data, which is available in the workspace as the file HoldoutData.csv.
+
+Instructions
+100 XP
+Read HoldoutData.csv into a DataFrame called holdout. Specify the keyword argument index_col=0 in your call to read_csv().
+Generate predictions using .predict_proba() on the numeric columns (available in the NUMERIC_COLUMNS list) of holdout. Make sure to fill in missing values with -1000!
+Take Hint (-30 XP)
+
+# Instantiate the classifier: clf
+clf = OneVsRestClassifier(LogisticRegression())
+
+# Fit it to the training data
+clf.fit(X_train, y_train)
+
+# Load the holdout data: holdout
+holdout = pd.read_csv('HoldoutData.csv',index_col=0)
+
+# Generate predictions: predictions
+predictions = clf.predict_proba(holdout[NUMERIC_COLUMNS].fillna(-1000))
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Writing out your results to a csv for submission
+At last, you're ready to submit some predictions for scoring. In this exercise, you'll write your predictions to a .csv using the .to_csv() method on a pandas DataFrame. Then you'll evaluate your performance according to the LogLoss metric discussed earlier!
+
+You'll need to make sure your submission obeys the correct format.
+
+To do this, you'll use your predictions values to create a new DataFrame, prediction_df.
+
+Interpreting LogLoss & Beating the Benchmark:
+
+When interpreting your log loss score, keep in mind that the score will change based on the number of samples tested. To get a sense of how this very basic model performs, compare your score to the DrivenData benchmark model performance: 2.0455, which merely submitted uniform probabilities for each class.
+
+Remember, the lower the log loss the better. Is your model's log loss lower than 2.0455?
+
+Instructions
+100 XP
+Create the prediction_df DataFrame by specifying the following arguments to the provided parameters pd.DataFrame():
+pd.get_dummies(df[LABELS]).columns.
+holdout.index.
+predictions.
+Save prediction_df to a csv file called 'predictions.csv' using the .to_csv() method.
+Submit the predictions for scoring by using the score_submission() function with pred_path set to 'predictions.csv'.
+Take Hint (-30 XP)
+
+# Generate predictions: predictions
+predictions = clf.predict_proba(holdout[NUMERIC_COLUMNS].fillna(-1000))
+
+# Format predictions in DataFrame: prediction_df
+prediction_df = pd.DataFrame(columns=pd.get_dummies(df[LABELS]).columns,
+                             index=holdout.index,
+                             data=predictions)
+
+
+# Save prediction_df to csv
+prediction_df.to_csv('predictions.csv')
+
+# Submit the predictions for scoring: score
+score = score_submission(pred_path='predictions.csv')
+
+# Print score
+print('Your model, trained with numeric data only, yields logloss score: {}'.format(score))
+
+
+<script.py> output:
+    Your model, trained with numeric data only, yields logloss score: 1.9067227623381413
+    
+    
+    Incredible! Even though your basic model scored 0.0 accuracy, it nevertheless performs better than the benchmark score of 2.0455. You've now got the basics down and have made a first pass at this complicated supervised learning problem. It's time to step up your game and incorporate the text data.
+-------------------------------------------------------------------------------------------------------------------------------------
+
+A
+very brief
+introduction
+to NLP
+
+
+A very brief introduction to NLP
+● Data for NLP:
+     ● Text, documents, speech, …
+● Tokenization
+      ● Spli"ing a string into segments
+      ● Store segments as list
+● Example: ‘Natural Language Processing’
+      ● —> [‘Natural’, ‘Language’, ‘Processing’]
+
+
+Tokens and token pa!erns
+● Tokenize on whitespace
+      PETRO-VEND FUEL AND FLUIDS
+      PETRO-VEND | FUEL | AND | FLUIDS
+● Tokenize on whitespace and punctuation
+      PETRO-VEND FUEL AND FLUIDS
+      PETRO | VEND | FUEL | AND | FLUID
+      
+      
+      
+      
+Bag of words representation
+  ● Count the number of times a particular token appears
+  ● “Bag of words”
+    ● Count the number of times a word was
+pulled out of the bag
+● This approach discards information about word order
+   ● “Red, not blue” is the same as “blue, not red”
+   
+   
+   
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Representing
+text
+numerically
+
+Representing text numerically
+● Bag-of-words
+     ● Simple way to represent text in machine learning
+     ● Discards information about grammar and word order
+     ● Computes frequency of occurrence
+
+
+Scikit-learn tools for bag-of-words
+● CountVectorizer()
+    ● Tokenizes all the strings
+    ● Builds a ‘vocabulary’
+    ● Counts the occurrences of each token in
+    the vocabulary
+
+
+Using CountVectorizer() on column of main dataset
+   In [1]: from sklearn.feature_extraction.text import CountVectorizer
+   In [2]: TOKENS_BASIC = '\\S+(?=\\s+)'
+   In [3]: df.Program_Description.fillna('', inplace=True)
+   In [4]: vec_basic = CountVectorizer(token_pattern=TOKENS_BASIC)
+   
+   
+   
+   
+-------------------------------------------------------------------------------------------------------------------------------------
+Using CountVectorizer() on column of main dataset
+
+In [5]: vec_basic.fit(df.Program_Description)
+Out[5]:
+CountVectorizer(analyzer='word', binary=False, decode_error='strict',
+ dtype=<class 'numpy.int64'>, encoding='utf-8', input='content',
+ lowercase=True, max_df=1.0, max_features=None, min_df=1,
+ ngram_range=(1, 1), preprocessor=None, stop_words=None,
+ strip_accents=None, token_pattern='\\S+(?=\\s+)',
+ tokenizer=None, vocabulary=None)
+In [6]: msg = 'There are {} tokens in Program_Description if tokens are
+any non-whitespace'
+In [7]: print(msg.format(len(vec_basic.get_feature_names())))
+There are 157 tokens in Program_Description if tokens are any nonwhitespace
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Creating a bag-of-words in scikit-learn
+In this exercise, you'll study the effects of tokenizing in different ways by comparing the bag-of-words representations resulting from different token patterns.
+
+You will focus on one feature only, the Position_Extra column, which describes any additional information not captured by the Position_Type label.
+
+For example, in the Shell you can check out the budget item in row 8960 of the data using df.loc[8960]. Looking at the output reveals that this Object_Description is overtime pay. For who? The Position Type is merely "other", but the Position Extra elaborates: "BUS DRIVER". Explore the column further to see more instances. It has a lot of NaN values.
+
+Your task is to turn the raw text in this column into a bag-of-words representation by creating tokens that contain only alphanumeric characters.
+
+For comparison purposes, the first 15 tokens of vec_basic, which splits df.Position_Extra into tokens when it encounters only whitespace characters, have been printed along with the length of the representation.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import CountVectorizer from sklearn.feature_extraction.text.
+Fill missing values in df.Position_Extra using .fillna('') to replace NaNs with empty strings. Specify the additional keyword argument inplace=True so that you don't have to assign the result back to df.
+Instantiate the CountVectorizer as vec_alphanumeric by specifying the token_pattern to be TOKENS_ALPHANUMERIC.
+Fit vec_alphanumeric to df.Position_Extra.
+Hit 'Submit Answer' to see the len of the fitted representation as well as the first 15 elements, and compare to vec_basic.
+
+
+# Import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the token pattern: TOKENS_ALPHANUMERIC
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Fill missing values in df.Position_Extra
+df.Position_Extra.fillna('',inplace=True)
+
+# Instantiate the CountVectorizer: vec_alphanumeric
+vec_alphanumeric = CountVectorizer(token_pattern = TOKENS_ALPHANUMERIC)
+
+# Fit to the data
+vec_alphanumeric.fit(df.Position_Extra)
+
+# Print the number of tokens and first 15 tokens
+msg = "There are {} tokens in Position_Extra if we split on non-alpha numeric"
+print(msg.format(len(vec_alphanumeric.get_feature_names())))
+print(vec_alphanumeric.get_feature_names()[:15])
+
+There are 135 tokens in Position_Extra if tokens are any non-whitespace
+['&', '(no', '-', '1st', '2nd', '3rd', 'a', 'ab', 'additional', 'adm', 'administrative', 'and', 'any', 'art', 'assessment']
+
+<script.py> output:
+    There are 123 tokens in Position_Extra if we split on non-alpha numeric
+    ['1st', '2nd', '3rd', 'a', 'ab', 'additional', 'adm', 'administrative', 'and', 'any', 'art', 'assessment', 'assistant', 'asst', 'athletic']
+
+Great work! Treating only alpha-numeric characters as tokens gives you a smaller number of more meaningful tokens. You've got bag-of-words in the bag!
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Combining text columns for tokenization
+In order to get a bag-of-words representation for all of the text data in our DataFrame, you must first convert the text data in each row of the DataFrame into a single string.
+
+In the previous exercise, this wasn't necessary because you only looked at one column of data, so each row was already just a single string. CountVectorizer expects each row to just be a single string, so in order to use all of the text columns, you'll need a method to turn a list of strings into a single string.
+
+In this exercise, you'll complete the function definition combine_text_columns(). When completed, this function will convert all training text data in your DataFrame to a single string per row that can be passed to the vectorizer object and made into a bag-of-words using the .fit_transform() method.
+
+Note that the function uses NUMERIC_COLUMNS and LABELS to determine which columns to drop. These lists have been loaded into the workspace.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Use the .drop() method on data_frame with to_drop and axis= as arguments to drop the non-text data. Save the result as text_data.
+Fill in missing values (inplace) in text_data with blanks (""), using the .fillna() method.
+Complete the .apply() method by writing a lambda function that uses the .join() method to join all the items in a row with a space in between.
+
+# Define combine_text_columns()
+def combine_text_columns(data_frame, to_drop=NUMERIC_COLUMNS + LABELS):
+    """ converts all text in each row of data_frame to single vector """
+    
+    # Drop non-text columns that are in the df
+    to_drop = set(to_drop) & set(data_frame.columns.tolist())
+    text_data = data_frame.drop(to_drop,axis=1)
+    
+    # Replace nans with blanks
+    text_data.fillna("",inplace=True)
+    
+    # Join all text items in a row that have a space in between
+    return text_data.apply(lambda x: " ".join(x), axis=1)
+		
+		
+Good job! You'll put this function to use in the next exercise to tokenize the data!		
+
+-------------------------------------------------------------------------------------------------------------------------------------
+What's in a token?
+Now you will use combine_text_columns to convert all training text data in your DataFrame to a single vector that can be passed to the vectorizer object and made into a bag-of-words using the .fit_transform() method.
+
+You'll compare the effect of tokenizing using any non-whitespace characters as a token and using only alphanumeric characters as a token.
+
+Instructions
+100 XP
+Import CountVectorizer from sklearn.feature_extraction.text.
+Instantiate vec_basic and vec_alphanumeric using, respectively, the TOKENS_BASIC and TOKENS_ALPHANUMERIC patterns.
+Create the text vector by using the combine_text_columns() function on df.
+Using the .fit_transform() method with text_vector, fit and transform first vec_basic and then vec_alphanumeric. Print the number of tokens they contain.
+
+# Import the CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the basic token pattern
+TOKENS_BASIC = '\\S+(?=\\s+)'
+
+# Create the alphanumeric token pattern
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate basic CountVectorizer: vec_basic
+vec_basic = CountVectorizer(token_pattern = TOKENS_BASIC)
+
+# Instantiate alphanumeric CountVectorizer: vec_alphanumeric
+vec_alphanumeric = CountVectorizer(token_pattern = TOKENS_ALPHANUMERIC)
+
+# Create the text vector
+text_vector = combine_text_columns(df)
+
+# Fit and transform vec_basic
+vec_basic.fit_transform(text_vector)
+
+# Print number of tokens of vec_basic
+print("There are {} tokens in the dataset".format(len(vec_basic.get_feature_names())))
+
+# Fit and transform vec_alphanumeric
+vec_alphanumeric.fit_transform(text_vector)
+
+# Print number of tokens of vec_alphanumeric
+print("There are {} alpha-numeric tokens in the dataset".format(len(vec_alphanumeric.get_feature_names())))
+
+Wow, you're on your way to complete Data Domination! Notice that tokenizing on alpha-numeric tokens reduced the number of tokens, just as in the last exercise. We'll keep this in mind when building a better model with the Pipeline object next. See you in the next chapter!
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+3
+Improving your model
+0%
+Here, you'll improve on your benchmark model using pipelines. Because the budget consists of both text and numeric data, you'll learn to how build pipielines that process multiple types of data. You'll also explore how the flexibility of the pipeline workflow makes testing different approaches efficient, even in complicated problems like this one!
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Pipelines,
+feature & text
+preprocessing
+
+
+The pipeline workflow
+● Repeatable way to go from raw data to trained model
+● Pipeline object takes sequential list of steps
+● Output of one step is input to next step
+● Each step is a tuple with two elements
+● Name: string
+● Transform: obj implementing .fit()
+and .transform()
+● Flexible: a step can itself be another pipeline!
+
+
+Instantiate simple pipeline with one step
+In [1]: from sklearn.pipeline import Pipeline
+In [2]: from sklearn.linear_model import LogisticRegression
+In [3]: from sklearn.multiclass import OneVsRestClassifier
+In [4]: pl = Pipeline([
+ ...: ('clf', OneVsRestClassifier(LogisticRegression()))
+ ...: ])
+ 
+ 
+ Train and test with sample numeric data
+In [5]: sample_df.head()
+Out[5]:
+ label numeric text with_missing
+0 a -4.167578 bar -4.084883
+1 a -0.562668 2.043464
+2 a -21.361961 -33.315334
+3 b 16.402708 foo bar 30.884604
+4 a -17.934356 foo -27.488405 
+
+
+Train and test with sample numeric data
+In [6]: from sklearn.model_selection import train_test_split
+In [7]: X_train, X_test, y_train, y_test = train_test_split(
+ ...: sample_df[['numeric']],
+ ...: pd.get_dummies(sample_df['label']),
+ ...: random_state=2)
+In [8]: pl.fit(X_train, y_train)
+Out[8]:
+Pipeline(steps=[('clf', OneVsRestClassifier(estimator=LogisticRegression(C=1.0,
+class_weight=None, dual=False, fit_intercept=True,
+ intercept_scaling=1, max_iter=100, multi_class='ovr', n_jobs=1,
+ penalty='l2', random_state=None, solver='liblinear', tol=0.0001,
+ verbose=0, warm_start=False),
+ n_jobs=1))])
+
+
+
+
+Train and test with sample numeric data
+In [9]: accuracy = pl.score(X_test, y_test)
+In [10]: print('accuracy on numeric data, no nans: ', accuracy)
+accuracy on numeric data, no nans: 0.44
+
+
+
+Adding more steps to the pipeline
+In [11]: X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric',
+ ...: 'with_missing']], pd.get_dummies(
+ ...: sample_df['label']), random_state=2)
+In [12]: pl.fit(X_train, y_train)
+Traceback (most recent call last):
+ ...
+ValueError: Input contains NaN, infinity or a value too large for
+dtype('float64').
+
+
+
+Preprocessing numeric features with missing data
+In [13]: from sklearn.preprocessing import Imputer
+In [14]: X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric',
+ ...: 'with_missing']], pd.get_dummies(
+ ...: sample_df['label']), random_state=2)
+In [15]: pl = Pipeline([
+ ....: ('imp', Imputer()),
+ ....: ('clf', OneVsRestClassifier(LogisticRegression()))
+ ....: ])
+
+
+Preprocessing numeric features with missing data
+In [16]: pipeline.fit(X_train, y_train)
+In [17]: accuracy = pl.score(X_test, y_test)
+In [18]: print('accuracy on all numeric, incl nans: ', accuracy)
+accuracy on all numeric, incl nans: 0.48
+● No errors!
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+nstantiate pipeline
+In order to make your life easier as you start to work with all of the data in your original DataFrame, df, it's time to turn to one of scikit-learn's most useful objects: the Pipeline.
+
+For the next few exercises, you'll reacquaint yourself with pipelines and train a classifier on some synthetic (sample) data of multiple datatypes before using the same techniques on the main dataset.
+
+The sample data is stored in the DataFrame, sample_df, which has three kinds of feature data: numeric, text, and numeric with missing values. It also has a label column with two classes, a and b.
+
+In this exercise, your job is to instantiate a pipeline that trains using the numeric column of the sample data.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import Pipeline from sklearn.pipeline.
+Create training and test sets using the numeric data only. Do this by specifying sample_df[['numeric']] in train_test_split().
+Instantiate a pipeline as pl by adding the classifier step. Use a name of 'clf' and the same classifier from Chapter 2: OneVsRestClassifier(LogisticRegression()).
+Fit your pipeline to the training data and compute its accuracy to see it in action! Since this is toy data, you'll use the default scoring method for now. In the next chapter, you'll return to log loss scoring.
+
+
+# Import Pipeline
+from sklearn.pipeline import Pipeline
+
+# Import other necessary modules
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+
+# Split and select numeric data only, no nans 
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=22)
+
+# Instantiate Pipeline object: pl
+pl = Pipeline([
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit the pipeline to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - numeric, no nans: ", accuracy)
+
+
+ numeric     text  with_missing label
+0 -10.856306               4.433240     b
+1   9.973454      foo      4.310229     b
+2   2.829785  foo bar      2.469828     a
+3 -15.062947               2.852981     b
+4  -5.786003  foo bar      1.826475     a
+
+<script.py> output:
+    
+    Accuracy on sample data - numeric, no nans:  0.62
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Preprocessing numeric features
+What would have happened if you had included the with 'with_missing' column in the last exercise? Without imputing missing values, the pipeline would not be happy (try it and see). So, in this exercise you'll improve your pipeline a bit by using the Imputer() imputation transformer from scikit-learn to fill in missing values in your sample data.
+
+By default, the imputer transformer replaces NaNs with the mean value of the column. That's a good enough imputation strategy for the sample data, so you won't need to pass anything extra to the imputer.
+
+After importing the transformer, you will edit the steps list used in the previous exercise by inserting a (name, transform) tuple. Recall that steps are processed sequentially, so make sure the new tuple encoding your preprocessing step is put in the right place.
+
+The sample_df is in the workspace, in case you'd like to take another look. Make sure to select both numeric columns- in the previous exercise we couldn't use with_missing because we had no preprocessing step!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import Imputer from sklearn.preprocessing.
+Create training and test sets by selecting the correct subset of sample_df: 'numeric' and 'with_missing'.
+Add the tuple ('imp', Imputer()) to the correct position in the pipeline. Pipeline processes steps sequentially, so the imputation step should come before the classifier step.
+Complete the .fit() and .score() methods to fit the pipeline to the data and compute the accuracy.
+
+# Import the Imputer object
+from sklearn.preprocessing import Imputer
+
+# Create training and test sets using only numeric data
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric', 'with_missing']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=456)
+
+# Insantiate Pipeline object: pl
+pl = Pipeline([
+        ('imp', Imputer()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit the pipeline to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test,y_test)
+print("\nAccuracy on sample data - all numeric, incl nans: ", accuracy)
+
+<script.py> output:
+    
+    Accuracy on sample data - all numeric, incl nans:  0.636
+		
+		Nice! Now you know how to use preprocessing in pipelines with numeric data, and it looks like the accuracy has improved because of it! Text data preprocessing is next!
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+Text features
+and
+feature unions
+
+Preprocessing text features
+In [1]: from sklearn.feature_extraction.text import CountVectorizer
+In [2]: X_train, X_test, y_train, y_test = train_test_split(sample_df['text'],
+ ...: pd.get_dummies(
+ ...: sample_df['label']),
+ ...: random_state=2)
+In [3]: pl = Pipeline([
+ ....: ('vec', CountVectorizer()),
+ ....: ('clf', OneVsRestClassifier(LogisticRegression()))
+ ....: ])
+
+
+
+
+Preprocessing text features
+In [4]: pl.fit(X_train, y_train)
+Out[4]:
+Pipeline(steps=[('vec', CountVectorizer(analyzer='word', binary=False,
+decode_error='strict', dtype=<class 'numpy.int64'>, encoding='utf-8',
+input='content', lowercase=True, max_df=1.0, max_features=None, min_df=1,
+ngram_range=(1, 1), preprocessor=None, stop_words=None, strip_...=None,
+solver='liblinear', tol=0.0001, verbose=0, warm_start=False), n_jobs=1))])
+In [5]: accuracy = pl.score(X_test, y_test)
+In [6]: print('accuracy on sample data: ', accuracy)
+accuracy on sample data: 0.64
+
+
+
+Preprocessing multiple dtypes
+● Want to use all available features in one pipeline
+● Problem
+● Pipeline steps for numeric and text preprocessing
+can’t follow each other
+● e.g., output of CountVectorizer can’t be
+input to Imputer
+● Solution
+● FunctionTransformer() & FeatureUnion()
+
+
+FunctionTransformer
+● Turns a Python function into an object that a scikit-learn
+pipeline can understand
+● Need to write two functions for pipeline preprocessing
+● Take entire DataFrame, return numeric columns
+● Take entire DataFrame, return text columns
+● Can then preprocess numeric and text data in
+separate pipelines
+
+
+Pu!ing it all together
+In [7]: X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric',
+ ...: 'with_missing', 'text']], pd.get_dummies(
+ ...: sample_df['label']), random_state=2)
+In [8]: from sklearn.preprocessing import FunctionTransformer
+In [9]: from sklearn.pipeline import FeatureUnion
+
+
+Pu!ing it all together
+In [10]: get_text_data = FunctionTransformer(lambda x: x['text'],
+ ...: validate=False)
+In [11]: get_numeric_data = FunctionTransformer(lambda x: x[['numeric',
+ ...: 'with_missing']], validate=False)
+ 
+ 
+ 
+ FeatureUnion Text and Numeric Features
+In [12]: from sklearn.pipeline import FeatureUnion
+In [13]: union = FeatureUnion([
+ ...: ('numeric', numeric_pipeline),
+ ...: ('text', text_pipeline)
+ ...: ])
+ 
+ 
+ Pu!ing it all together
+In [14]: numeric_pipeline = Pipeline([
+ ...: ('selector', get_numeric_data),
+ ...: ('imputer', Imputer())
+ ...: ])
+In [15]: text_pipeline = Pipeline([
+ ...: ('selector', get_text_data),
+ ...: ('vectorizer', CountVectorizer())
+ ...: ])
+In [16]: pl = Pipeline([
+ ...: ('union', FeatureUnion([
+ ...: ('numeric', numeric_pipeline),
+ ...: ('text', text_pipeline)
+ ...: ])),
+ ...: ('clf', OneVsRestClassifier(LogisticRegression()))
+ ...: ])
+-------------------------------------------------------------------------------------------------------------------------------------
+Preprocessing text features
+Here, you'll perform a similar preprocessing pipeline step, only this time you'll use the text column from the sample data.
+
+To preprocess the text, you'll turn to CountVectorizer() to generate a bag-of-words representation of the data, as in Chapter 2. Using the default arguments, add a (step, transform) tuple to the steps list in your pipeline.
+
+Make sure you select only the text column for splitting your training and test sets.
+
+As usual, your sample_df is ready and waiting in the workspace.
+
+Instructions
+100 XP
+Import CountVectorizer from sklearn.feature_extraction.text.
+Create training and test sets by selecting the correct subset of sample_df: 'text'.
+Add the CountVectorizer step (with the name 'vec') to the correct position in the pipeline.
+Fit the pipeline to the training data and compute its accuracy.
+
+# Import the CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Split out only the text data
+X_train, X_test, y_train, y_test = train_test_split(sample_df['text'],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=456)
+
+# Instantiate Pipeline object: pl
+pl = Pipeline([
+        ('vec', CountVectorizer()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - just text data: ", accuracy)
+
+
+
+<script.py> output:
+    
+    Accuracy on sample data - just text data:  0.808
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Multiple types of processing: FunctionTransformer
+The next two exercises will introduce new topics you'll need to make your pipeline truly excel.
+
+Any step in the pipeline must be an object that implements the fit and transform methods. The FunctionTransformer creates an object with these methods out of any Python function that you pass to it. We'll use it to help select subsets of data in a way that plays nicely with pipelines.
+
+You are working with numeric data that needs imputation, and text data that needs to be converted into a bag-of-words. You'll create functions that separate the text from the numeric variables and see how the .fit() and .transform() methods work.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Compute the selector get_text_data by using a lambda function and FunctionTransformer() to obtain all 'text' columns.
+Compute the selector get_numeric_data by using a lambda function and FunctionTransformer() to obtain all the numeric columns (including missing data). These are 'numeric' and 'with_missing'.
+Fit and transform get_text_data using the .fit_transform() method with sample_df as the argument.
+Fit and transform get_numeric_data using the same approach as above.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Multiple types of processing: FunctionTransformer
+The next two exercises will introduce new topics you'll need to make your pipeline truly excel.
+
+Any step in the pipeline must be an object that implements the fit and transform methods. The FunctionTransformer creates an object with these methods out of any Python function that you pass to it. We'll use it to help select subsets of data in a way that plays nicely with pipelines.
+
+You are working with numeric data that needs imputation, and text data that needs to be converted into a bag-of-words. You'll create functions that separate the text from the numeric variables and see how the .fit() and .transform() methods work.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Compute the selector get_text_data by using a lambda function and FunctionTransformer() to obtain all 'text' columns.
+Compute the selector get_numeric_data by using a lambda function and FunctionTransformer() to obtain all the numeric columns (including missing data). These are 'numeric' and 'with_missing'.
+Fit and transform get_text_data using the .fit_transform() method with sample_df as the argument.
+Fit and transform get_numeric_data using the same approach as above.
+
+# Import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer
+
+# Obtain the text data: get_text_data
+get_text_data = FunctionTransformer(lambda x: x['text'], validate=False)
+
+# Obtain the numeric data: get_numeric_data
+get_numeric_data = FunctionTransformer(lambda x: x[['numeric', 'with_missing']], validate=False)
+
+# Fit and transform the text data: just_text_data
+just_text_data = get_text_data.fit_transform(sample_df)
+
+# Fit and transform the numeric data: just_numeric_data
+just_numeric_data = get_numeric_data.fit_transform(sample_df)
+
+# Print head to check results
+print('Text Data')
+print(just_text_data.head())
+print('\nNumeric Data')
+print(just_numeric_data.head())
+
+
+<script.py> output:
+    Text Data
+    0           
+    1        foo
+    2    foo bar
+    3           
+    4    foo bar
+    Name: text, dtype: object
+    
+    Numeric Data
+         numeric  with_missing
+    0 -10.856306      4.433240
+    1   9.973454      4.310229
+    2   2.829785      2.469828
+    3 -15.062947      2.852981
+    4  -5.786003      1.826475
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Multiple types of processing: FeatureUnion
+Now that you can separate text and numeric data in your pipeline, you're ready to perform separate steps on each by nesting pipelines and using FeatureUnion().
+
+These tools will allow you to streamline all preprocessing steps for your model, even when multiple datatypes are involved. Here, for example, you don't want to impute our text data, and you don't want to create a bag-of-words with our numeric data. Instead, you want to deal with these separately and then join the results together using FeatureUnion().
+
+In the end, you'll still have only two high-level steps in your pipeline: preprocessing and model instantiation. The difference is that the first preprocessing step actually consists of a pipeline for numeric data and a pipeline for text data. The results of those pipelines are joined using FeatureUnion().
+
+Instructions
+100 XP
+Instructions
+100 XP
+In the process_and_join_features:
+Add the steps ('selector', get_numeric_data) and ('imputer', Imputer()) to the 'numeric_features' preprocessing step.
+Add the equivalent steps for the text_features preprocessing step. That is, use get_text_data and a CountVectorizer step with the name 'vectorizer'.
+Add the transform step process_and_join_features to 'union' in the main pipeline, pl.
+Hit 'Submit Answer' to see the pipeline in action!
+
+# Import FeatureUnion
+from sklearn.pipeline import FeatureUnion
+
+# Split using ALL data in sample_df
+X_train, X_test, y_train, y_test = train_test_split(sample_df[['numeric', 'with_missing', 'text']],
+                                                    pd.get_dummies(sample_df['label']), 
+                                                    random_state=22)
+
+# Create a FeatureUnion with nested pipeline: process_and_join_features
+process_and_join_features = FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )
+
+# Instantiate nested pipeline: pl
+pl = Pipeline([
+        ('union', process_and_join_features),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+
+# Fit pl to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on sample data - all data: ", accuracy)
+
+<script.py> output:
+    
+    Accuracy on sample data - all data:  0.928
+-------------------------------------------------------------------------------------------------------------------------------------
+Choosing
+a classification
+model
+
+Main dataset: lots of text
+In [1]: LABELS = ['Function', 'Use', 'Sharing', 'Reporting', 'Student_Type',
+ ...: 'Position_Type', 'Object_Type', 'Pre_K', 'Operating_Status']
+In [2]: NON_LABELS = [c for c in df.columns if c not in LABELS]
+In [3]: len(NON_LABELS) - len(NUMERIC_COLUMNS)
+Out[3]: 14
+
+
+Using pipeline with the main dataset
+In [4]: import numpy as np
+In [5]: import pandas as pd
+In [6]: df = pd.read_csv('TrainingSetSample.csv', index_col=0)
+In [7]: dummy_labels = pd.get_dummies(df[LABELS])
+In [8]: X_train, X_test, y_train, y_test = multilabel_train_test_split(
+ ...: df[NON_LABELS], dummy_labels,
+ ...: 0.2)
+ 
+ 
+ Using pipeline with the main dataset
+In [10]: get_text_data = FunctionTransformer(combine_text_columns,
+ ...: validate=False)
+In [11]: get_numeric_data = FunctionTransformer(lambda x:
+ ...: x[NUMERIC_COLUMNS], validate=False)
+In [12]: pl = Pipeline([
+ ...: ('union', FeatureUnion([
+ ...: ('numeric_features', Pipeline([
+ ...: ('selector', get_numeric_data),
+ ...: ('imputer', Imputer())
+ ...: ])),
+ ...: ('text_features', Pipeline([
+ ...: ('selector', get_text_data),
+ ...: ('vectorizer', CountVectorizer())
+ ...: ]))
+ ...: ])
+ ...: ),
+ ...: ('clf', OneVsRestClassifier(LogisticRegression()))
+ ...: ])
+ 
+ 
+ Performance using main dataset
+In [13]: pl.fit(X_train, y_train)
+Out[13]:
+Pipeline(steps=[('union', FeatureUnion(n_jobs=1,
+transformer_list=[('numeric_features', Pipeline(steps=[('selector',
+FunctionTransformer(accept_sparse=False, func=<function <lambda> at
+0x11415ec80>, pass_y=False, validate=False)), ('imputer', Imputer(axis=0,
+copy=True, missing_valu...=None, solver='liblinear', tol=0.0001, verbose=0,
+warm_start=False),n_jobs=1))])
+
+
+ Flexibility of model step
+● Is current model the best?
+● Can quickly try different models with pipelines
+● Pipeline preprocessing steps unchanged
+● Edit the model step in your pipeline
+● Random Forest, Naïve Bayes, k-NN
+
+
+Easily try new models using pipeline
+In [14]: from sklearn.ensemble import RandomForestClassifier
+In [15]: pl = Pipeline([
+ ...: ('union', FeatureUnion(
+ ...: transformer_list = [
+ ...: ('numeric_features', Pipeline([
+ ...: ('selector', get_numeric_data),
+ ...: ('imputer', Imputer())
+ ...: ])),
+ ...: ('text_features', Pipeline([
+ ...: ('selector', get_text_data),
+ ...: ('vectorizer', CountVectorizer())
+ ...: ]))
+ ...: ]
+ ...: )),
+ ...: ('clf', OneVsRest(RandomForestClassifier()))
+ ...: ])
+ 
+ 
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Using FunctionTransformer on the main dataset
+In this exercise you're going to use FunctionTransformer on the primary budget data, before instantiating a multiple-datatype pipeline in the next exercise.
+
+Recall from Chapter 2 that you used a custom function combine_text_columns to select and properly format text data for tokenization; it is loaded into the workspace and ready to be put to work in a function transformer!
+
+Concerning the numeric data, you can use NUMERIC_COLUMNS, preloaded as usual, to help design a subset-selecting lambda function.
+
+You're all finished with sample data. The original df is back in the workspace, ready to use.
+
+Instructions
+100 XP
+Complete the call to multilabel_train_test_split() by selecting df[NON_LABELS].
+Compute get_text_data by using FunctionTransformer() and passing in combine_text_columns. Be sure to also specify validate=False.
+Use FunctionTransformer() to compute get_numeric_data. In the lambda function, select out the NUMERIC_COLUMNS of x. Like you did when computing get_text_data, also specify validate=False.
+
+# Import FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer
+
+# Get the dummy encoding of the labels
+dummy_labels = pd.get_dummies(df[LABELS])
+
+# Get the columns that are features in the original df
+NON_LABELS = [c for c in df.columns if c not in LABELS]
+
+# Split into training and test sets
+X_train, X_test, y_train, y_test = multilabel_train_test_split(df[NON_LABELS],
+                                                               dummy_labels,
+                                                               0.2, 
+                                                               seed=123)
+
+# Preprocess the text data: get_text_data
+get_text_data = FunctionTransformer(combine_text_columns, validate=False)
+
+# Preprocess the numeric data: get_numeric_data
+get_numeric_data = FunctionTransformer(lambda x: x[NUMERIC_COLUMNS], validate=False)
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Add a model to the pipeline
+You're about to take everything you've learned so far and implement it in a Pipeline that works with the real, DrivenData budget line item data you've been exploring.
+
+Surprise! The structure of the pipeline is exactly the same as earlier in this chapter:
+
+the preprocessing step uses FeatureUnion to join the results of nested pipelines that each rely on FunctionTransformer to select multiple datatypes
+the model step stores the model object
+You can then call familiar methods like .fit() and .score() on the Pipeline object pl.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Complete the 'numeric_features' transform with the following steps:
+get_numeric_data, with the name 'selector'.
+Imputer(), with the name 'imputer'.
+Complete the 'text_features' transform with the following steps:
+get_text_data, with the name 'selector'.
+CountVectorizer(), with the name 'vectorizer'.
+Fit the pipeline to the training data.
+Hit 'Submit Answer' to compute the accuracy!
+
+
+# Complete the pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on budget dataset: ", accuracy)
+
+
+
+<script.py> output:
+    
+    Accuracy on budget dataset:  0.20384615384615384
+-------------------------------------------------------------------------------------------------------------------------------------
+Try a different class of model
+Now you're cruising. One of the great strengths of pipelines is how easy they make the process of testing different models.
+
+Until now, you've been using the model step ('clf', OneVsRestClassifier(LogisticRegression())) in your pipeline.
+
+But what if you want to try a different model? Do you need to build an entirely new pipeline? New nests? New FeatureUnions? Nope! You just have a simple one-line change, as you'll see in this exercise.
+
+In particular, you'll swap out the logistic-regression model and replace it with a random forest classifier, which uses the statistics of an ensemble of decision trees to generate predictions.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import the RandomForestClassifier from sklearn.ensemble.
+Add a RandomForestClassifier() step named 'clf' to the pipeline.
+Hit 'Submit Answer' to fit the pipeline to the training data and compute its accuracy.
+
+# Import random forest classifer
+from sklearn.ensemble import RandomForestClassifier
+
+# Edit model step in pipeline
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer())
+                ]))
+             ]
+        )),
+        ('clf', RandomForestClassifier())
+    ])
+
+# Fit to the training data
+pl.fit(X_train, y_train)
+
+# Compute and print accuracy
+accuracy = pl.score(X_test, y_test)
+print("\nAccuracy on budget dataset: ", accuracy)
+
+<script.py> output:
+    
+    Accuracy on budget dataset:  0.2673076923076923
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Can you adjust the model or parameters to improve accuracy?
+You just saw a substantial improvement in accuracy by swapping out the model. Pipelines are amazing!
+
+Can you make it better? Try changing the parameter n_estimators of RandomForestClassifier(), whose default value is 10, to 15.
+
+Instructions
+100 XP
+Import the RandomForestClassifier from sklearn.ensemble.
+Add a RandomForestClassifier() step with n_estimators=15 to the pipeline with a name of 'clf'.
+Hit 'Submit Answer' to fit the pipeline to the training data and compute its accuracy.
+
+Can you adjust the model or parameters to improve accuracy?
+You just saw a substantial improvement in accuracy by swapping out the model. Pipelines are amazing!
+
+Can you make it better? Try changing the parameter n_estimators of RandomForestClassifier(), whose default value is 10, to 15.
+
+Instructions
+100 XP
+Import the RandomForestClassifier from sklearn.ensemble.
+Add a RandomForestClassifier() step with n_estimators=15 to the pipeline with a name of 'clf'.
+Hit 'Submit Answer' to fit the pipeline to the training data and compute its accuracy.
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+4
+Learning from the experts
+0%
+In this chapter, you will learn the tricks used by the competition winner, and implement them yourself using scikit-learn. Enjoy!
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Learning from the expert
+● Text processing
+● Statistical methods
+● Computational efficiency
+
+
+Learning from the expert: text preprocessing
+● NLP tricks for text data
+● Tokenize on punctuation to avoid hyphens,
+underscores, etc.
+● Include unigrams and bi-grams in the model to
+capture important information involving multiple
+tokens - e.g., ‘middle school
+
+N-grams and tokenization
+● Simple changes to CountVectorizer
+● alphanumeric tokenization
+● ngram_range=(1, 2)
+
+
+
+Range of n-grams in scikit-learn
+In [2]: pl.fit(X_train, y_train)
+Out[2]:
+Pipeline(steps=[('union', FeatureUnion(n_jobs=1,
+ transformer_list=[('numeric_features',
+Pipeline(steps=[('selector',
+FunctionTransformer(accept_sparse=False,
+ func=<function <lambda> at 0x11441f7b8>, pass_y=False,
+ validate=False)), ('imputer', Imputer(axis=0, copy=True,
+missing_valu...=None, solver='liblinear', tol=0.0001,
+ verbose=0, warm_start=False),
+ n_jobs=1))])
+
+
+Range of n-grams in scikit-learn
+In [3]: holdout = pd.read_csv('HoldoutData.csv', index_col=0)
+In [4]: predictions = pl.predict_proba(holdout)
+In [5]: prediction_df = pd.DataFrame(columns=pd.get_dummies(
+ ...: df[LABELS]).columns, index=holdout.index,
+ ...: data=predictions)
+In [6]: prediction_df.to_csv('predictions.csv')
+In [7]: score = score_submission(pred_path='predictions.csv')
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+Deciding what's a word
+Before you build up to the winning pipeline, it will be useful to look a little deeper into how the text features will be processed.
+
+In this exercise, you will use CountVectorizer on the training data X_train (preloaded into the workspace) to see the effect of tokenization on punctuation.
+
+Remember, since CountVectorizer expects a vector, you'll need to use the preloaded function, combine_text_columns before fitting to the training data.
+
+Instructions
+100 XP
+Create text_vector by preprocessing X_train using combine_text_columns. This is important, or else you won't get any tokens!
+Instantiate CountVectorizer as text_features. Specify the keyword argument token_pattern=TOKENS_ALPHANUMERIC.
+Fit text_features to the text_vector.
+Hit 'Submit Answer' to print the first 10 tokens.
+
+# Import the CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Create the text vector
+text_vector = combine_text_columns(X_train)
+
+# Create the token pattern: TOKENS_ALPHANUMERIC
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate the CountVectorizer: text_features
+text_features = CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC)
+
+# Fit text_features to the text vector
+text_features.fit(text_vector)
+
+# Print the first 10 tokens
+print(text_features.get_feature_names()[:10])
+
+<script.py> output:
+    ['00a', '12', '1st', '2nd', '3rd', '5th', '70', '70h', '8', 'a']
+
+-------------------------------------------------------------------------------------------------------------------------------------
+N-gram range in scikit-learn
+In this exercise you'll insert a CountVectorizer instance into your pipeline for the main dataset, and compute multiple n-gram features to be used in the model.
+
+In order to look for ngram relationships at multiple scales, you will use the ngram_range parameter as Peter discussed in the video.
+
+Special functions: You'll notice a couple of new steps provided in the pipeline in this and many of the remaining exercises. Specifically, the dim_red step following the vectorizer step , and the scale step preceeding the clf (classification) step.
+
+These have been added in order to account for the fact that you're using a reduced-size sample of the full dataset in this course. To make sure the models perform as the expert competition winner intended, we have to apply a dimensionality reduction technique, which is what the dim_red step does, and we have to scale the features to lie between -1 and 1, which is what the scale step does.
+
+The dim_red step uses a scikit-learn function called SelectKBest(), applying something called the chi-squared test to select the K "best" features. The scale step uses a scikit-learn function called MaxAbsScaler() in order to squash the relevant features into the interval -1 to 1.
+
+You won't need to do anything extra with these functions here, just complete the vectorizing pipeline steps below. However, notice how easy it was to add more processing steps to our pipeline!
+
+Instructions
+100 XP
+Import CountVectorizer from sklearn.feature_extraction.text.
+Add a CountVectorizer step to the pipeline with the name 'vectorizer'.
+Set the token pattern to be TOKENS_ALPHANUMERIC.
+Set the ngram_range to be (1, 2).
+
+# Import pipeline
+from sklearn.pipeline import Pipeline
+
+# Import classifiers
+from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
+
+# Import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Import other preprocessing modules
+from sklearn.preprocessing import Imputer
+from sklearn.feature_selection import chi2, SelectKBest
+
+# Select 300 best features
+chi_k = 300
+
+# Import functional utilities
+from sklearn.preprocessing import FunctionTransformer, MaxAbsScaler
+from sklearn.pipeline import FeatureUnion
+
+# Perform preprocessing
+get_text_data = FunctionTransformer(combine_text_columns, validate=False)
+get_numeric_data = FunctionTransformer(lambda x: x[NUMERIC_COLUMNS], validate=False)
+
+# Create the token pattern: TOKENS_ALPHANUMERIC
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)'
+
+# Instantiate pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                   ngram_range=(1,2))),
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Learning
+from the expert:
+a stats trick
+
+Learning from the expert: interaction terms
+● Statistical tool that the winner used: interaction terms
+● Example
+● English teacher for 2nd grade
+● 2nd grade - budget for English teacher
+● Interaction terms mathematically describe when
+tokens appear together
+
+Interaction terms: the math
+X1 X2
+0 1
+1 1
+X3
+X1*X2 = 0*1 = 0
+X1*X2 = 1*1 = 1
+
+
+
+Adding interaction features with scikit-learn
+In [1]: from sklearn.preprocessing import PolynomialFeatures
+In [2]: x
+Out[2]:
+ x1 x2
+a 0 1
+b 1 1
+In [3]: interaction = PolynomialFeatures(degree=2,
+ ...: interaction_only=True,
+ ...: include_bias=False)
+In [4]: interaction.fit_transform(x)
+Out[4]:
+array([[ 0., 1., 0.],
+ [ 1., 1., 1.]])
+
+
+
+A note about bias terms
+● Bias term allows model to have non-zero y value
+when x value is zero
+
+
+Sparse interaction features
+● The number of interaction terms grows exponentially
+● Our vectorizer saves memory by using a sparse matrix
+● PolynomialFeatures does not support sparse
+matrices
+● We have provided SparseInteractions to work
+for this problem
+
+In [5]: SparseInteractions(degree=2).fit_transform(x).toarray()
+Out[5]:
+array([[ 0., 1., 0.],
+ [ 1., 1., 1.]])
+ 
+ -------------------------------------------------------------------------------------------------------------------------------------
+Implement interaction modeling in scikit-learn
+It's time to add interaction features to your model. The PolynomialFeatures object in scikit-learn does just that, but here you're going to use a custom interaction object, SparseInteractions. Interaction terms are a statistical tool that lets your model express what happens if two features appear together in the same row.
+
+SparseInteractions does the same thing as PolynomialFeatures, but it uses sparse matrices to do so. You can get the code for SparseInteractions at this GitHub Gist.
+
+PolynomialFeatures and SparseInteractions both take the argument degree, which tells them what polynomial degree of interactions to compute.
+
+You're going to consider interaction terms of degree=2 in your pipeline. You will insert these steps after the preprocessing steps you've built out so far, but before the classifier steps.
+
+Pipelines with interaction terms take a while to train (since you're making n features into n-squared features!), so as long as you set it up right, we'll do the heavy lifting and tell you what your score is!
+
+Instructions
+100 XP
+Add the interaction terms step using SparseInteractions() with degree=2. Give it a name of 'int', and make sure it is after the preprocessing step but before scaling.
+
+# Instantiate pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', CountVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                   ngram_range=(1, 2))),  
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('int', SparseInteractions(degree=2)),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Learning
+from the expert:
+a computational trick
+and
+the winning model 
+
+Learning from the expert: hashing trick
+● Adding new features may cause enormous increase in
+array size
+● Hashing is a way of increasing memory efficiency
+PETRO VEND FUEL AND FLUIDS
+2954 9384 4569 1197 8947
+● Hash function limits possible outputs, fixing array size
+
+
+When to use the hashing trick
+● Want to make array of features as small as possible
+● Dimensionality reduction
+● Particularly useful on large datasets
+● e.g., lots of text data!
+
+
+
+Implementing the hashing trick in scikit-learn
+In [5]: from sklearn.feature_extraction.text import HashingVectorizer
+
+In [6]: vec = HashingVectorizer(norm=None,
+ ...: non_negative=True,
+ ...: token_pattern=TOKENS_ALPHANUMERIC,
+ ...: ngram_range=(1, 2))
+ 
+ 
+ 
+ The model that won it all
+● You now know all the expert
+moves to make on this dataset
+● NLP: Range of n-grams,
+punctuation tokenization
+● Stats: Interaction terms
+● Computation: Hashing trick
+● What class of model was used?
+ 
+ 
+ The model that won it all
+● And the winning model was…
+● Logistic regression!
+● Carefully create features
+● Easily implemented tricks
+● Favor simplicity over complexity and see how far it takes
+you!
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Implementing the hashing trick in scikit-learn
+In this exercise you will check out the scikit-learn implementation of HashingVectorizer before adding it to your pipeline later.
+
+As you saw in the video, HashingVectorizer acts just like CountVectorizer in that it can accept token_pattern and ngram_range parameters. The important difference is that it creates hash values from the text, so that we get all the computational advantages of hashing!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import HashingVectorizer from sklearn.feature_extraction.text.
+Instantiate the HashingVectorizer as hashing_vec using the TOKENS_ALPHANUMERIC pattern.
+Fit and transform hashing_vec using text_data. Save the result as hashed_text.
+
+
+# Import HashingVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
+
+# Get text data: text_data
+text_data = combine_text_columns(X_train)
+
+# Create the token pattern: TOKENS_ALPHANUMERIC
+TOKENS_ALPHANUMERIC = '[A-Za-z0-9]+(?=\\s+)' 
+
+# Instantiate the HashingVectorizer: hashing_vec
+hashing_vec = HashingVectorizer(token_pattern = TOKENS_ALPHANUMERIC)
+
+# Fit and transform the Hashing Vectorizer
+hashed_text = hashing_vec.fit_transform(text_data)
+
+# Create DataFrame and print the head
+hashed_df = pd.DataFrame(hashed_text.data)
+print(hashed_df.head())
+
+
+<script.py> output:
+              0
+    0 -0.160128
+    1  0.160128
+    2 -0.480384
+    3 -0.320256
+    4  0.160128
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Build the winning model
+You have arrived! This is where all of your hard work pays off. It's time to build the model that won DrivenData's competition.
+
+You've constructed a robust, powerful pipeline capable of processing training and testing data. Now that you understand the data and know all of the tools you need, you can essentially solve the whole problem in a relatively small number of lines of code. Wow!
+
+All you need to do is add the HashingVectorizer step to the pipeline to replace the CountVectorizer step.
+
+The parameters non_negative=True, norm=None, and binary=False make the HashingVectorizer perform similarly to the default settings on the CountVectorizer so you can just replace one with the other.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import HashingVectorizer from sklearn.feature_extraction.text.
+Add a HashingVectorizer step to the pipeline.
+Name the step 'vectorizer'.
+Use the TOKENS_ALPHANUMERIC token pattern.
+Specify the ngram_range to be (1, 2)
+
+
+# Import the hashing vectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
+
+# Instantiate the winning model pipeline: pl
+pl = Pipeline([
+        ('union', FeatureUnion(
+            transformer_list = [
+                ('numeric_features', Pipeline([
+                    ('selector', get_numeric_data),
+                    ('imputer', Imputer())
+                ])),
+                ('text_features', Pipeline([
+                    ('selector', get_text_data),
+                    ('vectorizer', HashingVectorizer(token_pattern=TOKENS_ALPHANUMERIC,
+                                                     non_negative=True, norm=None, binary=False,
+                                                     ngram_range=(1,2))),
+                    ('dim_red', SelectKBest(chi2, chi_k))
+                ]))
+             ]
+        )),
+        ('int', SparseInteractions(degree=2)),
+        ('scale', MaxAbsScaler()),
+        ('clf', OneVsRestClassifier(LogisticRegression()))
+    ])
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Next steps
+and
+the social impact
+of your work
+
+
+Can you do be!er?
+● You’ve seen the flexibility of the pipeline steps
+● Quickly test ways of improving your submission
+● NLP: Stemming, stop-word removal
+● Model: RandomForest, k-NN, Naïve Bayes
+● Numeric Preprocessing: Imputation strategies
+● Optimization: Grid search over pipeline objects
+● Experiment with new scikit-learn techniques
+● Work with the full dataset at DrivenData!
+
+
+Hundreds of hours saved
+● Make schools more efficient by improving their budgeting
+decisions
+● Saves hundreds of hours each year that humans spent
+labeling line items
+● Can spend more time on the decisions that really ma"er
+
+
+DrivenData: Data Science to save the world
+● Other ways to use data science to have a social impact at
+www.drivendata.org
+● Improve your data science skills while helping
+meaningful organizations thrive
+● Win some cash prizes while you’re at it!
+
+

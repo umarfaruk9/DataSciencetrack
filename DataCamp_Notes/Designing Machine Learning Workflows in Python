@@ -1,0 +1,963 @@
+Course Description
+Deploying machine learning models in production seems easy with modern tools, but often ends in disappointment as the model performs worse in production than in development. This course will give you four superpowers that will make you stand out from the data science crowd and build pipelines that stand the test of time: how to exhaustively tune every aspect of your model in development; how to make the best possible use of available domain expertise; how to monitor your model in performance and deal with any performance deterioration; and finally how to deal with poorly or scarcely labelled data. Digging deep into the cutting edge of sklearn, and dealing with real-life datasets from hot areas like personalized healthcare and cybersecurity, this course reveals a view of machine learning from the frontline.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+1
+The Standard Workflow
+FREE
+60%
+In this chapter, you will be reminded of the basics of a supervised learning workflow, complete with model fitting, tuning and selection, feature engineering and selection, and data splitting techniques. You will understand how these steps in a workflow depend on each other, and recognize how they can all contribute to, or fight against overfitting: the data scientist's worst enemy. By the end of the chapter, you will already be fluent in supervised learning, and ready to take the dive towards more advanced material in later chapters.
+
+
+______________________________________________________________________________________________________________________________________________-
+
+Categorical encodings
+Your colleague has converted the columns in the credit dataset to numeric values using LabelEncoder(). He left one out: credit_history, which records the credit history of the applicant. You want to create two versions of the dataset. One will use LabelEncoder() and another one-hot encoding, for comparison purposes. The feature matrix is available to you as credit. You have LabelEncoder() preloaded and pandas as pd.
+
+Instructions
+100 XP
+Encode credit_history using LabelEncoder().
+Concatenate the result to the original frame.
+Create a new data frame by concatenating the 1-hot encoding dummies to the original frame.
+Confirm that 1-hot encoding produces more columns than label encoding.
+
+
+# Create numeric encoding for credit_history
+credit_history_num = LabelEncoder().fit_transform(
+  credit['credit_history'])
+
+# Create a new feature matrix including the numeric encoding
+X_num = pd.concat([X, pd.Series(credit_history_num)], 1)
+
+# Create new feature matrix with dummies for credit_history
+X_hot = pd.concat(
+  [X, pd.get_dummies(credit['credit_history'])], 1)
+
+# Compare the number of features of the resulting DataFrames
+X_hot.shape[1] > X_num.shape[1]
+
+
+ # Create numeric encoding for credit_history
+        credit_history_num = LabelEncoder().fit_transform(
+          credit['credit_history'])
+        
+        # Create a new feature matrix including the numeric encoding
+        X_num = pd.concat([X, pd.Series(credit_history_num)], 1)
+        
+        # Create new feature matrix with dummies for credit_history
+        X_hot = pd.concat(
+          [X, pd.get_dummies(credit['purpose'])], 1)
+        
+        # Compare the number of features of the resulting DataFrames
+        X_hot.shape[1] > X_num.shape[1]
+Out[1]: True
+______________________________________________________________________________________________________________________________________________
+
+Feature transformations
+You are discussing the credit dataset with the bank manager. She suggests that the safest loan applications tend to request mid-range credit amounts. Values that are either too low or too high suggest high risk. This means that a non-linear relationship might exist between this variable and the class. You want to test this hypothesis. You will construct a non-linear transformation of the feature. Then, you will assess which of the two features is better at predicting the class using SelectKBest() and the chi2() metric, both of which have been preloaded.
+
+The data is available as a pandas DataFrame called credit, with the class contained in the column class. You also have preloaded pandas as pd and numpy as np.
+
+Instructions
+100 XP
+Define a function that transforms a numeric vector by considering the absolute difference of each value from the average value of the vector.
+Apply this transformation to the credit_amount column of the dataset and store in new column called diff
+Create a SelectKBest() feature selector to pick one of the two columns, credit_amount and diff using the chi2() metric.
+Inspect the results.
+
+
+# Function computing absolute difference from column mean
+def abs_diff(x):
+    return np.abs(x-np.mean(x))
+
+# Apply it to the credit amount and store to new column
+credit['diff'] = abs_diff(credit['credit_amount'])
+
+# Create a feature selector with chi2 that picks one feature
+sk = SelectKBest(chi2, k=1)
+
+# Use the selector to pick between credit_amount and diff
+sk.fit(credit[['credit_amount', 'diff']], credit['class'])
+
+# Inspect the results
+sk.get_support()
+
+______________________________________________________________________________________________________________________________________________
+Bringing it all together
+You just joined an arrhythmia detection startup and want to train a model on the arrhythmias dataset arrh. You noticed that random forests tend to win quite a few Kaggle competitions, so you want to try that out with a maximum depth of 2, 5, or 10, using grid search. You also observe that the dimension of the dataset is quite high so you wish to consider the effect of a feature selection method.
+
+To make sure you don't overfit by mistake, you have already split your data. You will use X_train and y_train for the grid search, and X_test and y_test to decide if feature selection helps. All four dataset folds are preloaded in your environment. You also have access to GridSearchCV(), train_test_split(), SelectKBest(), chi2() and RandomForestClassifier as rfc.
+
+Instructions
+100 XP
+Use grid search to experiment with a maximum depth of 2, 5, and 10 for RandomForestClassifier and store the best performing parameter setting.
+Now refit the estimator using the best-performing number of estimators as deduced above.
+Apply the SelectKBest feature selector with the chi2 scoring function and refit the classifier.
+
+# Find the best value for max_depth among values 2, 5 and 10
+grid_search = GridSearchCV(
+  rfc(random_state=1), param_grid={'max_depth': [2, 5, 10]})
+best_value = grid_search.fit(
+  X_train, y_train).best_params_['max_depth']
+
+# Using the best value from above, fit a random forest
+clf = rfc(
+  random_state=1, max_depth=best_value).fit(X_train, y_train)
+
+# Apply SelectKBest with chi2 and pick top 100 features
+vt = SelectKBest(chi2, k=100).fit(X_train, y_train)
+
+# Create a new dataset only containing the selected features
+X_train_reduced = vt.transform(X_train)
+
+You are already able to handle hundreds of features in a few lines of code! But what if the optimal number of estimators is different if you first apply feature selection? In Chapter 3 you will learn how to put your pipelines on steroids so that such questions can be asked in just one line of code.
+
+==================================================================================================================================
+
+2
+The Human in the Loop
+0%
+In the previous chapter, you perfected your knowledge of the standard supervised learning workflows. In this chapter, you will critically examine the ways in which expert knowledge is incorporated in supervised learning. This is done through the identification of the appropriate unit of analysis which might require feature engineering across multiple data sources, through the sometimes imperfect process of labeling examples, and through the specification of a loss function that captures the true business value of errors made by your machine learning model.
+
+___________________________________________________________________________________________________________________________________
+
+Is the source or the destination bad?
+In the previous lesson, you used the destination computer as your entity of interest. However, your cybersecurity analyst just told you that it is the infected machines that generate the bad traffic, and will therefore appear as a source, not a destination, in the flows dataset.
+
+The data flows has been preloaded, as well as the list bad of infected IDs and the feature extractor featurizer() from the previous lesson. You also have numpy available as np, AdaBoostClassifier(), and cross_val_score().
+
+Instructions
+100 XP
+Create a data frame where each row is a feature vector for a source_computer. Group by source computer ID in the flows dataset and apply the feature extractor to each group.
+Convert the iterator to a data frame by calling list() on it.
+Create labels by checking whether each source_computer ID belongs in the list of bads you have been given.
+Assess an AdaBoostClassifier() on this data using cross_val_score().
+
+
+# Group by source computer, and apply the feature extractor
+out = flows.groupby('source_computer').apply(featurize)
+
+# Convert the iterator to a dataframe by calling list on it
+X = pd.DataFrame(list(out), index=out.index)
+
+# Check which sources in X.index are bad to create labels
+y = [x in bads for x in X.index]
+
+# Report the average accuracy of Adaboost over 3-fold CV
+print(np.mean(cross_val_score(AdaBoostClassifier(), X, y)))
+
+
+
+<script.py> output:
+    0.9361199939089387
+    
+    
+___________________________________________________________________________________________________________________________________
+
+Feature engineering on grouped data
+You will now build on the previous exercise, by considering one additional feature: the number of unique protocols used by each source computer. Note that with grouped data, it is always possible to construct features in this manner: you can take the number of unique elements of all categorical columns, and the mean of all numeric columns as your starting point. As before, you have flows preloaded, cross_val_score() for measuring accuracy, AdaBoostClassifier(), pandas as pd and numpy as np.
+
+Instructions
+100 XP
+Apply a lambda function on the group iterator provided, to compute the number of unique protocols used by each source computer. You can use set() to reduce the protocol column to a set of unique values.
+Convert the result to a data frame with the right shape by providing an index and naming the column protocol.
+Concatenate the new data frame with the old one, which is available as X.
+Assess the accuracy of AdaBoostClassifier() on this new dataset using cross_val_score().
+
+# Create a feature counting unique protocols per source
+protocols = flows.groupby('source_computer').apply(
+  lambda df: len(set(df['protocol'])))
+
+# Convert this feature into a dataframe, naming the column
+protocols_DF = pd.DataFrame(
+  protocols, index=protocols.index, columns=['protocol'])
+
+# Now concatenate this feature with the previous dataset, X
+X_more = pd.concat([X, protocols_DF], axis=1)
+
+# Refit the classifier and report its accuracy
+print(np.mean(cross_val_score(
+  AdaBoostClassifier(), X_more, y)))
+  
+  
+  <script.py> output:
+    0.9377950357849856
+    
+___________________________________________________________________________________________________________________________________
+
+
+Turning a heuristic into a classifier
+You are surprised by the fact that heuristics can be so helpful. So you decide to treat the heuristic that "too many unique ports is suspicious" as a classifier in its own right. You achieve that by thresholding the number of unique ports per source by the average number used in bad source computers -- these are computers for which the label is True. The dataset is preloaded and split into training and test, so you have objects X_train, X_test, y_train and y_test in memory. Your imports include accuracy_score(), and numpy as np. To clarify: you won't be fitting a classifier from scikit-learn in this exercise, but instead you will define your own classification rule explicitly!
+
+Instructions
+100 XP
+Subselect all bad hosts from X_train to form a new dataset X_train_bad. Note that y_train is a Boolean array.
+Calculate the average of the unique_ports column for bad hosts, and store it in avg_bad_ports.
+Now consider a classifier that predicts as positive every example whose unique_ports exceed avg_bad_ports. Save the predictions of this classifier on the test data on a new variable, pred_port.
+Calculate this classifier's accuracy on the test data using accuracy_score().
+
+
+# Create a new dataset X_train_bad by subselecting bad hosts
+X_train_bad = X_train[y_train]
+
+# Calculate the average of unique_ports in bad examples
+avg_bad_ports = np.mean(X_train_bad['unique_ports'])
+
+# Label as positive sources that use more ports than that
+pred_port = X_test['unique_ports'] > avg_bad_ports
+
+# Print the accuracy of the heuristic
+print(accuracy_score(y_test, pred_port))
+
+
+___________________________________________________________________________________________________________________________________
+
+Combining heuristics
+A different cyber analyst tells you that during certain types of attack, the infected source computer sends small bits of traffic, to avoid detection. This makes you wonder whether it would be better to create a combined heuristic that simultaneously looks for large numbers of ports and small packet sizes. Does this improve performance over the simple port heuristic? As with the last exercise, you have X_train, X_test, y_train and y_test in memory. The sample code also helps you reproduce the outcome of the port heuristic, pred_port. You also have numpy as np and accuracy_score() preloaded.
+
+Instructions
+100 XP
+The column average_packet computes the average packet size over all flows observed from a single source. Take the mean of those values for bad sources only on the training set.
+Now construct a new rule which flags as positive all sources whose average traffic is less than the value above.
+Combine the rules so that both heuristics have to simultaneously apply, using an appropriate arithmetic operation.
+Report the accuracy of the combined heuristic.
+
+# Compute the mean of average_packet for bad sources
+avg_bad_packet = np.mean(X_train[y_train]['average_packet'])
+
+# Label as positive if average_packet is lower than that
+pred_packet = X_test['average_packet'] < avg_bad_packet
+
+# Find indices where pred_port and pred_packet both True
+pred_port = X_test['unique_ports'] > avg_bad_ports
+pred_both = pred_packet * pred_port
+
+# Ports only produced an accuracy of 0.919. Is this better?
+print(accuracy_score(y_test, pred_both))
+
+___________________________________________________________________________________________________________________________________
+
+
+Dealing with label noise
+One of your cyber analysts informs you that many of the labels for the first 100 source computers in your training data might be wrong because of a database error. She hopes you can still use the data because most of the labels are still correct, but asks you to treat these 100 labels as "noisy". Thankfully you know how to do that, using weighted learning. The contaminated data is available in your workspace as X_train, X_test, y_train_noisy, y_test. You want to see if you can improve the performance of a GaussianNB() classifier using weighted learning. You can use the optional parameter sample_weight, which is supported by the .fit() methods of most popular classifiers. The function accuracy_score() is preloaded. You can consult the image below for guidance.
+
+
+
+Instructions
+100 XP
+Fit an instance of GaussianNB() to the training data with the contaminated labels.
+Report its accuracy on the test data using accuracy_score().
+Create weights that assign twice as much weight to ground truth labels than to noisy labels. Remember that the weights concern the training data.
+Refit the classifier using the above weights and report its accuracy.
+
+# Fit a Gaussian Naive Bayes classifier to the training data
+clf = GaussianNB().fit(X_train, y_train_noisy)
+
+# Report its accuracy on the test data
+print(accuracy_score(y_test, clf.predict(X_test)))
+
+# Assign half the weight to the first 100 noisy examples
+weights = [0.5]*100 + [1.0]*(len(y_train_noisy)-100)
+
+# Refit using weights and report accuracy. Has it improved?
+clf_weights = GaussianNB().fit(X_train, y_train_noisy, sample_weight=weights)
+print(accuracy_score(y_test, clf_weights.predict(X_test)))
+
+  ___________________________________________________________________________________________________________________________________
+  
+  
+Real-world cost analysis
+You will still work on the credit dataset for this exercise. Recall that a "positive" in this dataset means "bad credit", i.e., a customer who defaulted on their loan, and a "negative" means a customer who continued to pay without problems. The bank manager informed you that the bank makes 10K profit on average from each "good risk" customer, but loses 150K from each "bad risk" customer. Your algorithm will be used to screen applicants, so those that are labeled as "negative" will be given a loan, and the "positive" ones will be turned down. What is the total cost of your classifier? The data is available as X_train, X_test, y_train and y_test. The functions confusion_matrix(), f1_score(), and precision_score() and RandomForestClassifier() are available.
+
+Instructions
+100 XP
+Fit a random forest classifier to the training data.
+Use it to label the test data.
+Extract the false negatives and false positives from confusion_matrix(). You will have to flatten the matrix.
+Falsely classifying a "good" customer as "bad" means that the bank would have lost the chance to make 10K profit. Falsely classifying a "bad" customer as "good" means that the bank would have lost 150K due to the customer defaulting on their loan.
+
+
+# Fit a random forest classifier to the training data
+clf = RandomForestClassifier(random_state=2).fit(X_train, y_train)
+
+# Label the test data
+preds = clf.predict(X_test)
+
+# Get false positives/negatives from the confusion matrix
+tp, fp, fn, tn = confusion_matrix(y_test, preds).ravel()
+
+# Now compute the cost using the manager's advice
+cost = fp*10000 + fn*150000
+
+___________________________________________________________________________________________________________________________________
+
+Confusion matrix calculations
+Your classifier on the credit data achieved the following statistics: 168 true positives, 19 false positives, 49 false negatives, and 25 true negatives. These numbers are preloaded in the console environment for you as tp, fp, fn and tn respectively. The following statements involve two metrics: accuracy, given by the proportion of examples classified correctly, and recall, which is the proportion of truly positive examples that were classified as positive. Which of the statements is true?
+
+
+___________________________________________________________________________________________________________________________________
+
+
+Default thresholding
+You would like to confirm that the DecisionTreeClassifier() uses the same default classification threshold as mentioned in the previous lesson, namely 0.5. It seems strange to you that all classifiers should use the same threshold. Let's check! A fitted decision tree classifier clf has been preloaded for you, as have the training and test data with their usual names: X_train, X_test, y_train and y_test. You will have to extract probability scores from the classifier using the .predict_proba() method.
+
+Instructions
+100 XP
+Produce scores for the test examples, using the preloaded classifier clf.
+Now extract labels from the scores. Remember that you have a pair of scores for each example, not a single score, and the second element is the probability of the positive class.
+Now label the test data using the standard .predict() method
+Finally, compare with the predictions you got before. Are they identical?
+
+# Score the test data using the given classifier
+scores = clf.predict_proba(X_test)
+
+# Get labels from the scores using the default threshold
+preds = [s[1] > 0.5 for s in scores]
+
+# Use the predict method to label the test data again
+preds_default = clf.predict(X_test)
+
+# Compare the two sets of predictions
+all(preds == preds_default)
+
+___________________________________________________________________________________________________________________________________
+
+Optimizing the threshold
+You heard that the default value of 0.5 maximizes accuracy in theory, but you want to test what happens in practice. So you try out a number of different threshold values, to see what accuracy you get, and hence determine the best-performing threshold value. You repeat this experiment for the F1 score. Is 0.5 the optimal threshold? Is the optimal threshold for accuracy and for the F1 score the same? Go ahead and find out! You have a scores matrix available, obtained by scoring the test data. The ground truth labels for the test data is also available as y_test. Finally, two numpy functions are preloaded, argmin() and argmax(), which retrieve the index of the minimum and maximum values in an array respectively, in addition to the metrics accuracy_score() and f1_score().
+
+Instructions
+100 XP
+Create a range of threshold values that include 0.0, 0.25, 0.5, 0.75 and 1.0.
+Via double list comprehension, store the predictions for each threshold value in the range above. Recall that obtaining labels for a scores matrix using a threshold thr is possible using [s[1] > thr for s in scores].
+Run through that list and compute the accuracy for each threshold. Repeat for the F1 score.
+Using either argmin() or argmax(), find the optimal threshold for accuracy, and for F1.
+
+
+# Create a range of equally spaced threshold values
+t_range = [0.0,0.25,0.5,0.75,1.0]
+
+# Store the predicted labels for each value of the threshold
+preds = [[s[1] > thr for s in scores] for thr in t_range]
+
+# Compute the accuracy for each threshold
+accuracies = [accuracy_score(y_test, p) for p in preds]
+
+# Compute the F1 score for each threshold
+f1_scores = [f1_score(y_test, p) for p in preds]
+
+# Report the optimal threshold for accuracy, and for F1
+print(t_range[argmax(accuracies)], t_range[argmax(f1_scores)])
+
+You were right to be suspicious: in practice, accuracy is sometimes optimized with a threshold other than 0.5. Moreover, if you want to use a different metric, you should re-tune your threshold!
+
+___________________________________________________________________________________________________________________________________
+
+Bringing it all together
+One of the engineers in your arrhythmia detection startup rushes into your office to let you know that there is a problem with the ECG sensor for overweight users. You decide to reduce the influence of examples with weight over 80 by 50%. You are also told that since your startup is targeting the fitness market and makes no medical claims, scaring an athlete unnecessarily is costlier than missing a possible case of arrhythmia. You decide to create a custom loss that makes each "false alarm" ten times costlier than missing a case of arrhythmia. Does down-weighting overweight subjects improve this custom loss? Your training data X_train, y_train and test data X_test, y_test are preloaded, as are confusion_matrix(), numpy as np, and DecisionTreeClassifier().
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Start by creating a custom loss which extracts the false positives and false negatives from the confusion matrix, and then makes each false alarm count ten times as much as a missed case of arrhythmia.
+
+
+# Create a scorer assigning more cost to false positives
+def my_scorer(y_test, y_est, cost_fp=10.0, cost_fn=1.0):
+    tn, fp, fn, tp = confusion_matrix(y_test,y_est).ravel()
+    return cost_fp*fp + cost_fn*fn
+    
+    
+Fit a DecisionTreeClassifier to the original data and estimate this loss.
+
+# Create a scorer assigning more cost to false positives
+def my_scorer(y_test, y_est, cost_fp=10.0, cost_fn=1.0):
+    tn, fp, fn, tp = confusion_matrix(y_test, y_est).ravel()
+    return cost_fp*fp + cost_fn*fn
+
+# Fit a DecisionTreeClassifier to the data and compute the loss
+clf = DecisionTreeClassifier(random_state=2).fit(X_train, y_train)
+print(my_scorer(y_test, clf.predict(X_test)))
+
+
+# Create a scorer assigning more cost to false positives
+def my_scorer(y_test, y_est, cost_fp=10.0, cost_fn=1.0):
+    tn, fp, fn, tp = confusion_matrix(y_test, y_est).ravel()
+    return cost_fp*fp + cost_fn*fn
+
+# Fit a DecisionTreeClassifier to the data and compute the loss
+clf = DecisionTreeClassifier(random_state=2).fit(X_train, y_train)
+print(my_scorer(y_test, clf.predict(X_test)))
+
+# Refit, downweighting subjects whose weight is above 80
+weights = [0.5 if w > 80 else 1.0 for w in X_train.weight]
+clf_weighted = DecisionTreeClassifier(random_state=2).fit(
+  X_train, y_train, sample_weight=weights)
+print(my_scorer(y_test, clf_weighted.predict(X_test)))
+
+
+Create a list of weights so that each example where the weight is greater than 80 has half the weight of any other example. Does this improve your loss?
+
+
+Great work! You have mastered the art of using weights in order to assign different importance to different parts of the data. Time to revisit your optimization skills using pipelines.
+==================================================================================================================================
+
+
+3
+Model Lifecycle Management
+0%
+In the previous chapter, you employed different ways of incorporating feedback from experts in your workflow, and evaluating it in ways that are aligned with business value. Now it is time for you to practice the skills needed to productize your model and ensure it continues to perform well thereafter by iteratively improving it. You will also learn to diagnose dataset shift and mitigate the effect that a changing environment can have on your model's accuracy.
+
+___________________________________________________________________________________________________________________________________
+
+Your first pipeline - again!
+Back in the arrhythmia startup, your monthly review is coming up, and as part of that an expert Python programmer will be reviewing your code. You decide to tidy up by following best practices and replace your script for feature selection and random forest classification, with a pipeline. You are using a training dataset available as X_train and y_train, and a number of modules: RandomForestClassifier, SelectKBest() and f_classif() for feature selection, as well as GridSearchCV and Pipeline.
+
+Instructions
+100 XP
+Create a pipeline with the feature selector given by the sample code, and a random forest classifier. Name the first step feature_selection.
+Add two key-value pairs in params, one for the number of features k in the selector with values 10 and 20, and one for n_estimators in the forest with possible values 2 and 5.
+Initialize a GridSearchCV object with the given pipeline and parameter grid.
+Fit the object to the data and print the best performing parameter combination.
+
+# Create pipeline with feature selector and classifier
+pipe = Pipeline([
+    ('feature_selection', SelectKBest(f_classif)),
+    ('clf', RandomForestClassifier(random_state=2))])
+
+# Create a parameter grid
+params = {
+   'feature_selection__k':[10,20],
+    'clf__n_estimators':[2, 5]}
+
+# Initialize the grid search object
+grid_search = GridSearchCV(pipe, param_grid=params)
+
+# Fit it to the data and print the best value combination
+print(grid_search.fit(X_train, y_train).best_params_)
+
+___________________________________________________________________________________________________________________________________
+
+Custom scorers in pipelines
+You are proud of the improvement in your code quality, but just remembered that previously you had to use a custom scoring metric in order to account for the fact that false positives are costlier to your startup than false negatives. You hence want to equip your pipeline with scorers other than accuracy, including roc_auc_score(), f1_score(), and you own custom scoring function. The pipeline from the previous lesson is available as pipe, as is the parameter grid as params and the training data as X_train, y_train. You also have confusion_matrix() for the purpose of writing your own metric.
+
+Instructions 1/3
+35 XP
+1
+Convert the metric roc_auc_score() into a scorer, and feed it into GridSearchCV(). Then fit that to the data.
+
+# Create a custom scorer
+scorer = make_scorer(roc_auc_score)
+
+# Initialize the CV object
+gs = GridSearchCV(pipe, param_grid=params, scoring=scorer)
+
+# Fit it to the data and print the winning combination
+print(gs.fit(X_train, y_train).best_params_)
+
+
+<script.py> output:
+    {'clf__n_estimators': 5, 'feature_selection__k': 20}
+
+Now repeat for the F1 score, instead, given by f1_score().
+
+# Create a custom scorer
+scorer = make_scorer(f1_score)
+
+# Initialise the CV object
+gs = GridSearchCV(pipe, param_grid=params, scoring=scorer)
+
+# Fit it to the data and print the winning combination
+print(gs.fit(X_train, y_train).best_params_)
+
+Now repeat with a custom metric which is available to you as as simple Python function called my_metric().
+
+# Create a custom scorer
+scorer = make_scorer(my_metric)
+
+# Initialise the CV object
+gs = GridSearchCV(pipe, param_grid=params, scoring=scorer)
+
+# Fit it to the data and print the winning combination
+print(gs.fit(X_train, y_train).best_params_)
+___________________________________________________________________________________________________________________________________
+
+Pickles
+Finally, it is time for you to push your first model to production. It is a random forest classifier which you will use as a baseline, while you are still working to develop a better alternative. You have access to the data split in training test with their usual names, X_train, X_test, y_train and y_test, as well as to the modules RandomForestClassifier() and pickle, whose methods .load() and .dump() you will need for this exercise.
+
+Instructions
+100 XP
+Fit a random forest classifier to the data. Fix the random seed to 42 ensure that your results are reproducible.
+Write the model to file using pickle. Open the destination file using the with open(____) as ____ syntax.
+Now load the model from file into a different variable name, clf_from_file.
+Store the predictions from the model you loaded into a variable preds.
+# Fit a random forest to the training set
+clf = RandomForestClassifier(random_state=42).fit(
+  X_train, y_train)
+
+# Save it to a file, to be pushed to production
+with open('model.pkl', 'wb') as file:
+    pickle.dump(clf, file=file)
+
+# Now load the model from file in the production environment
+with open('model.pkl', 'rb') as file:
+    clf_from_file = pickle.load(file)
+
+# Predict the labels of the test dataset
+preds = clf_from_file.predict(X_test)
+
+
+Hint
+The random seed is fixed via the optional parameter random_state
+Make sure the file you open is writeable and binary using the wb option.
+Make sure the file you open is writeable and binary using the rb option.
+The model object you recovered from file has all its usual methods, including predict().
+
+
+___________________________________________________________________________________________________________________________________
+
+Custom function transformers in pipelines
+At some point, you were told that the sensors might be performing poorly for obese individuals. Previously you had dealt with that using weights, but now you are thinking that this information might also be useful for feature engineering, so you decide to replace the recorded weight of an individual with an indicator of whether they are obese. You want to do this using pipelines. You have numpy available as np, RandomForestClassifier(), FunctionTransformer(), and GridSearchCV().
+
+Instructions
+100 XP
+Define a custom feature extractor. This is a function that will output a modified copy of its input.
+Replace each value of the first column with the indicator of whether that value is above a threshold given by a multiple of the column mean.
+Convert the feature extractor above to a transformer and place it in a pipeline together with a random forest classifier.
+Use grid search CV to try values 1, 2 and 3 for the multiplication constant multiplier in your feature extractor.
+
+# Define a feature extractor to flag very large values
+def more_than_average(X, multiplier=1.0):
+  Z = X.copy()
+  Z[:,1] = Z[:,1] > multiplier*np.mean(Z[:,1])
+  return Z
+
+# Convert your function so that it can be used in a pipeline
+pipe = Pipeline([
+  ('ft', FunctionTransformer(more_than_average)),
+  ('clf', RandomForestClassifier(random_state=2))])
+
+# Optimize the parameter multiplier using GridSearchCV
+params = dict(ft__multiplier=[1,2,3])
+grid_search = GridSearchCV(pipe, param_grid=params)
+
+___________________________________________________________________________________________________________________________________
+
+
+Challenge the champion
+Having pushed your random forest to production, you suddenly worry that a naive Bayes classifier might be better. You want to run a champion-challenger test, by comparing a naive Bayes, acting as the challenger, to exactly the model which is currently in production, which you will load from file to make sure there is no confusion. You will use the F1 score for assessment. You have the data X_train, X_test, y_train and y_test available as before and GaussianNB(), f1_score() and pickle().
+
+Instructions
+100 XP
+Instructions
+100 XP
+Load the existing model from memory using pickle.
+Fit a Gaussian Naive Bayes classifier to the training data.
+Print the F1 score of the champion and then the challenger on the test data.
+Overwrite the current model to disk with the one that performed best.
+
+# Load the current model from disk
+champion = pickle.load(open('model.pkl', 'rb'))
+
+# Fit a Gaussian Naive Bayes to the training data
+challenger = GaussianNB().fit(X_train, y_train)
+
+# Print the F1 test scores of both champion and challenger
+print(f1_score(y_test, champion.predict(X_test)))
+print(f1_score(y_test, challenger.predict(X_test)))
+
+# Write back to disk the best-performing model
+with open('model.pkl', 'wb') as file:
+    pickle.dump(champion, file=file)
+
+___________________________________________________________________________________________________________________________________
+
+Cross-validation statistics
+You used grid search CV to tune your random forest classifier, and now want to inspect the cross-validation results to ensure you did not overfit. In particular you would like to take the difference of the mean test score for each fold from the mean training score. The dataset is available as X_train and y_train, the pipeline as pipe, and a number of modules are pre-loaded including pandas as pd and GridSearchCV().
+
+Instructions
+100 XP
+Create a grid search object with three cross-validation folds and ensure it returns training as well as test statistics.
+Fit the grid search object to the training data.
+Store the results of the cross-validation, available in the cv_results_ attribute of the fitted CV object, into a dataframe.
+Print the difference between the column containing the average test score and that containing the average training score.
+
+# Fit your pipeline using GridSearchCV with three folds
+grid_search = GridSearchCV(
+  pipe, params, cv=3, return_train_score=True)
+
+# Fit the grid search
+gs = grid_search.fit(X_train, y_train)
+
+# Store the results of CV into a pandas dataframe
+results = pd.DataFrame(gs.cv_results_)
+
+# Print the difference between mean test and training scores
+print(
+  results['mean_test_score']-results['mean_train_score'])
+  
+  <script.py> output:
+    0   -0.234513
+    1   -0.246313
+    2   -0.308260
+    3   -0.265487
+    dtype: float64
+    
+    ___________________________________________________________________________________________________________________________________
+    
+    Tuning the window size
+You want to check for yourself that the optimal window size for the arrhythmia dataset is 50. You have been given the dataset as a pandas data frame called arrh, and want to use a subset of the data up to time t_now. Your test data is available as X_test, y_test. You will try out a number of window sizes, ranging from 10 to 100, fit a naive Bayes classifier to each window, assess its F1 score on the test data, and then pick the best performing window size. You also have numpy available as np, and the function f1_score() has been imported already. Finally, an empty list called accuracies has been initialized for you to store the accuracies of the windows.
+
+Instructions
+100 XP
+Define the index of a sliding window of size w_size stopping at t_now using the .loc() method.
+Construct X from the sliding window by removing the class column. Store that latter column as y.
+Fit a naive Bayes classifier to X and y, and use it to predict the labels of the test data X_test.
+Compute the F1 score of these predictions for each window size, and find the best-performing window size.
+
+
+# Loop over window sizes
+for w_size in wrange:
+
+    # Define sliding window
+    sliding = arrh.loc[(t_now - w_size + 1):t_now]
+
+    # Extract X and y from the sliding window
+    X, y = sliding.drop('class', 1), sliding['class']
+    
+    # Fit the classifier and store the F1 score
+    preds = GaussianNB().fit(X, y).predict(X_test)
+    accuracies.append(f1_score(y_test, preds))
+
+# Estimate the best performing window size
+optimal_window = wrange[np.argmax(accuracies)]
+
+
+Well done! You now realise that the possibility of dataset shift introduces yet another parameter to optimize: the window size. This cannot be done with Cross-Validation on historical data, but instead requires the technique shown here.
+___________________________________________________________________________________________________________________________________
+
+Bringing it all together
+You have two concerns about your pipeline at the arrhythmia detection startup:
+
+The app was trained on patients of all ages, but is primarily being used by fitness users who tend to be young. You suspect this might be a case of domain shift, and hence want to disregard all examples above 50 years old.
+You are still concerned about overfitting, so you want to see if making the random forest classifier less complex and selecting some features might help with that.
+You will create a pipeline with a feature selection SelectKBest() step and a RandomForestClassifier, both of which have been imported. You also have access to GridSearchCV(), Pipeline, numpy as np and pickle. The data is available as arrh.
+
+Instructions
+100 XP
+Create a pipeline with SelectKBest() as step ft and RandomForestClassifier() as step clf.
+Create a parameter grid to tune k in SelectKBest() and max_depth in RandomForestClassifier().
+Use GridSearchCV() to optimize your pipeline against that grid and data containing only those aged under 50.
+Save the optimized pipeline to a pickle for production.
+
+# Create a pipeline 
+pipe = Pipeline([
+  ('ft', SelectKBest()), ('clf', RandomForestClassifier(random_state=2))])
+
+# Create a parameter grid
+grid = {'ft__k':[5, 10], 'clf__max_depth':[10, 20]}
+
+# Execute grid search CV on a dataset containing under 50s
+grid_search = GridSearchCV(pipe, param_grid=grid)
+arrh = arrh.iloc[np.where(arrh['age'] < 50)]
+grid_search.fit(arrh.drop('class', 1), arrh['class'])
+
+# Push the fitted pipeline to production
+with open('pipe.pkl', 'wb') as file:
+    pickle.dump(grid_search, file)
+
+
+==================================================================================================================================
+Unsupervised Workflows
+0%
+In the previous chapters you established a solid foundation in supervised learning, complete with knowledge of deploying models in production but always assumed you a labeled dataset would be available for your analysis. In this chapter, you take on the challenge of modeling data without any, or with very few, labels. This takes you into a journey into anomaly detection, a kind of unsupervised modeling, as well as distance-based learning, where beliefs about what constitutes similarity between two examples can be used in place of labels to help you achieve levels of accuracy comparable to a supervised workflow. Upon completing this chapter, you will clearly stand out from the crowd of data scientists in confidently knowing what tools to use to modify your workflow in order to overcome common real-world challenges.
+
+___________________________________________________________________________________________________________________________________
+
+
+A simple outlier
+When you first encounter a new type of algorithm, it is always a great idea to test it with a very simple example. So you decide to create a list containing thirty examples with the value 1.0 and just one example with value 10.0, which you expect should be flagged as an outlier. To make sure you use the algorithm correctly, you convert the list to a pandas dataframe, and feed it into the local outlier factor algorithm. pandas is available to you as pd.
+
+Instructions
+100 XP
+Import the LocalOutlierFactor module as lof for convenience.
+Create a list with thirty 1s followed by a 10, [1.0, 1.0, ..., 1.0, 10.0].
+Cast the list to a data frame.
+Print the outlier scores produced by the local outlier factor algorithm.
+
+
+# Import the LocalOutlierFactor module
+from sklearn.neighbors import LocalOutlierFactor as lof
+
+# Create the list [1.0, 1.0, ..., 1.0, 10.0] as explained
+x = [1.0]*30
+x.append(10.0)
+
+# Cast to a data frame
+X = pd.DataFrame(x)
+
+# Fit the local outlier factor and print the outlier scores
+print(lof().fit_predict(X))
+___________________________________________________________________________________________________________________________________
+
+
+LoF contamination
+Your medical advisor at the arrhythmia startup informs you that your training data might not contain all possible types of arrhythmia. How on earth will you detect these other types without any labeled examples? Could an anomaly detector tell the difference between healthy and unhealthy without access to labels? But first, you experiment with the contamination parameter to see its effect on the confusion matrix. You have LocalOutlierFactor as lof, numpy as np, the labels as ground_truth encoded in -1and 1 just like local outlier factor output, and the unlabeled training data as X.
+
+Instructions 1/3
+35 XP
+1
+Fit a local outlier factor and output the predictions on X and print the confusion matrix for these predictions.
+
+# Fit the local outlier factor and output predictions
+preds = lof().fit_predict(X)
+
+# Print the confusion matrix
+print(confusion_matrix(ground_truth, preds))
+
+Repeat but now set the proportion of datapoints to be flagged as outliers to 0.2. Print the confusion matrix
+
+# Set the contamination parameter to 0.2
+preds = lof(contamination=0.2).fit_predict(X)
+
+# Print the confusion matrix
+print(confusion_matrix(ground_truth,preds))
+
+Now set the contamination to be equal to the actual proportion of outliers in the data.
+
+# Contamination to match outlier frequency in ground_truth
+preds = lof(
+  contamination=np.mean(ground_truth==-1.0)).fit_predict(X)
+
+# Print the confusion matrix
+print(confusion_matrix(ground_truth, preds))
+
+___________________________________________________________________________________________________________________________________
+
+A simple novelty
+You find novelty detection more useful than outlier detection, but want to make sure it works on the simple example you came up with before. This time you will use a sequence of thirty examples all with value 1.0 as a training set, and try to see if the example 10.0 is labeled as a novelty. You have access to pandas as pd, and the LocalOutlierFactor module as lof.
+
+Instructions
+100 XP
+Create a pandas DataFrame containing thirty examples all equal to 1.0.
+Initialize a local outlier factor novelty detector.
+Fit the detector to the training data.
+Output the novelty label of the datapoint 10.0, casted to a DataFrame.
+
+<script.py> output:
+    [-1]
+    
+    
+Great, you are now reassured that you understand the method correctly: 10.0 is labelled as -1, which means it is considered novel.
+
+___________________________________________________________________________________________________________________________________
+
+
+Three novelty detectors
+Finally, you know enough to run some tests on the use of a few anomaly detectors on the arrhythmia dataset. To test their performance, you will train them on an unlabeled training dataset, but then compare their predictions to the ground truth on the test data using their method .score_samples(). This time, you will be asked to import the detectors as part of the exercise, but you do have the data X_train, X_test, y_train, y_test preloaded as usual.
+
+Instructions 1/3
+35 XP
+1
+Import the one-class SVM detector from the svm module as onesvm, fit it to the training data, and score the test data.
+
+# Import the novelty detector
+from sklearn.svm import OneClassSVM as onesvm
+
+# Fit it to the training data and score the test data
+svm_detector = onesvm().fit(X_train)
+scores = svm_detector.score_samples(X_test)
+
+
+Adapt your code to import the isolation forest from the ensemble module as isof, fit it and score the test data.
+
+# Import the novelty detector
+from sklearn.ensemble import IsolationForest as isof
+
+# Fit it to the training data and score the test data
+svm_detector = isof().fit(X_train)
+scores = svm_detector.score_samples(X_test)
+
+
+Adapt your code to import the LocalOutlierFactor module as lof, fit it to the training data, and score the test data.
+
+# Import the novelty detector
+from sklearn.neighbors import LocalOutlierFactor as lof
+
+# Fit it to the training data and score the test data
+lof_detector = lof(novelty=True).fit(X_train)
+scores = lof_detector.score_samples(X_test)
+
+___________________________________________________________________________________________________________________________________
+
+Contamination revisited
+You notice that one-class SVM does not have a contamination parameter. But you know well by now that you really need a way to control the proportion of examples that are labeled as novelties in order to control your false positive rate. So you decide to experiment with thresholding the scores. The detector has been imported as onesvm, you also have available the data as X_train, X_test, y_train, y_test, numpy as np, and confusion_matrix().
+
+Instructions
+100 XP
+Fit the 1-class SVM and score the test data.
+Compute the observed proportion of outliers in the test data.
+Use np.quantile() to find where to threshold the scores to achieve that proportion.
+Use that threshold to label the test data. Print the confusion matrix.
+
+# Fit a one-class SVM detector and score the test data
+nov_det = onesvm().fit(X_train)
+scores = nov_det.score_samples(X_test)
+
+# Find the observed proportion of outliers in the test data
+prop = np.mean(y_test==1.0)
+
+# Compute the appropriate threshold
+threshold = np.quantile(scores, prop)
+
+# Print the confusion matrix for the thresholded scores
+print(confusion_matrix(y_test, scores > threshold))
+
+___________________________________________________________________________________________________________________________________
+
+Find the neighbor
+It is clear that the local outlier factor algorithm depends a lot on the idea of a nearest neighbor, which in turn depends on the choice of distance metric. So you decide to experiment some more with the hepatitis dataset introduced in the previous lesson. You are given three examples stored in features, whose classes are stored in labels. You will identify the nearest neighbor to the first example (row with index 0) using three different distance metrics, Euclidean, Hamming and Chebyshev, and on the basis of that choose which distance metric to use. You will import the necessary module as part of the exercise, but pandas and numpy already available, as are features and their labels labels.
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Import the DistanceMetric module as dm.
+
+# Import DistanceMetric as dm
+from sklearn.neighbors import DistanceMetric as dm
+
+
+   Class   AGE  SEX  STEROID  ANTIVIRALS  ...  ALK PHOSPHATE   SGOT  ALBUMIN  PROTIME  HISTOLOGY
+0    2.0  50.0  1.0      0.0         1.0  ...          230.0  117.0      3.4     41.0        2.0
+1    2.0  40.0  0.0      0.0         0.0  ...           40.0   69.0      4.2     67.0        2.0
+2    1.0  47.0  0.0      1.0         1.0  ...           84.0   23.0      4.2     66.0        2.0
+3    1.0  48.0  0.0      0.0         1.0  ...          123.0  157.0      2.7     31.0        2.0
+
+[4 rows x 20 columns]
+   Class   AGE  SEX  STEROID  ANTIVIRALS  ...  ALK PHOSPHATE   SGOT  ALBUMIN  PROTIME  HISTOLOGY
+0    2.0  50.0  1.0      0.0         1.0  ...          230.0  117.0      3.4     41.0        2.0
+1    2.0  40.0  0.0      0.0         0.0  ...           40.0   69.0      4.2     67.0        2.0
+2    1.0  47.0  0.0      1.0         1.0  ...           84.0   23.0      4.2     66.0        2.0
+3    1.0  48.0  0.0      0.0         1.0  ...          123.0  157.0      2.7     31.0        2.0
+
+[4 rows x 20 columns]
+   Class   AGE  SEX  STEROID  ANTIVIRALS  ...  ALK PHOSPHATE   SGOT  ALBUMIN  PROTIME  HISTOLOGY
+0    2.0  50.0  1.0      0.0         1.0  ...          230.0  117.0      3.4     41.0        2.0
+1    2.0  40.0  0.0      0.0         0.0  ...           40.0   69.0      4.2     67.0        2.0
+2    1.0  47.0  0.0      1.0         1.0  ...           84.0   23.0      4.2     66.0        2.0
+3    1.0  48.0  0.0      0.0         1.0  ...          123.0  157.0      2.7     31.0        2.0
+
+[4 rows x 20 columns]
+
+
+
+
+Compute the pairwise Euclidean, Hamming and Chebyshev distances for all points.
+
+# Import DistanceMetric as dm
+from sklearn.neighbors import DistanceMetric as dm
+
+# Find the Euclidean distance between all pairs
+dist_eucl = dm.get_metric('euclidean').pairwise(features)
+
+# Find the Hamming distance between all pairs
+dist_hamm = dm.get_metric('hamming').pairwise(features)
+
+# Find the Chebyshev distance between all pairs
+dist_cheb = dm.get_metric('chebyshev').pairwise(features)
+
+
+Question
+Inspect the matrices dist_eucl, dist_hamm and dist_cheb in your terminal and identify the nearest neighbor to the first example for each metric. Noting that the labels of the three examples are, respectively, 2.0, 2.0 and 1.0, pick one of the following answers:
+
+___________________________________________________________________________________________________________________________________
+
+Not all metrics agree
+In the previous exercise you saw that not all metrics agree when it comes to identifying nearest neighbors. But does this mean they might disagree on outliers, too? You decide to put this to the test. You use the same data as before, but this time feed it into a local outlier factor outlier detector. The module LocalOutlierFactor has been made available to you as lof, and the data is available as features.
+
+Instructions
+100 XP
+Detect outliers in features using the euclidean metric.
+Detect outliers in features using the hamming metric.
+Detect outliers in features using the jaccard metric.
+Find if all three metrics agree on any one outlier.
+
+
+# Compute outliers according to the Euclidean metric
+out_eucl = lof(metric='euclidean').fit_predict(features)
+
+# Compute outliers according to the Hamming metric
+out_hamm = lof(metric='hamming').fit_predict(features)
+
+# Compute outliers according to the Jaccard metric
+out_jacc = lof(metric='jaccard').fit_predict(features)
+
+# Find if all three metrics agree on any one datapoint
+print(any(out_jacc + out_hamm + out_eucl == -3))
+
+There is no datapoint that all three metrics flag as an outlier. So choosing a distance metric should be done with great caution! You now have a concrete understanding of the effect of distance metrics on outlier detection.
+___________________________________________________________________________________________________________________________________
+
+
+Restricted Levenshtein
+You notice that the stringdist package also implements a variation of Levenshtein distance called the Restricted Damerau-Levenshtein distance, and want to try it out. You will follow the logic from the lesson, wrapping it inside a custom function and precomputing the distance matrix before fitting a local outlier factor anomaly detector. You will measure performance with accuracy_score() which is available to you as accuracy(). You also have access to packages stringdist, numpy as np, pdist() and squareform() from scipy.spatial.distance, and LocalOutlierFactor as lof. The data has been preloaded as a pandas dataframe with two columns, label and sequence, and has two classes: IMMUNE SYSTEM and VIRUS.
+
+Instructions
+100 XP
+Write a function with input u and v, each of which is an array containing a string, and applies the rdlevenshtein() function on the two strings.
+Reshape the sequence column from proteins by first casting it into an numpy array, and then using .reshape().
+Compute a square distance matrix for sequences using my_rdlevenshtein(), and fit lof on it.
+Compute accuracy by converting preds and proteins['label'] into booleans indicating whether a protein is a virus.
+
+# Wrap the RD-Levenshtein metric in a custom function
+def my_rdlevenshtein(u, v):
+    return stringdist.rdlevenshtein(u[0], v[0])
+
+# Reshape the array into a numpy matrix
+sequences = np.array(proteins['seq']).reshape(-1, 1)
+
+# Compute the pairwise distance matrix in square form
+M = squareform(pdist(sequences, my_rdlevenshtein))
+
+# Run a LoF algorithm on the precomputed distance matrix
+preds = lof(metric='precomputed').fit_predict(M)
+
+# Compute the accuracy of the outlier predictions
+print(accuracy(proteins['label'] == 'VIRUS', preds == -1))
+
+
+Overcoming compatibility problems when working with different Python modules is the sign of a true expert. What's more, you should now feel confident that success is possible even without labels.
+
+___________________________________________________________________________________________________________________________________
+
+Bringing it all together
+In addition to the distance-based learning anomaly detection pipeline you created in the last exercise, you want to also support a feature-based learning one with one-class SVM. You decide to extract two features: first, the length of the string, and, second, a numerical encoding of the first letter of the string, obtained using the function LabelEncoder() described in Chapter 1. To ensure a fair comparison, you will input the outlier scores into an AUC calculation. The following have been imported: LabelEncoder(), roc_auc_score() as auc() and OneClassSVM. The data is available as a pandas data frame called proteins with two columns, label and seq, and two classes, IMMUNE SYSTEM and VIRUS. A fitted LoF detector is available as lof_detector.
+
+Instructions
+100 XP
+For a string s, len(s) returns its length. Apply that to the seq column to obtain a new column len.
+For a string s, list(s) returns a list of its characters. Use this to extract the first letter of each sequence, and encode it using LabelEncoder().
+LoF scores are in the negative_outlier_factor_ attribute. Compute their AUC.
+Fit a 1-class SVM to a data frame with only len and first as columns. Extract the scores and assess both the LoF scores and the SVM scores using AUC.
+
+
+# Create a feature that contains the length of the string
+proteins['len'] = proteins['seq'].apply(lambda s: len(s))
+
+# Create a feature encoding the first letter of the string
+proteins['first'] =  LabelEncoder().fit_transform(
+  proteins['seq'].apply(lambda s: list(s)[0]))
+
+# Extract scores from the fitted LoF object, compute its AUC
+scores_lof = lof_detector.negative_outlier_factor_
+print(auc(proteins['label']=='IMMUNE SYSTEM', scores_lof))
+
+# Fit a 1-class SVM, extract its scores, and compute its AUC
+svm = OneClassSVM().fit(proteins[['len', 'first']])
+scores_svm = svm.score_samples(proteins[['len', 'first']])
+print(auc(proteins['label']=='IMMUNE SYSTEM', scores_svm))

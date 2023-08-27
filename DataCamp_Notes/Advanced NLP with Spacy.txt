@@ -1,0 +1,1224 @@
+Advanced NLP with spaCy
+
+Course Description
+If you're working with a lot of text, you'll eventually want to know more about it. For example, what's it about? What do the words mean in context? Who is doing what to whom? What companies and products are mentioned? Which texts are similar to each other? In this course, you'll learn how to use spaCy, a fast-growing industry standard library for NLP in Python, to build advanced natural language understanding systems, using both rule-based and machine learning approaches.
+
+<===========================================================================================================================>
+
+1
+Finding words, phrases, names and concepts
+FREE
+0%
+This chapter will introduce you to the basics of text processing with spaCy. You'll learn about the data structures, how to work with statistical models, and how to use them to predict linguistic features in your text.
+
+------------------------------------------------------------------------------------------------------------------------
+
+
+The nlp object
+# Import the English language class
+from spacy.lang.en import English
+# Create the nlp object
+nlp = English()
+contains the processing pipeline
+includes language-specic rules for tokenization etc.
+
+
+The Doc object
+# Created by processing a string of text with the nlp object
+doc = nlp("Hello world!")
+# Iterate over tokens in a Doc
+for token in doc:
+print(token.text)
+Hello
+world
+!
+
+
+
+The Token object
+doc = nlp("Hello world!")
+# Index into the Doc to get a single Token
+token = doc[1]
+# Get the token text via the .text attribute
+print(token.text)
+
+
+
+The Span object
+doc = nlp("Hello world!")
+# A slice from the Doc is a Span object
+span = doc[1:4]
+# Get the span text via the .text attribute
+print(span.text)
+world!
+
+
+
+Lexical attributes
+doc = nlp("It costs $5.")
+print('Index: '
+, [token.i for token in doc])
+print('Text: '
+, [token.text for token in doc])
+print('is_alpha:'
+, [token.is_alpha for token in doc])
+print('is_punct:'
+, [token.is_punct for token in doc])
+print('like_num:'
+, [token.like_num for token in doc])
+Index: [0, 1, 2, 3, 4]
+Text: ['It'
+,
+'costs'
+,
+'$'
+,
+'5'
+,
+'.']
+is_alpha: [True, True, False, False, False]
+is_punct: [False, False, False, False, True]
+like_num: [False, False, False, True, False]
+
+------------------------------------------------------------------------------------------------------------------------
+Getting Started
+Let's get started and try out spaCy! In this exercise, you'll be able to try out some of the 45+ available languages.
+
+This course introduces a lot of new concepts, so if you ever need a quick refresher, download the spaCy Cheat Sheet and keep it handy!
+
+Instructions 1/3
+35 XP
+Import the English class from spacy.lang.en and create the nlp object.
+Create a doc and print its text.
+2
+Import the German class from spacy.lang.de and create the nlp object.
+Create a doc and print its text.
+3
+Import the Spanish class from spacy.lang.es and create the nlp object.
+Create a doc and print its text.
+
+
+
+
+# Import the English language class
+from spacy.lang.en import English
+
+# Create the nlp object
+nlp = English()
+
+# Process a text
+doc = nlp("This is a sentence.")
+
+# Print the document text
+print(doc.text)
+
+
+# Import the German language class
+from spacy.lang.de import German
+
+# Create the nlp object
+nlp = German()
+
+# Process a text (this is German for: "Kind regards!")
+doc = nlp("Liebe Grüße!")
+
+# Print the document text
+print(doc.text)
+
+
+# Import the Spanish language class
+from spacy.lang.es import Spanish
+
+# Create the nlp object
+nlp = Spanish()
+
+# Process a text (this is Spanish for: "How are you?")
+doc = nlp("¿Cómo estás?")
+
+# Print the document text
+print(doc.text)
+
+
+------------------------------------------------------------
+
+
+
+Documents, spans and tokens
+When you call nlp on a string, spaCy first tokenizes the text and creates a document object. In this exercise, you'll learn more about the Doc, as well as its views Token and Span.
+
+Instructions 1/2
+50 XP
+1
+2
+Import the English language class and create the nlp object.
+Process the text and instantiate a Doc object in the variable doc.
+Select the first token of the Doc and print its text.
+
+
+# Import the English language class and create the nlp object
+from spacy.lang.en import English
+nlp = English()
+
+# Process the text
+doc = nlp("I like tree kangaroos and narwhals.")
+
+# Select the first token
+first_token = doc[0]
+
+# Print the first token's text
+print(first_token.text)
+
+
+
+# Import the English language class and create the nlp object
+from spacy.lang.en import English
+nlp = English()
+
+# Process the text
+doc = nlp("I like tree kangaroos and narwhals.")
+
+# A slice of the Doc for "tree kangaroos"
+tree_kangaroos = doc[2:4]
+print(tree_kangaroos.text)
+
+# A slice of the Doc for "tree kangaroos and narwhals" (without the ".")
+tree_kangaroos_and_narwhals = doc[2:6]
+print(tree_kangaroos_and_narwhals.text)
+
+
+
+------------------------------------------------------------
+
+Lexical attributes
+In this example, you'll use spaCy's Doc and Token objects, and lexical attributes to find percentages in a text. You'll be looking for two subsequent tokens: a number and a percent sign. The English nlp object has already been created.
+
+Instructions
+100 XP
+Use the like_num token attribute to check whether a token in the doc resembles a number.
+Get the token following the current token in the document. The index of the next token in the doc is token.i + 1.
+Check whether the next token's text attribute is a percent sign "%".
+
+
+
+# Process the text
+doc = nlp("In 1990, more than 60% of people in East Asia were in extreme poverty. Now less than 4% are.")
+
+# Iterate over the tokens in the doc
+for token in doc:
+    # Check if the token resembles a number
+    if token.like_num:
+        # Get the next token in the document
+        next_token = doc[token.i+1]
+        # Check if the next token's text equals '%'
+        if next_token.text == '%':
+            print('Percentage found:', token.text)
+            
+            
+
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+Statistical Models
+ADVAN CED N LP WITH S PA CY
+
+
+What are statistical models?
+Enable spaCy to predict linguistic attributes in context
+Part-of-speech tags
+Syntactic dependencies
+Named entities
+Trained on labeled example texts
+Can be updated with more examples to ne-tune predictions
+
+
+Model Packages
+import spacy
+nlp = spacy.load('en_core_web_sm')
+Binary weights
+Vocabulary
+Meta information (language, pipeline)
+
+
+Predicting Part-of-speech Tags
+import spacy
+# Load the small English model
+nlp = spacy.load('en_core_web_sm')
+# Process a text
+doc = nlp("She ate the pizza")
+# Iterate over the tokens
+for token in doc:
+# Print the text and the predicted part-of-speech tag
+print(token.text, token.pos_)
+She PRON
+ate VERB
+the DET
+pizza NOUN
+
+
+
+Predicting Syntactic Dependencies
+for token in doc:
+print(token.text, token.pos_, token.dep_, token.head.text)
+She PRON nsubj ate
+ate VERB ROOT ate
+the DET det pizza
+pizza NOUN dobj ate
+
+Label Description Example
+nsubj nominal subject She
+dobj direct object pizza
+det determiner (article) the
+
+
+Predicting Named Entities
+# Process a text
+doc = nlp(u"Apple is looking at buying U.K. startup for $1 billion")
+# Iterate over the predicted entities
+for ent in doc.ents:
+# Print the entity text and its label
+print(ent.text, ent.label_)
+Apple ORG
+U.K. GPE
+$1 billion MONEY
+
+
+Tip:the explain method
+Get quick denitions ofthe most common tags and labels.
+spacy.explain('GPE')
+Countries, cities, states'
+spacy.explain('NNP')
+'noun, proper singular'
+spacy.explain('dobj')
+'direct object
+
+----------------------------------------------------------------------------------------
+
+
+Loading models
+Let's start by loading a model. spacy is already imported.
+
+Instructions 1/2
+50 XP
+1
+Use spacy.load to load the small English model 'en_core_web_sm'.
+Process the text and print the document text.
+Take Hint (-15 XP)
+2
+Use spacy.load to load the small German model 'de_core_news_sm'.
+Process the text and print the document text.
+
+# Load the 'en_core_web_sm' model – spaCy is already imported
+nlp = spacy.load('en_core_web_sm')
+
+text = "It’s official: Apple is the first U.S. public company to reach a $1 trillion market value"
+
+# Process the text
+doc = nlp(text)
+
+# Print the document text
+print(doc.text)
+
+# Load the 'de_core_news_sm' model – spaCy is already imported
+nlp = spacy.load('de_core_news_sm')
+
+text = "Als erstes Unternehmen der Börsengeschichte hat Apple einen Marktwert von einer Billion US-Dollar erreicht"
+
+# Process the text
+doc = nlp(text)
+
+# Print the document text
+print(doc.text)
+
+
+---------------------------------------------------------------------------------
+
+Predicting linguistic annotations
+You'll now get to try one of spaCy's pre-trained model packages and see its predictions in action. Feel free to try it out on your own text! The small English model is already available as the variable nlp.
+
+To find out what a tag or label means, you can call spacy.explain in the IPython shell. For example: spacy.explain('PROPN') or spacy.explain('GPE').
+
+Instructions 1/2
+50 XP
+1
+2
+Process the text with the nlp object and create a doc.
+For each token, print the token text, the token's .pos_ (part-of-speech tag) and the token's .dep_ (dependency label).
+
+
+text = "It’s official: Apple is the first U.S. public company to reach a $1 trillion market value"
+
+# Process the text
+doc = nlp(text)
+
+for token in doc:
+    # Get the token text, part-of-speech tag and dependency label
+    token_text = token.text
+    token_pos = token.pos_
+    token_dep = token.dep_
+    # This is for formatting only
+    print('{:<12}{:<10}{:<10}'.format(token_text, token_pos, token_dep))
+    
+    
+
+<script.py> output:
+    It          PRON      nsubj     
+    ’s          PROPN     ROOT      
+    official    NOUN      acomp     
+    :           PUNCT     punct     
+    Apple       PROPN     nsubj     
+    is          VERB      ROOT      
+    the         DET       det       
+    first       ADJ       amod      
+    U.S.        PROPN     nmod      
+    public      ADJ       amod      
+    company     NOUN      attr      
+    to          PART      aux       
+    reach       VERB      relcl     
+    a           DET       det       
+    $           SYM       quantmod  
+    1           NUM       compound  
+    trillion    NUM       nummod    
+    market      NOUN      compound  
+    value       NOUN      dobj
+    
+    
+    
+text = "It’s official: Apple is the first U.S. public company to reach a $1 trillion market value"
+
+# Process the text
+doc = nlp(text)
+
+# Iterate over the predicted entities
+for ent in doc.ents:
+    # print the entity text and its label
+    print(ent.text, ent.label_)
+    
+    text = "It’s official: Apple is the first U.S. public company to reach a $1 trillion market value"
+
+# Process the text
+doc = nlp(text)
+
+# Iterate over the predicted entities
+for ent in doc.ents:
+    # print the entity text and its label
+
+<script.py> output:
+    Apple ORG
+    first ORDINAL
+    U.S. GPE
+    $1 trillion MONEY
+    
+    
+-------------------------------------------------------------------------------------
+
+Predicting named entities in context
+Models are statistical and not always right. Whether their predictions are correct depends on the training data and the text you're processing. Let's take a look at an example. The small English model is available as the variable nlp.
+
+Instructions 1/2
+50 XP
+1
+2
+Process the text with the nlp object.
+Iterate over the entities with the iterator ent and print the entity text and label.
+Take Hint (-15 XP)
+
+
+text = "New iPhone X release date leaked as Apple reveals pre-orders by mistake"
+
+# Process the text
+doc = nlp(text)
+
+# Iterate over the entities
+for ent in doc.ents:
+    # print the entity text and label
+    print(ent.text, ent.label_)
+    
+    
+    text = "New iPhone X release date leaked as Apple reveals pre-orders by mistake"
+
+# Process the text
+doc = nlp(text)
+
+# Iterate over the entities
+for ent in doc.ents:
+    # print the entity text and label
+    print(ent.text, ent.label_)
+
+# Get the span for "iPhone X"
+iphone_x = doc[1:3]
+
+# Print the span text
+print('Missing entity:', iphone_x.text)
+
+
+Perfect! Of course, you don't always have to do this manually. In the next video, you'll learn about spaCy's rule-based matcher, which can help you find certain words and phrases in text.
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+Rule-based Matching
+ADVAN CED N LP WITH S PA CY
+
+Why notjust regular expressions?
+Match on Doc objects, not just strings
+Match on tokens and token attributes
+Use the model's predictions
+Example:"duck"(verb) vs."duck"(noun)
+
+Match patterns
+Lists of dictionaries, one per token
+Match exact token texts
+[{'ORTH': 'iPhone'}, {'ORTH': 'X'}]
+Match lexical attributes
+[{'LOWER': 'iphone'}, {'LOWER': 'x'}]
+Match any token attributes
+[{'LEMMA': 'buy'}, {'POS': 'NOUN'}]
+
+
+Using the Matcher (1)
+import spacy
+# Import the Matcher
+from spacy.matcher import Matcher
+# Load a model and create the nlp object
+nlp = spacy.load('en_core_web_sm')
+# Initialize the matcher with the shared vocab
+matcher = Matcher(nlp.vocab)
+# Add the pattern to the matcher
+pattern = [{'ORTH': 'iPhone'}, {'ORTH': 'X'}]
+matcher.add('IPHONE_PATTERN', None, pattern)
+# Process some text
+doc = nlp("New iPhone X release date leaked")
+# Call the matcher on the doc
+matches = matcher(doc)
+
+
+Using the Matcher (2)
+# Call the matcher on the doc
+doc = nlp("New iPhone X release date leaked")
+matches = matcher(doc)
+# Iterate over the matches
+for match_id, start, end in matches:
+# Get the matched span
+matched_span = doc[start:end]
+print(matched_span.text)
+iPhone X
+match_id : hash value ofthe pattern name
+start : start index of matched span
+end : end index of matched span
+
+
+Matching lexical attributes
+pattern = [
+{'IS_DIGIT': True},
+{'LOWER': 'fifa'},
+{'LOWER': 'world'},
+{'LOWER': 'cup'},
+{'IS_PUNCT': True}
+]
+doc = nlp("2018 FIFA World Cup: France won!")
+2018 FIFA World Cup:
+
+
+Matching other token attributes
+pattern = [
+{'LEMMA': 'love'
+,
+'POS': 'VERB'},
+{'POS': 'NOUN'}
+]
+doc = nlp("I loved dogs but now I love cats more.")
+loved dogs
+love cats
+
+
+
+
+
+Using operators and quantiers (1)
+pattern = [
+{'LEMMA': 'buy'},
+{'POS': 'DET'
+,
+'OP': '?'}, # optional: match 0 or 1 times
+{'POS': 'NOUN'}
+]
+doc = nlp("I bought a smartphone. Now I'm buying apps.")
+bought a smartphone
+buying apps
+
+
+Using operators and quantiers (2)
+Description
+{'OP': '!'} Negation: match 0 times
+{'OP': '?'} Optional: match 0 or 1 times
+{'OP': '+'} Match 1 or more times
+{'OP': '*'} Match 0 or more times
+
+------------------------------------------------------------------------------------------------------------------------
+
+Using the Matcher
+Let's try spaCy's rule-based Matcher. You'll be using the example from the previous exercise and write a pattern that can match the phrase "iPhone X" in the text. The nlp object and a processed doc are already available.
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Import the Matcher from spacy.matcher.
+Initialize it with the nlp object's shared vocab.
+
+# Import the Matcher
+from spacy.matcher import Matcher
+
+# Initialize the Matcher with the shared vocabulary
+matcher = Matcher(nlp.vocab)
+
+Create a pattern that matches the 'TEXT' values of two tokens: "iPhone" and "X".
+Use the matcher.add method to add the pattern to the matcher.
+
+# Import the Matcher
+from spacy.matcher import Matcher
+
+# Initialize the Matcher with the shared vocabulary
+matcher = Matcher(nlp.vocab)
+
+# Create a pattern matching two tokens: "iPhone" and "X"
+pattern = [{'TEXT':'iPhone'},{'TEXT':'X'}]
+
+# Add the pattern to the matcher
+matcher.add('IPHONE_X_PATTERN', None, pattern)
+
+Call the matcher on the doc and store the result in the variable matches.
+Iterate over the matches and get the matched span from the start to the end index.
+
+# Import the Matcher and initialize it with the shared vocabulary
+from spacy.matcher import Matcher
+matcher = Matcher(nlp.vocab)
+
+# Create a pattern matching two tokens: "iPhone" and "X"
+pattern = [{'TEXT': 'iPhone'}, {'TEXT': 'X'}]
+
+# Add the pattern to the matcher
+matcher.add('IPHONE_X_PATTERN', None, pattern)
+
+# Use the matcher on the doc
+matches = matcher(doc)
+print('Matches:', [doc[start:end].text for match_id, start, end in matches])
+------------------------------------------------------------------------------------------------------------------------
+
+
+Writing match patterns
+In this exercise, you'll practice writing more complex match patterns using different token attributes and operators. A matcher is already initialized and available as the variable matcher.
+
+Instructions 1/3
+35 XP
+1
+Write one pattern that only matches mentions of the full iOS versions: "iOS 7", "iOS 11" and "iOS 10".
+Take Hint (-10 XP)
+2
+Write one pattern that only matches forms of "download" (tokens with the lemma "download"), followed by a token with the part-of-speech tag 'PROPN' (proper noun).
+3
+Write one pattern that matches adjectives ('ADJ') followed by one or two 'NOUN's (one noun and one optional noun).
+
+
+doc = nlp("After making the iOS update you won't notice a radical system-wide redesign: nothing like the aesthetic upheaval we got with iOS 7. Most of iOS 11's furniture remains the same as in iOS 10. But you will discover some tweaks once you delve a little deeper.")
+
+# Write a pattern for full iOS versions ("iOS 7", "iOS 11", "iOS 10")
+pattern = [{'TEXT': 'iOS'}, {'IS_DIGIT': True}]
+
+# Add the pattern to the matcher and apply the matcher to the doc
+matcher.add('IOS_VERSION_PATTERN', None, pattern)
+matches = matcher(doc)
+print('Total matches found:', len(matches))
+
+# Iterate over the matches and print the span text
+for match_id, start, end in matches:
+    print('Match found:', doc[start:end].text)
+    
+    
+ <script.py> output:
+    Total matches found: 3
+    Match found: iOS 7
+    Match found: iOS 11
+    Match found: iOS 10
+    
+    
+    doc = nlp("i downloaded Fortnite on my laptop and can't open the game at all. Help? so when I was downloading Minecraft, I got the Windows version where it is the '.zip' folder and I used the default program to unpack it... do I also need to download Winzip?")
+
+# Write a pattern that matches a form of "download" plus proper noun
+pattern = [{'LEMMA': 'download'}, {'POS': 'PROPN'}]
+
+# Add the pattern to the matcher and apply the matcher to the doc
+matcher.add('DOWNLOAD_THINGS_PATTERN', None, pattern)
+matches = matcher(doc)
+print('Total matches found:', len(matches))
+
+# Iterate over the matches and print the span text
+for match_id, start, end in matches:
+    print('Match found:', doc[start:end].text)
+    
+    
+    doc = nlp("Features of the app include a beautiful design, smart search, automatic labels and optional voice responses.")
+
+# Write a pattern for adjective plus one or two nouns
+pattern = [{'POS': 'ADJ'}, {'POS': 'NOUN'}, {'POS': 'NOUN', 'OP': '?'}]
+
+# Add the pattern to the matcher and apply the matcher to the doc
+matcher.add('ADJ_NOUN_PATTERN', None, pattern)
+matches = matcher(doc)
+print('Total matches found:', len(matches))
+
+# Iterate over the matches and print the span text
+for match_id, start, end in matches:
+    print('Match found:', doc[start:end].text)
+    
+    
+
+<===========================================================================================================================>
+
+
+2
+Large-scale data analysis with spaCy
+0%
+In this chapter, you'll use your new skills to extract specific information from large volumes of text. You'll learn how to make the most of spaCy's data structures, and how to effectively combine statistical and rule-based approaches for text analysis.
+
+____________________________________________________________________________________________________________________
+
+Data Structures: Vocab,
+Lexemes and StringStore
+
+
+Shared vocab and string store (1)
+Vocab : stores data shared across multiple documents
+To save memory, spaCy encodes all strings to hash values
+Strings are only stored once in the StringStore via nlp.vocab.strings
+String store: lookup table in both directions
+coffee_hash = nlp.vocab.strings['coffee']
+coffee_string = nlp.vocab.strings[coffee_hash]
+Hashes can't be reversed – that's why we need to provide the shared vocab
+# Raises an error if we haven't seen the string before
+string = nlp.vocab.strings[3197928453018144401]
+
+Shared vocab and string store (2)
+Look up the string and hash in nlp.vocab.strings
+doc = nlp("I love coffee")
+print('hash value:', nlp.vocab.strings['coffee'])
+print('string value:', nlp.vocab.strings[3197928453018144401])
+hash value: 3197928453018144401
+string value: coffee
+The doc also exposes the vocab and strings
+doc = nlp("I love coffee")
+print('hash value:', doc.vocab.strings['coffee'])
+hash value: 3197928453018144401
+
+
+Lexemes: entries in the vocabulary
+A Lexeme object is an entry in the vocabulary
+doc = nlp("I love coffee")
+lexeme = nlp.vocab['coffee']
+# print the lexical attributes
+print(lexeme.text, lexeme.orth, lexeme.is_alpha)
+coffee 3197928453018144401 True
+Contains the context-independentinformation about a word
+Word text: lexeme.text and lexeme.orth (the hash)
+Lexical attributes like lexeme.is_alpha
+Not context-dependent part-of-speech tags, dependencies or entity labels
+
+
+______________________________________________________________________________________________________
+
+Strings to hashes
+The nlp object has already been created for you.
+
+Instructions 1/2
+50 XP
+1
+Look up the string "cat" in nlp.vocab.strings to get the hash.
+Look up the hash to get back the string.
+Take Hint (-15 XP)
+2
+Look up the string label "PERSON" in nlp.vocab.strings to get the hash.
+Look up the hash to get back the string.
+
+# Look up the hash for the word "cat"
+cat_hash = nlp.vocab.strings['cat']
+print(cat_hash)
+
+# Look up the cat_hash to get the string
+cat_string = nlp.vocab.strings[cat_hash]
+print(cat_string)
+
+
+# Look up the hash for the string label "PERSON"
+person_hash = nlp.vocab.strings['PERSON']
+print(person_hash)
+
+# Look up the person_hash to get the string
+person_string = nlp.vocab.strings[person_hash]
+print(person_string)
+
+<script.py> output:
+    14800503047316267216
+    person
+
+<script.py> output:
+    380
+    PERSON
+
+____________________________________________________________________________________________________
+
+Vocab, hashes and lexemes
+Why does this code throw an error?
+
+from spacy.lang.en import English
+from spacy.lang.de import German
+
+# Create an English and German nlp object
+nlp = English()
+nlp_de = German()
+# Get the ID for the string 'Bowie'
+bowie_id = nlp.vocab.strings['Bowie']
+print(bowie_id)
+
+# Look up the ID for 'Bowie' in the vocab
+print(nlp_de.vocab.strings[bowie_id])
+The English language class is already available as the nlp object.
+
+
+
+
+
+
+____________________________________________________________________________________________________----
+
+Data Structures: Doc, Span and
+Token
+
+
+The Doc object
+# Create an nlp object
+from spacy.lang.en import English
+nlp = English()
+# Import the Doc class
+from spacy.tokens import Doc
+# The words and spaces to create the doc from
+words = ['Hello'
+,
+'world'
+,
+'!']
+spaces = [True, False, False]
+# Create a doc manually
+doc = Doc(nlp.vocab, words=words, spaces=spaces)
+
+
+The Span object(2)
+# Import the Doc and Span classes
+from spacy.tokens import Doc, Span
+# The words and spaces to create the doc from
+words = ['Hello', 'world', '!']
+spaces = [True, False, False]
+# Create a doc manually
+doc = Doc(nlp.vocab, words=words, spaces=spaces)
+# Create a span manually
+span = Span(doc, 0, 2)
+# Create a span with a label
+span_with_label = Span(doc, 0, 2, label="GREETING")
+# Add span to the doc.ents
+doc.ents = [span_with_label]
+
+Best practices
+Doc and Span are very powerful and hold references and relationships of words and sentences
+Convert resultto strings as late as possible
+Use token attributes if available – for example, token.i for the token index
+Don't forget to pass in the shared vocab
+
+_______________________________________________________________________________________________
+
+Creating a Doc
+Let's create some Doc objects from scratch! The nlp object has already been created for you.
+
+By the way, if you haven't downloaded it already, check out the spaCy Cheat Sheet. It includes an overview of the most important concepts and methods and might come in handy if you ever need a quick refresher!
+
+Instructions 1/3
+35 XP
+Instructions 1/3
+35 XP
+1
+Import the Doc from spacy.tokens.
+Create a Doc from the words and spaces. Don't forget to pass in the vocab!
+Take Hint (-10 XP)
+2
+Import the Doc from spacy.tokens.
+Create a Doc from the words and spaces. Don't forget to pass in the vocab!
+3
+Import the Doc from spacy.tokens.
+Complete the words and spaces to match the desired text and create a doc.
+
+
+
+# Import the Doc class
+from spacy.tokens import Doc
+
+# Desired text: "spaCy is cool!"
+words = ['spaCy', 'is', 'cool', '!']
+spaces = [True, True, False, False]
+
+# Create a Doc from the words and spaces
+doc = Doc(nlp.vocab, words=words, spaces=spaces)
+print(doc.text)
+
+
+
+# Import the Doc class
+from spacy.tokens import Doc
+
+# Desired text: "Go, get started!"
+words = ['Go', ',', 'get', 'started', '!']
+spaces = [False, True, True, False, False]
+
+# Create a Doc from the words and spaces
+doc = Doc(nlp.vocab, words=words, spaces=spaces)
+print(doc.text)
+
+_______________________________________________________________________________________________
+
+Docs, spans and entities from scratch
+In this exercise, you'll create the Doc and Span objects manually, and update the named entities – just like spaCy does behind the scenes. A shared nlp object has already been created.
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Import the Doc and Span classes from spacy.tokens.
+Use the Doc class directly to create a doc from the words and spaces.
+
+# Import the Doc and Span classes
+from spacy.tokens import Doc, Span
+
+words = ['I', 'like', 'David', 'Bowie']
+spaces = [True, True, True, False]
+
+# Create a doc from the words and spaces
+doc = Doc(nlp.vocab, words = words, spaces = spaces)
+print(doc.text)
+
+Instructions 2/3
+35 XP
+2
+3
+Create a Span for "David Bowie" from the doc and assign it the label "PERSON".
+
+# Import the Doc and Span classes
+from spacy.tokens import Doc, Span
+
+# Create a doc from the words and spaces
+doc = Doc(nlp.vocab, words=['I', 'like', 'David', 'Bowie'], spaces=[True, True, True, False])
+
+# Create a span for "David Bowie" from the doc and assign it the label "PERSON"
+span = Span(doc, 2, 4, label="PERSON")
+print(span.text, span.label_)
+
+Instructions 3/3
+30 XP
+3
+Overwrite the doc.ents with a list of one entity, the "David Bowie" span.
+
+
+# Import the Doc and Span classes
+from spacy.tokens import Doc, Span
+
+# Create a doc from the words and spaces
+doc = Doc(nlp.vocab, words=['I', 'like', 'David', 'Bowie'], spaces=[True, True, True, False])
+
+# Create a span for "David Bowie" from the doc and assign it the label "PERSON"
+span = Span(doc, 2, 4, label='PERSON')
+
+# Add the span to the doc's entities
+doc.ents = [span]
+
+# Print entities' text and labels
+print([(ent.text, ent.label_) for ent in doc.ents])
+_______________________________________________________________________________________________
+
+Data structures best practices
+The code in this example is trying to analyze a text and collect all proper nouns. If the token following the proper noun is a verb, it should also be extracted. A doc object has already been created.
+
+# Get all tokens and part-of-speech tags
+pos_tags = [token.pos_ for token in doc]
+
+for index, pos in enumerate(pos_tags):
+    # Check if the current token is a proper noun
+    if pos == 'PROPN':
+        # Check if the next token is a verb
+        if pos_tags[index + 1] == 'VERB':
+            print('Found a verb after a proper noun!')
+Instructions 2/2
+0 XP
+Rewrite the code to use the native token attributes instead of a list of pos_tags.
+Loop over each token in the doc and check the token.pos_ attribute.
+Use doc[token.i + 1] to check for the next token and its .pos_ attribute.
+
+
+# Iterate over the tokens
+for token in doc:
+    # Check if the current token is a proper noun
+    if token.pos_ == 'PROPN':
+        # Check if the next token is a verb
+        if doc[token.i + 1].pos_ == 'VERB':
+            print('Found a verb after a proper noun!')
+_______________________________________________________________________________________________--
+
+Word vectors and semantic
+similarity
+
+Comparing semantic similarity
+spaCy can compare two objects and predict similarity
+Doc.similarity() , Span.similarity() and Token.similarity()
+Take another object and return a similarity score ( 0 to 1 )
+Important: needs a modelthat has word vectors included,for example:
+YES: en_core_web_md (medium model)
+YES: en_core_web_lg (large model)
+NO: en_core_web_sm (small model)
+
+
+Similarity examples (1)
+# Load a larger model with vectors
+nlp = spacy.load('en_core_web_md')
+# Compare two documents
+doc1 = nlp("I like fast food")
+doc2 = nlp("I like pizza")
+print(doc1.similarity(doc2))
+0.8627204117787385
+# Compare two tokens
+doc = nlp("I like pizza and pasta")
+token1 = doc[2]
+token2 = doc[4]
+print(token1.similarity(token2))
+0.7369546
+
+
+Similarity examples (2)
+# Compare a document with a token
+doc = nlp("I like pizza")
+token = nlp("soap")[0]
+print(doc.similarity(token))
+0.32531983166759537
+# Compare a span with a document
+span = nlp("I like pizza and pasta")[2:5]
+doc = nlp("McDonalds sells burgers")
+print(span.similarity(doc))
+0.619909235817623
+
+
+How does spaCy predict similarity?
+Similarity is determined using word vectors
+Multi-dimensional meaning representations of words
+Generated using an algorithm likeWord2Vec and lots oftext
+Can be added to spaCy's statistical models
+Default: cosine similarity, but can be adjusted
+Doc and Span vectors default to average oftoken vectors
+Short phrases are better than long documents with many irrelevant words
+
+
+Word vectors in spaCy
+# Load a larger model with vectors
+nlp = spacy.load('en_core_web_md')
+doc = nlp("I have a banana")
+# Access the vector via the token.vector attribute
+print(doc[3].vector)
+[2.02280000e-01, -7.66180009e-02, 3.70319992e-01,
+3.28450017e-02, -4.19569999e-01, 7.20689967e-02,
+-3.74760002e-01, 5.74599989e-02, -1.24009997e-02,
+5.29489994e-01, -5.23800015e-01, -1.97710007e-01,
+-3.41470003e-01, 5.33169985e-01, -2.53309999e-02,
+1.73800007e-01, 1.67720005e-01, 8.39839995e-01,
+5.51070012e-02, 1.05470002e-01, 3.78719985e-01,
+2.42750004e-01, 1.47449998e-02, 5.59509993e-01,
+1.25210002e-01, -6.75960004e-01, 3.58420014e-01,
+-4.00279984e-02, 9.59490016e-02, -5.06900012e-01,
+-8.53179991e-02, 1.79800004e-01, 3.38669986e-01,
+
+
+Similarity depends on the application context
+Useful for many applications: recommendation systems, agging duplicates etc.
+There's no objective denition of"similarity"
+Depends on the context and what application needs to do
+doc1 = nlp("I like cats")
+doc2 = nlp("I hate cats")
+print(doc1.similarity(doc2))
+0.9501447503553421
+______________________________________________________________________________________________________
+
+
+Inspecting word vectors
+In this exercise, you'll use a larger English model, which includes around 20.000 word vectors. Because vectors take a little longer to load, we're using a slightly compressed version of it than the one you can download with spaCy. The model is already pre-installed, and spacy has already been imported for you.
+
+Instructions
+0 XP
+Load the medium 'en_core_web_md' model with word vectors.
+Print the vector for "bananas" using the token.vector attribute.
+Hint
+To load a statistical model, call spacy.load with its string name.
+To access a token in a doc, you can index into it. For example, doc[4].
+
+
+# Load the en_core_web_md model
+nlp = spacy.load('en_core_web_md')
+
+# Process a text
+doc = nlp("Two bananas in pyjamas")
+
+# Get the vector for the token "bananas"
+bananas_vector = doc[1].vector
+print(bananas_vector)
+
+______________________________________________________________________________________________________
+
+Comparing similarities
+In this exercise, you'll be using spaCy's similarity methods to compare Doc, Token and Span objects and get similarity scores. The medium English model is already available as the nlp object.
+
+Instructions 1/3
+35 XP
+1
+Use the doc.similarity method to compare doc1 to doc2 and print the result.
+Take Hint (-10 XP)
+
+doc1 = nlp("It's a warm summer day")
+doc2 = nlp("It's sunny outside")
+
+# Get the similarity of doc1 and doc2
+similarity = doc1.similarity(doc2)
+print(similarity)
+
+
+2
+Use the token.similarity method to compare token1 to token2 and print the result.
+
+doc = nlp("TV and books")
+token1, token2 = doc[0], doc[2]
+
+# Get the similarity of the tokens "TV" and "books" 
+similarity = token1.similarity(token2)
+print(similarity)
+
+
+
+3
+Create spans for "great restaurant"/"really nice bar".
+Use span.similarity to compare them and print the result.
+
+doc = nlp("This was a great restaurant. Afterwards, we went to a really nice bar.")
+
+# Create spans for "great restaurant" and "really nice bar"
+span1 = doc[3:5]
+print(span1)
+span2 = doc[12:15]
+print(span2)
+
+
+# Get the similarity of the spans
+similarity = span1.similarity(span2)
+print(similarity)
+
+______________________________________________________________________________________________________--
+
+Combining models and rules
+
+
+Statistical predictions vs. rules
+Statistical models Rule-based systems
+Use cases
+application needs to generalize based on
+examples
+dictionary with nite number of
+examples
+Real-world
+examples
+product names, person names,
+subject/object relationships
+countries ofthe world, cities, drug
+names, dog breeds
+spaCy features
+entity recognizer, dependency parser, partof-speech tagger
+tokenizer, Matcher ,
+PhraseMatcher
+
+
+
+Recap: Rule-based Matching
+# Initialize with the shared vocab
+from spacy.matcher import Matcher
+matcher = Matcher(nlp.vocab)
+# Patterns are lists of dictionaries describing the tokens
+pattern = [{'LEMMA': 'love'
+,
+'POS': 'VERB'}, {'LOWER': 'cats'}]
+matcher.add('LOVE_CATS'
+, None, pattern)
+# Operators can specify how often a token should be matched
+pattern = [{'TEXT': 'very'
+,
+'OP': '+'}, {'TEXT': 'happy'}]
+# Calling matcher on doc returns list of (match_id, start, end) tuples
+doc = nlp("I love cats and I'm very very happy")
+matches = matcher(doc)
+
+
+Adding statistical predictions
+matcher = Matcher(nlp.vocab)
+matcher.add('DOG', None, [{'LOWER': 'golden'}, {'LOWER': 'retriever'}])
+doc = nlp("I have a Golden Retriever")
+for match_id, start, end in matcher(doc):
+span = doc[start:end]
+print('Matched span:', span.text)
+# Get the span's root token and root head token
+print('Root token:', span.root.text)
+print('Root head token:', span.root.head.text)
+# Get the previous token and its POS tag
+print('Previous token:', doc[start - 1].text, doc[start - 1].pos_)
+Matched span: Golden Retriever
+Root token: Retriever
+Root head token: have
+Previous token: a DET
+
+
+Efcient phrase matching (1)
+PhraseMatcher like regular expressions or keyword search – but with access to the tokens!
+Takes Doc object as patterns
+More efcient and faster than the Matcher
+Great for matching large word lists
+
+Efcient phrase matching (2)
+from spacy.matcher import PhraseMatcher
+matcher = PhraseMatcher(nlp.vocab)
+pattern = nlp("Golden Retriever")
+matcher.add('DOG', None, pattern)
+doc = nlp("I have a Golden Retriever")
+# iterate over the matches
+for match_id, start, end in matcher(doc):
+# get the matched span
+span = doc[start:end]
+print('Matched span:', span.text)
+Matched span: Golden Retriever
+
+
+
+
+
+<===========================================================================================================================>
+
+3
+Processing Pipelines
+0%
+This chapter will show you to everything you need to know about spaCy's processing pipeline. You'll learn what goes on under the hood when you process a text, how to write your own components and add them to the pipeline, and how to use custom attributes to add your own meta data to the documents, spans and tokens.
+
+<===========================================================================================================================>
+
+
+4
+Training a neural network model
+0%
+In this chapter, you'll learn how to update spaCy's statistical models to customize them for your use case – for example, to predict a new entity type in online comments. You'll write your own training loop from scratch, and understand the basics of how training works, along with tips and tricks that can make your custom NLP projects more successful.

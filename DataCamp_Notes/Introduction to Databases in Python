@@ -1,0 +1,2630 @@
+Course Description
+In this Python SQL course, you'll learn the basics of using Structured Query Language (SQL) with Python. This will be useful since whether you like it or not, databases are ubiquitous and, as a data scientist, you'll need to interact with them constantly. The Python SQL toolkit SQLAlchemy provides an accessible and intuitive way to query, build & write to SQLite, MySQL and Postgresql databases (among many others), all of which you will encounter in the daily life of a data scientist.
+
+=====================================================================================================================
+1
+Basics of Relational Databases
+
+In this chapter, you will become acquainted with the fundamentals of Relational Databases and the Relational Model. You will learn how to connect to a database and then interact with it by writing basic SQL queries, both in raw SQL as well as with SQLAlchemy, which provides a Pythonic way of interacting with databases.
+
+Connecting to a Database
+
+Meet SQLAlchemy
+● Two Main Pieces
+			● Core (Relational Model focused)
+			● ORM (User Data Model focused)
+
+
+Connecting to a database
+			In [1]: from sqlalchemy import create_engine
+			In [2]: engine = create_engine('sqlite:///census_nyc.sqlite')
+			In [3]: connection = engine.connect()
+
+								● Engine: common interface to the database from
+								SQLAlchemy; requires connection string before it can connect to a database
+								● Connection string: All the details required to find the
+								database (and login, if necessary)
+
+A word on connection strings
+● 'sqlite:///census_nyc.sqlite'
+Driver+Dialect Filename
+
+
+What’s in your database?
+		● Before querying your database, you’ll want to know what is in it: what the tables are, for example:
+								In [1]: from sqlalchemy import create_engine
+								In [2]: engine = create_engine('sqlite:///census_nyc.sqlite')
+								In [3]: print(engine.table_names())
+								Out[3]: ['census', 'state_fact']
+
+
+Reflection <= process that reads the database and builds a Table object that we can use in our code
+We've already created the engine so we begin by importing the MetaData and Table Objects needed for reflection
+
+					In [1]: from sqlalchemy import MetaData, Table
+					In [2]: metadata = MetaData()
+					In [3]: census = Table('census', metadata, autoload=True,
+					autoload_with=engine)
+					In [4]: print(repr(census))
+
+									Out[4]:
+									Table('census', MetaData(bind=None), Column('state',
+									VARCHAR(length=30), table=<census>), Column('sex',
+									VARCHAR(length=1), table=<census>), Column('age', INTEGER(),
+									table=<census>), Column('pop2000', INTEGER(), table=<census>),
+									Column('pop2008', INTEGER(), table=<census>), schema=None)
+
+
+
+
+_______________________________________________________________________________________________________________________
+
+Engines and Connection Strings
+Alright, it's time to create your first engine! An engine is just a common interface to a database, and the information it requires to connect to one is contained in a connection string, such as sqlite:///census_nyc.sqlite. Here, sqlite is the database driver, while census_nyc.sqlite is a SQLite file contained in the local directory.
+
+You can learn a lot more about connection strings in the SQLAlchemy documentation.
+
+Your job in this exercise is to create an engine that connects to a local SQLite file named census.sqlite. Then, print the names of the tables it contains using the .table_names() method. Note that when you just want to print the table names, you do not need to use engine.connect() after creating the engine.
+
+Instructions
+100 XP
+Import create_engine from the sqlalchemy module.
+Using the create_engine() function, create an engine for a local file named census.sqlite with sqlite as the driver. Be sure to enclose the connection string within quotation marks.
+Print the output from the .table_names() method on the engine.
+
+
+# Import create_engine
+from sqlalchemy import create_engine
+
+# Create an engine that connects to the census.sqlite file: engine
+engine = create_engine('sqlite:///census.sqlite')
+
+# Print table names
+print(engine.table_names())
+
+________________________________________________________________________________________________________
+
+Autoloading Tables from a Database
+SQLAlchemy can be used to automatically load tables from a database using something called reflection. Reflection is the process of reading the database and building the metadata based on that information. It's the opposite of creating a Table by hand and is very useful for working with existing databases. To perform reflection, you need to import the Table object from the SQLAlchemy package. Then, you use this Table object to read your table from the engine and autoload the columns. Using the Table object in this manner is a lot like passing arguments to a function. For example, to autoload the columns with the engine, you have to specify the keyword arguments autoload=True and autoload_with=engine to Table().
+
+In this exercise, your job is to reflect the census table available on your engine into a variable called census. The metadata has already been loaded for you using MetaData() and is available in the variable metadata.
+
+Instructions
+100 XP
+Import the Table object from sqlalchemy.
+Reflect the census table by using the Table object with the arguments:
+The name of the table as a string ('census').
+The metadata, contained in the variable metadata.
+autoload=True
+The engine to autoload with - in this case, engine.
+Print the details of census using the repr() function.
+
+# Import Table
+from sqlalchemy import Table
+
+# Reflect census table from the engine: census
+census = Table('census', metadata, autoload=True, autoload_with=engine)
+
+# Print census table metadata
+print(repr(census))
+
+<script.py> output:
+    Table('census', MetaData(bind=None), Column('state', VARCHAR(length=30), table=<census>), Column('sex', VARCHAR(length=1), table=<census>), Column('age', INTEGER(), table=<census>), Column('pop2000', INTEGER(), table=<census>), Column('pop2008', INTEGER(), table=<census>), schema=None)
+
+
+__________________________________________________________________________________________________________
+
+
+Viewing Table Details
+Great job reflecting the census table! Now you can begin to learn more about the columns and structure of your table. It is important to get an understanding of your database by examining the column names. This can be done by using the .columns attribute and accessing the .keys() method. For example, census.columns.keys() would return a list of column names of the census table.
+
+Following this, we can use the metadata container to find out more details about the reflected table such as the columns and their types. For example, table objects are stored in the metadata.tables dictionary, so you can get the metadata of your census table with metadata.tables['census']. This is similar to your use of the repr() function on the census table from the previous exercise.
+
+Instructions
+100 XP
+Reflect the census table as you did in the previous exercise using the Table() function.
+Print a list of column names of the census table by applying the .keys() method to census.columns.
+Print the details of the census table using the metadata.tables dictionary along with the repr() function. To do this, first access the 'census' key of the metadata.tables dictionary, and place this inside the provided repr() function.
+
+
+
+
+# Reflect the census table from the engine: census
+census = Table('census', metadata, autoload=True, autoload_with=engine)
+
+# Print the column names
+print(census.columns.keys())
+
+# Print full table metadata
+print(repr(metadata.tables['census']))
+
+<script.py> output:
+    ['state', 'sex', 'age', 'pop2000', 'pop2008']
+    Table('census', MetaData(bind=None), Column('state', VARCHAR(length=30), table=<census>), Column('sex', VARCHAR(length=1), table=<census>), Column('age', INTEGER(), table=<census>), Column('pop2000', INTEGER(), table=<census>), Column('pop2008', INTEGER(), table=<census>), schema=None)
+    
+    __________________________________________________________________________________________________________________________
+    
+Basic SQL querying
+In [1]: from sqlalchemy import create_engine
+In [2]: engine = create_engine('sqlite:///census_nyc.sqlite')
+In [3]: connection = engine.connect()
+In [4]: stmt = 'SELECT * FROM people'
+In [5]: result_proxy = connection.execute(stmt)
+In [6] results = result_proxy.fetchall()    
+
+
+ResultProxy vs ResultSet
+● ResultProxy -  When we use a fetch method, like fetchall on ResultProxy, weget a ResultSrt that contains all the data we ask for in a query 
+● ResultSet
+
+ 	result_proxy = connection.execute(stmt)
+	results = result_proxy.fetchall()
+
+
+Handling ResultSets
+In [1]: first_row = results[0]
+In [2]: print(first_row)
+Out[2]: ('Illinois', 'M', 0, 89600, 95012)
+In [4]: print(first_row.keys())
+Out[4]: ['state', 'sex', 'age', 'pop2000', 'pop2008']
+In [6]: print(first_row.state)
+Out[6]: 'Illinois'
+
+SQLAlchemy to Build Queries
+● Provides a Pythonic way to build SQL statements
+● Hides differences between backend database types
+
+
+SQLAlchemy querying
+In [4]: from sqlalchemy import Table, MetaData
+In [5]: metadata = MetaData()
+In [6]: census = Table('census', metadata, autoload=True,
+autoload_with=engine)
+In [7]: stmt = select([census])
+In [8]: results = connection.execute(stmt).fetchall()
+
+
+SQLAlchemy Select Statement
+● Requires a list of one or more Tables or Columns
+● Using a table will select all the columns in it
+In [9]: stmt = select([census])
+In [10]: print(stmt)
+Out[10]: 'SELECT * from CENSUS
+
+
+
+
+
+
+Selecting data from a Table: raw SQL
+Using what we just learned about SQL and applying the .execute() method on our connection, we can leverage a raw SQL query to query all the records in our census table. The object returned by the .execute() method is a ResultProxy. On this ResultProxy, we can then use the .fetchall() method to get our results - that is, the ResultSet.
+
+In this exercise, you'll use a traditional SQL query. In the next exercise, you'll move to SQLAlchemy and begin to understand its advantages. Go for it!
+
+Instructions
+100 XP
+Build a SQL statement to query all the columns from census and store it in stmt. Note that your SQL statement must be a string.
+Use the .execute() and .fetchall() methods on connection and store the result in results. Remember that .execute() comes before .fetchall() and that stmt needs to be passed to .execute().
+Print results.
+
+
+# Build select statement for census table: stmt
+stmt = 'SELECT * FROM census'
+
+# Execute the statement and fetch the results: results
+results = connection.execute(stmt).fetchall()
+
+# Print results
+print(results)
+
+
+
+<script.py> output:
+    [('Illinois', 'M', 0, 89600, 95012), ('Illinois', 'M', 1, 88445, 91829), ('Illinois', 'M', 2, 88729, 89547), ('Illinois', 'M', 3, 88868, 90037), ('Illinois', 'M', 4, 91947, 91111), ('Illinois', 'M', 5, 93894, 89802), ('Illinois', 'M', 6, 93676, 88931), ('Illinois', 'M', 7, 94818, 90940), ('Illinois', 'M', 8, 95035, 86943), ('Illinois', 'M', 9, 96436, 86055), ('Illinois', 'M', 10, 97280, 86565), ('Illinois', 'M', 11, 94029, 86606), ('Illinois', 'M', 12, 92402, 89596), ('Illinois', 'M', 13, 89926, 91661), ('Illinois', 'M', 14, 90717, 91256), ('Illinois', 'M', 15, 92178, 92729), ('Illinois', 'M', 16, 90587, 93083), ('Illinois', 'M', 17, 92782, 94541), ('Illinois', 'M', 18, 90997, 100253), ('Illinois', 'M', 19, 89629, 96588), ('Illinois', 'M', 20, 91040, 95460), ('Illinois', 'M', 21, 85176, 91373), ('Illinois', 'M', 22, 84372, 90723), ('Illinois', 'M', 23, 85529, 91982), ('Illinois', 'M', 24, 84549, 90237), ('Illinois', 'M', 25, 87630, 95217), ('Illinois', 'M', 26, 84205, 93351), ('Illinois', 'M', 27, 87481, 92949), ('Illinois', 'M', 28, 91586, 93929), ('Illinois', 'M', 29, 95226, 89559), ('Illinois', 'M', 30, 98572, 89598), ('Illinois', 'M', 31, 91469, 90093), ('Illinois', 'M', 32, 89813, 87703), ('Illinois', 'M', 33, 89694, 90090), ('Illinois', 'M', 34, 91474, 84679), ('Illinois', 'M', 35, 
+
+______________________________________________________________________________________________
+
+Selecting data from a Table with SQLAlchemy
+Excellent work so far! It's now time to build your first select statement using SQLAlchemy. SQLAlchemy provides a nice "Pythonic" way of interacting with databases. So rather than dealing with the differences between specific dialects of traditional SQL such as MySQL or PostgreSQL, you can leverage the Pythonic framework of SQLAlchemy to streamline your workflow and more efficiently query your data. For this reason, it is worth learning even if you may already be familiar with traditional SQL.
+
+In this exercise, you'll once again build a statement to query all records from the census table. This time, however, you'll make use of the select() function of the sqlalchemy module. This function requires a list of tables or columns as the only required argument.
+
+Table and MetaData have already been imported. The metadata is available as metadata and the connection to the database as connection.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import select from the sqlalchemy module.
+Reflect the census table. This code is already written for you.
+Create a query using the select() function to retrieve the census table. To do so, pass a list to select() containing a single element: census.
+Print stmt to see the actual SQL query being created. This code has been written for you.
+Using the provided print() function, print all the records from the census table. To do this:
+Use the .execute() method on connection with stmt as the argument to retrieve the ResultProxy.
+Use .fetchall() on connection.execute(stmt) to retrieve the ResultSet.
+
+
+# Import select
+from sqlalchemy import select
+
+# Reflect census table via engine: census
+census = Table('census', metadata, autoload=True, autoload_with=engine)
+
+# Build select statement for census table: stmt
+stmt = select([census])
+
+# Print the emitted statement to see the SQL emitted
+print(stmt)
+
+# Execute the statement and print the results
+print(connection.execute(stmt).fetchall())
+
+
+___________________________________________________________________________________________________________________-
+
+
+
+Handling a ResultSet
+Recall the differences between a ResultProxy and a ResultSet:
+
+ResultProxy: The object returned by the .execute() method. It can be used in a variety of ways to get the data returned by the query.
+ResultSet: The actual data asked for in the query when using a fetch method such as .fetchall() on a ResultProxy.
+This separation between the ResultSet and ResultProxy allows us to fetch as much or as little data as we desire.
+
+Once we have a ResultSet, we can use Python to access all the data within it by column name and by list style indexes. For example, you can get the first row of the results by using results[0]. With that first row then assigned to a variable first_row, you can get data from the first column by either using first_row[0] or by column name such as first_row['column_name']. You'll now practice exactly this using the ResultSet you obtained from the census table in the previous exercise. It is stored in the variable results. Enjoy!
+
+Instructions
+100 XP
+Extract the first row of results and assign it to the variable first_row.
+Print the value of the first column in first_row.
+Print the value of the 'state' column in first_row
+
+
+# Get the first row of the results by using an index: first_row
+first_row = results[0]
+
+# Print the first row of the results
+print(first_row)
+
+# Print the first column of the first row by using an index
+print(first_row[0])
+
+# Print the 'state' column of the first row by using its name
+print(first_row['state'])
+
+
+<script.py> output:
+    ('Illinois', 'M', 0, 89600, 95012)
+    Illinois
+    Illinois
+
+
+
+_________________________________________________________________________________________________________________________________
+Coming up next…
+● Beef up your SQL querying skills
+● Learn how to extract all types of useful information
+from your databases using SQLAlchemy
+● Learn how to create and write to relational databases
+● Deep dive into the US census dataset!
+=======================================================================================================================
+
+
+2
+Applying Filtering, Ordering and Grouping to Queries
+
+In this chapter, you will build on the database knowledge you began acquiring in the previous chapter by writing more nuanced queries that allow you to filter, order, and count your data, all within the Pythonic framework provided by SQLAlchemy!
+
+Where Clauses
+		In [1]: stmt = select([census])
+		In [2]: stmt = stmt.where(census.columns.state ==
+		 'California')
+		In [3]: results = connection.execute(stmt).fetchall()
+		In [4]: for result in results:
+		 ...: print(result.state, result.age)
+				Out[4]:
+				California 0
+				California 1
+				California 2
+				California 3
+				California 4
+				California 
+
+
+Where Clauses
+		● Restrict data returned by a query based on boolean
+		conditions
+		● Compare a column against a value or another column
+		● O!en used comparisons: '==', '<=', '>=', or '!='
+
+
+
+Expressions
+● Provide more complex conditions than simple operators
+● Eg. in_(), like(), between()
+● Many more in documentation
+● Available as method on a Column
+
+
+
+
+Expressions
+		In [1]: stmt = select([census])
+		In [2]: stmt = stmt.where(
+		 census.columns.state.startswith('New'))
+		In [3]: for result in connection.execute(stmt):
+		 ...: print(result.state, result.pop2000)
+					Out[3]:
+					New Jersey 56983
+					New Jersey 56686
+					New Jersey 57011
+
+
+
+
+Conjunctions
+● Allow us to have multiple criteria in a where clause
+● Eg. and_(), not_(), or_()
+
+
+
+Conjunctions
+		In [1]: from sqlalchemy import or_
+		In [2]: stmt = select([census])
+		In [3]: stmt = stmt.where(
+		 ...: or_(census.columns.state == 'California',
+		 ...: census.columns.state == 'New York'
+		 ...: )
+		 ...: )
+		In [4]: for result in connection.execute(stmt):
+		 ...: print(result.state, result.sex)
+					Out[4]:
+					New York M
+					…
+					California F	
+
+
+_____________________________________________________________________________________________________
+
+Connecting to a PostgreSQL Database
+In these exercises, you will be working with real databases hosted on the cloud via Amazon Web Services (AWS)!
+
+Let's begin by connecting to a PostgreSQL database. When connecting to a PostgreSQL database, many prefer to use the psycopg2 database driver as it supports practically all of PostgreSQL's features efficiently and is the standard dialect for PostgreSQL in SQLAlchemy.
+
+You might recall from Chapter 1 that we use the create_engine() function and a connection string to connect to a database.
+
+There are three components to the connection string in this exercise: the dialect and driver ('postgresql+psycopg2://'), followed by the username and password ('student:datacamp'), followed by the host and port ('@postgresql.csrrinzqubik.us-east-1.rds.amazonaws.com:5432/'), and finally, the database name ('census'). You will have to pass this string as an argument to create_engine() in order to connect to the database.
+
+Instructions
+100 XP
+Import create_engine from sqlalchemy.
+Create an engine to the census database by concatenating the following strings:
+'postgresql+psycopg2://'
+'student:datacamp'
+'@postgresql.csrrinzqubik.us-east-1.rds.amazonaws.com'
+':5432/census'
+Use the .table_names() method on engine to print the table names.
+
+
+# Import create_engine function
+from sqlalchemy import create_engine
+
+# Create an engine to the census database
+engine = create_engine('postgresql+psycopg2://student:datacamp@postgresql.csrrinzqubik.us-east-1.rds.amazonaws.com:5432/census')
+
+# Use the .table_names() method on the engine to print the table names
+print(engine.table_names())
+
+<script.py> output:
+    ['census', 'state_fact', 'data', 'users']
+    
+    _________________________________________________________________________________________________________________________
+    
+    Filter data selected from a Table - Simple
+Having connected to the database, it's now time to practice filtering your queries!
+
+As mentioned in the video, a where() clause is used to filter the data that a statement returns. For example, to select all the records from the census table where the sex is Female (or 'F') we would do the following:
+
+select([census]).where(census.columns.sex == 'F')
+
+In addition to == we can use basically any python comparison operator (such as <=, !=, etc) in the where() clause.
+
+Instructions
+100 XP
+Select all records from the census table by passing in census as a list to select().
+Append a where clause to stmt to return only the records with a state of 'New York'.
+Execute the statement stmt using .execute() and retrieve the results using .fetchall().
+Iterate over results and print the age, sex and pop2008 columns from each record. For example, you can print out the age of result with result.age.
+    
+    
+  # Create a select query: stmt
+stmt = select([census])
+
+# Add a where clause to filter the results to only those for New York
+stmt = stmt.where(census.columns.state == 'New York')
+
+# Execute the query to retrieve all the data returned: results
+results = connection.execute(stmt).fetchall()
+
+# Loop over the results and print the age, sex, and pop2008
+for result in results:
+    print(result.age, result.sex, result.pop2008)
+  
+    
+<script.py> output:
+    0 M 128088
+    1 M 125649
+    2 M 121615
+    3 M 120580
+    4 M 122482
+    5 M 121205
+    6 M 120089
+    7 M 122355
+    8 M 118653
+    9 M 117369
+    10 M 118810
+    11 M 121121
+    12 M 126338
+    13 M 128713
+    14 M 129812
+    15 M 134463
+    16 M 136569
+    17 M 140114
+    18 M 156892
+    19 M 147556
+    20 M 146611
+    21 M 141932
+    22 M 138557
+    23 M 136150
+    24 M 132383
+    25 M 141850
+    26 M 129603
+    27 M 131419
+    28 M 127224
+    29 M 122449
+    30 M 126404
+    31 M 126124
+    32 M 123362
+    33 M 126486
+    34 M 120030
+    35 M 123017
+    36 M 127076    
+    
+    
+ ______________________________________________________________________________________________________________________________
+ 
+ 
+Filter data selected from a Table - Expressions
+In addition to standard Python comparators, we can also use methods such as in_() to create more powerful where() clauses. You can see a full list of expressions in the SQLAlchemy Documentation.
+
+We've already created a list of some of the most densely populated states.
+
+Instructions
+100 XP
+Select all records from the census table by passing it in as a list to select().
+Append a where clause to return all the records with a state in the states list. Use in_(states) on census.columns.state to do this.
+Loop over the ResultProxy connection.execute(stmt) and print the state and pop2000 columns from each record.
+
+
+# Create a query for the census table: stmt
+stmt = select([census])
+
+# Append a where clause to match all the states in_ the list states
+stmt = stmt.where(census.columns.state.in_(states))
+
+# Loop over the ResultProxy and print the state and its population in 2000
+for result in connection.execute(stmt):
+    print(result.state, result.pop2000)
+
+<script.py> output:
+    New York 126237
+    New York 124008
+    New York 124725
+    New York 126697
+    New York 131357
+    New York 133095
+    New York 134203
+    New York 137986
+    New York 139455
+    New York 142454
+    New York 145621
+    California 252494
+    
+    
+    ________________________________________________________________________________________________________________
+    
+    
+    Filter data selected from a Table - Advanced
+You're really getting the hang of this! SQLAlchemy also allows users to use conjunctions such as and_(), or_(), and not_() to build more complex filtering. For example, we can get a set of records for people in New York who are 21 or 37 years old with the following code:
+
+select([census]).where(
+  and_(census.columns.state == 'New York',
+       or_(census.columns.age == 21,
+          census.columns.age == 37
+         )
+      )
+  )
+Instructions
+100 XP
+Import and_ from the sqlalchemy module.
+Select all records from the census table.
+Append a where clause to filter all the records whose state is 'California', and whose sex is not 'M'.
+Iterate over the ResultProxy and print the age and sex columns from each record.
+    
+    
+    
+   # Import and_
+from sqlalchemy import and_
+
+# Build a query for the census table: stmt
+stmt = select([census])
+
+# Append a where clause to select only non-male records from California using and_
+stmt = stmt.where(
+    # The state of California with a non-male sex
+    and_(census.columns.state == 'California',
+         census.columns.sex != 'M'
+         )
+)
+
+# Loop over the ResultProxy printing the age and sex
+for result in connection.execute(stmt):
+    print(result.age, result.sex)
+
+
+<script.py> output:
+    0 F
+    1 F
+    2 F
+    3 F
+    4 F
+    5 F
+    6 F
+    7 F
+    8 F
+    9 F
+    10 F
+    11 F
+    12 F
+    13 F
+    14 F
+_________________________________________________________________________________________________________________________
+Ordering Query Results  
+
+Order by Clauses
+		● Allows us to control the order in which records are
+		returned in the query results
+		● Available as a method on statements order_by()
+
+
+Order by Ascending
+		In [1]: print(results[:10])
+				Out[1]: [('Illinois',), …]
+		In [3]: stmt = select([census.columns.state])
+		In [4]: stmt = stmt.order_by(census.columns.state)
+		In [5]: results = connection.execute(stmt).fetchall()
+		In [6]: print(results[:10])
+				Out[6]: [('Alabama',), …]
+    
+    
+Order by Descending
+● Wrap the column with desc() in the order_by()
+clause    
+
+
+Order by Multiple
+● Just separate multiple columns with a comma
+● Orders completely by the first column
+● Then if there are duplicates in the first column,
+orders by the second column
+● repeat until all columns are ordered
+
+
+
+Order by Multiple
+		In [6]: print(results)
+				Out[6]: ('Alabama', 'M')
+		In [7]: stmt = select([census.columns.state,
+		 ...: census.columns.sex])
+		In [8]: stmt = stmt.order_by(census.columns.state,
+		 ...: census.columns.sex)
+		In [9]: results = connection.execute(stmt).first()
+		In [10]: print(results)
+				Out[10]:('Alabama', 'F')
+				('Alabama', 'F')
+				…
+				('Alabama', 'M')
+
+
+____________________________________________________________________________________________________________________________________
+
+Ordering by a Single Column
+To sort the result output by a field, we use the .order_by() method. By default, the .order_by() method sorts from lowest to highest on the supplied column. You just have to pass in the name of the column you want sorted to .order_by().
+
+In the video, for example, Jason used stmt.order_by(census.columns.state) to sort the result output by the state column.
+
+Instructions
+100 XP
+Select all records of the state column from the census table. To do this, pass census.columns.state as a list to select().
+Append an .order_by() to sort the result output by the state column.
+Execute stmt using the .execute() method on connection and retrieve all the results using .fetchall().
+Print the first 10 rows of results.
+
+
+# Build a query to select the state column: stmt
+stmt = select([census.columns.state])
+
+# Order stmt by the state column
+stmt = stmt.order_by(census.columns.state)
+
+# Execute the query and store the results: results
+results = connection.execute(stmt).fetchall()
+
+# Print the first 10 results
+print(results[:10])
+
+
+<script.py> output:
+    [('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',), ('Alabama',)]
+    
+    _________________________________________________________________________________________________________
+    
+   Ordering in Descending Order by a Single Column
+You can also use .order_by() to sort from highest to lowest by wrapping a column in the desc() function. Although you haven't seen this function in action, it generalizes what you have already learned.
+
+Pass desc() (for "descending") inside an .order_by() with the name of the column you want to sort by. For instance, stmt.order_by(desc(table.columns.column_name)) sorts column_name in descending order.
+
+Instructions
+100 XP
+Import desc from the sqlalchemy module.
+Select all records of the state column from the census table.
+Append an .order_by() to sort the result output by the state column in descending order. Save the result as rev_stmt.
+Execute rev_stmt using connection.execute() and fetch all the results with .fetchall(). Save them as rev_results.
+Print the first 10 rows of rev_results.
+
+
+# Import desc
+from sqlalchemy import desc
+
+# Build a query to select the state column: stmt
+stmt = select([census.columns.state])
+
+# Order stmt by state in descending order: rev_stmt
+rev_stmt = stmt.order_by(desc(census.columns.state))
+
+# Execute the query and store the results: rev_results
+rev_results = connection.execute(rev_stmt).fetchall()
+
+# Print the first 10 rev_results
+print(rev_results[0:10])
+
+
+<script.py> output:
+    [('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',), ('Wyoming',)]
+    
+    _____________________________________________________________________________________________________________
+    
+   Ordering by Multiple Columns
+We can pass multiple arguments to the .order_by() method to order by multiple columns. In fact, we can also sort in ascending or descending order for each individual column. Each column in the .order_by() method is fully sorted from left to right. This means that the first column is completely sorted, and then within each matching group of values in the first column, it's sorted by the next column in the .order_by() method. This process is repeated until all the columns in the .order_by() are sorted.
+
+Instructions
+100 XP
+Select all records of the state and age columns from the census table.
+Use .order_by() to sort the output of the state column in ascending order and age in descending order. (NOTE: desc is already imported).
+Execute stmt using the .execute() method on connection and retrieve all the results using .fetchall().
+Print the first 20 results. 
+
+
+# Build a query to select state and age: stmt
+stmt = select([census.columns.state, census.columns.age])
+
+# Append order by to ascend by state and descend by age
+stmt = stmt.order_by(census.columns.state, desc(census.columns.age))
+
+# Execute the statement and store all the records: results
+results = connection.execute(stmt).fetchall()
+
+# Print the first 20 results
+print(results[0:20])
+
+
+<script.py> output:
+    [('Alabama', 85), ('Alabama', 85), ('Alabama', 84), ('Alabama', 84), ('Alabama', 83), ('Alabama', 83), ('Alabama', 82), ('Alabama', 82), ('Alabama', 81), ('Alabama', 81), ('Alabama', 80), ('Alabama', 80), ('Alabama', 79), ('Alabama', 79), ('Alabama', 78), ('Alabama', 78), ('Alabama', 77), ('Alabama', 77), ('Alabama', 76), ('Alabama', 76)]
+
+
+________________________________________________________________________________________________________________
+
+Counting,
+Summing and
+Grouping Data
+
+SQL Functions
+		● E.g. Count, Sum
+		● from sqlalchemy import func
+		● More efficient than processing in Python
+		● Aggregate data
+
+
+Sum Example
+		In [1]: from sqlalchemy import func
+		In [2]: stmt = select([func.sum(census.columns.pop2008)])
+		In [3]: results = connection.execute(stmt).scalar()
+		In [4]: print(results)
+				Out[4]: 302876613
+
+Group by
+● Allows us to group row by common values
+
+
+Group by
+		In [1]: stmt = select([census.columns.sex,
+		 ...: func.sum(census.columns.pop2008)
+		 ...: ])
+		In [2]: stmt = stmt.group_by(census.columns.sex)
+		In [3]: results = connection.execute(stmt).fetchall()
+		In [4]: print(results)
+				Out[4]: [('F', 153959198), ('M', 148917415)]
+
+Group by
+			● Supports multiple columns to group by with a
+			pa#ern similar to order_by()
+			● Requires all selected columns to be grouped or
+			aggregated by a function
+
+
+
+Group by Multiple
+		In [1]: stmt = select([census.columns.sex,
+		 ...: census.columns.age,
+		 ...: func.sum(census.columns.pop2008)
+		 ...: ])
+		In [2]: stmt = stmt.group_by(census.columns.sex,
+		 ...: census.columns.age)
+		In [2]: results = connection.execute(stmt).fetchall()
+		In [3]: print(results)
+				Out[3]:
+				[('F', 0, 2105442), ('F', 1, 2087705), ('F', 2, 2037280), ('F', 3,
+				2012742), ('F', 4, 2014825), ('F', 5, 1991082), ('F', 6, 1977923),
+				('F', 7, 2005470), ('F', 8, 1925725),
+
+
+Handling ResultSets from Functions
+		● SQLAlchemy auto generates “column names” for functions
+		in the ResultSet
+		● The column names are o!en func_# such as
+		count_1
+		● Replace them with the label() method
+
+
+Using label()
+		In [1]: print(results[0].keys())
+				Out[1]: ['sex', u'sum_1']
+		In [2]: stmt = select([census.columns.sex,
+		 ...: func.sum(census.columns.pop2008).label(
+		 ...: 'pop2008_sum')
+		 ...: ])
+		In [3]: stmt = stmt.group_by(census.columns.sex)
+		In [4]: results = connection.execute(stmt).fetchall()
+		In [5]: print(results[0].keys())
+				Out[5]: ['sex', 'pop2008_sum']
+
+
+
+_________________________________________________________________________________________________________________________
+
+
+Counting Distinct Data
+As mentioned in the video, SQLAlchemy's func module provides access to built-in SQL functions that can make operations like counting and summing faster and more efficient.
+
+In the video, Jason used func.sum() to get a sum of the pop2008 column of census as shown below:
+
+select([func.sum(census.columns.pop2008)])
+If instead you want to count the number of values in pop2008, you could use func.count() like this:
+
+select([func.count(census.columns.pop2008)])
+Furthermore, if you only want to count the distinct values of pop2008, you can use the .distinct() method:
+
+select([func.count(census.columns.pop2008.distinct())])
+In this exercise, you will practice using func.count() and .distinct() to get a count of the distinct number of states in census.
+
+So far, you've seen .fetchall() and .first() used on a ResultProxy to get the results. The ResultProxy also has a method called .scalar() for getting just the value of a query that returns only one row and column.
+
+This can be very useful when you are querying for just a count or sum.
+
+Instructions
+100 XP
+Build a select statement to count the distinct values in the state field of census.
+Execute stmt to get the count and store the results as distinct_state_count.
+Print the value of distinct_state_count.
+
+# Build a query to count the distinct states values: stmt
+stmt = select([func.count(census.columns.state.distinct())])
+
+# Execute the query and store the scalar result: distinct_state_count
+distinct_state_count = connection.execute(stmt).scalar()
+
+# Print the distinct_state_count
+print(distinct_state_count)
+
+<script.py> output:
+    51
+
+_______________________________________________________________________________________________________
+
+Count of Records by State
+Often, we want to get a count for each record with a particular value in another column. The .group_by() method helps answer this type of query. You can pass a column to the .group_by() method and use in an aggregate function like sum() or count(). Much like the .order_by() method, .group_by() can take multiple columns as arguments.
+
+Instructions
+100 XP
+Import func from sqlalchemy.
+Build a select statement to get the value of the state field and a count of the values in the age field, and store it as stmt.
+Use the .group_by() method to group the statement by the state column.
+Execute stmt using the connection to get the count and store the results as results.
+Print the keys/column names of the results returned using results[0].keys().
+
+# Import func
+from sqlalchemy import func
+
+# Build a query to select the state and count of ages by state: stmt
+stmt = select([census.columns.state, func.count(census.columns.age)])
+
+# Group stmt by state
+stmt = stmt.group_by(census.columns.state)
+
+# Execute the statement and store all the records: results
+results = connection.execute(stmt).fetchall()
+
+# Print results
+print(results)
+
+# Print the keys/column names of the results returned
+print(results[0].keys())
+
+
+
+
+<script.py> output:
+    [('Alabama', 172), ('Alaska', 172), ('Arizona', 172), ('Arkansas', 172), ('California', 172), ('Colorado', 172), ('Connecticut', 172), ('Delaware', 172), ('District of Columbia', 172), ('Florida', 172), ('Georgia', 172), ('Hawaii', 172), ('Idaho', 172), ('Illinois', 172), ('Indiana', 172), ('Iowa', 172), ('Kansas', 172), ('Kentucky', 172), ('Louisiana', 172), ('Maine', 172), ('Maryland', 172), ('Massachusetts', 172), ('Michigan', 172), ('Minnesota', 172), ('Mississippi', 172), ('Missouri', 172), ('Montana', 172), ('Nebraska', 172), ('Nevada', 172), ('New Hampshire', 172), ('New Jersey', 172), ('New Mexico', 172), ('New York', 172), ('North Carolina', 172), ('North Dakota', 172), ('Ohio', 172), ('Oklahoma', 172), ('Oregon', 172), ('Pennsylvania', 172), ('Rhode Island', 172), ('South Carolina', 172), ('South Dakota', 172), ('Tennessee', 172), ('Texas', 172), ('Utah', 172), ('Vermont', 172), ('Virginia', 172), ('Washington', 172), ('West Virginia', 172), ('Wisconsin', 172), ('Wyoming', 172)]
+    ['state', 'count_1']
+
+In [1]: 
+
+
+
+Fantastic work! Notice that the the key for the count method just came out as count_1. This can make it hard in complex queries to tell what column is being referred to: In the next exercise, you'll practice assign more descriptive labels when performing such calculations.
+
+________________________________________________________________________________________________________________________
+
+Determining the Population Sum by State
+To avoid confusion with query result column names like count_1, we can use the .label() method to provide a name for the resulting column. This gets appendedto the function method we are using, and its argument is the name we want to use.
+
+We can pair func.sum() with .group_by() to get a sum of the population by State and use the label() method to name the output.
+
+We can also create the func.sum() expression before using it in the select statement. We do it the same way we would inside the select statement and store it in a variable. Then we use that variable in the select statement where the func.sum() would normally be.
+
+Instructions
+100 XP
+Import func from sqlalchemy.
+Build an expression to calculate the sum of the values in the pop2008 field labeled as 'population'.
+Build a select statement to get the value of the state field and the sum of the values in pop2008.
+Group the statement by state using a .group_by() method.
+Execute stmt using the connection to get the count and store the results as results.
+Print the keys/column names of the results returned using results[0].keys().
+
+
+# Import func
+from sqlalchemy import func
+
+# Build an expression to calculate the sum of pop2008 labeled as population
+pop2008_sum = func.sum(census.columns.pop2008).label('population')
+
+# Build a query to select the state and sum of pop2008: stmt
+stmt = select([census.columns.state, pop2008_sum])
+
+# Group stmt by state
+stmt = stmt.group_by(census.columns.state)
+
+# Execute the statement and store all the records: results
+results = connection.execute(stmt).fetchall()
+
+# Print results
+print(results)
+
+# Print the keys/column names of the results returned
+print(results[0].keys())
+
+
+<script.py> output:
+    [('Alabama', 4649367), ('Alaska', 664546), ('Arizona', 6480767), ('Arkansas', 2848432), ('California', 36609002), ('Colorado', 4912947), ('Connecticut', 3493783), ('Delaware', 869221), ('District of Columbia', 588910), ('Florida', 18257662), ('Georgia', 9622508), ('Hawaii', 1250676), ('Idaho', 1518914), ('Illinois', 12867077), ('Indiana', 6373299), ('Iowa', 3000490), ('Kansas', 2782245), ('Kentucky', 4254964), ('Louisiana', 4395797), ('Maine', 1312972), ('Maryland', 5604174), ('Massachusetts', 6492024), ('Michigan', 9998854), ('Minnesota', 5215815), ('Mississippi', 2922355), ('Missouri', 5891974), ('Montana', 963802), ('Nebraska', 1776757), ('Nevada', 2579387), ('New Hampshire', 1314533), ('New Jersey', 8670204), ('New Mexico', 1974993), ('New York', 19465159), ('North Carolina', 9121606), ('North Dakota', 634282), ('Ohio', 11476782), ('Oklahoma', 3620620), ('Oregon', 3786824), ('Pennsylvania', 12440129), ('Rhode Island', 1046535), ('South Carolina', 4438870), ('South Dakota', 800997), ('Tennessee', 6202407), ('Texas', 24214127), ('Utah', 2730919), ('Vermont', 620602), ('Virginia', 7648902), ('Washington', 6502019), ('West Virginia', 1812879), ('Wisconsin', 5625013), ('Wyoming', 529490)]
+    ['state', 'population']
+
+In [1]: 
+
+__________________________________________________________________________________________________________________
+
+SQLAlchemy and Pandas
+● DataFrame can take a SQLAlchemy ResultSet
+● Make sure to set the DataFrame columns to the ResultSet
+keys
+
+
+DataFrame Example
+	In [1]: import pandas as pd
+	In [2]: df = pd.DataFrame(results)
+	In [3]: df.columns = results[0].keys()
+	In [4]: print(df)
+			Out[4]:
+			 sex pop2008_sum
+			0 F 2105442
+			1 F 2087705
+			2 F 2037280
+			3 F 2012742
+			4 F 2014825
+			5 F 1991082
+
+
+Graphing
+● We can graph just like we would normally
+
+Graphing Example
+		In [1]: import matplotlib.pyplot as plt
+		In [2]: df[10:20].plot.barh()
+		In [3]: plt.show()
+
+
+
+______________________________________________________________________________________________________________________
+
+
+
+SQLAlchemy ResultsProxy and Pandas Dataframes
+We can feed a ResultProxy directly into a pandas DataFrame, which is the workhorse of many Data Scientists in PythonLand. Jason demonstrated this in the video. In this exercise, you'll follow exactly the same approach to convert a ResultProxy into a DataFrame.
+
+Instructions
+100 XP
+Import pandas as pd.
+Create a DataFrame df using pd.DataFrame() on the ResultProxy results.
+Set the columns of the DataFrame df.columns to be the columns from the first result object results[0].keys().
+Print the DataFrame.
+
+
+# import pandas
+import pandas as pd
+
+# Create a DataFrame from the results: df
+df = pd.DataFrame(results)
+
+# Set column names
+df.columns = results[0].keys()
+
+# Print the Dataframe
+print(df)
+
+<script.py> output:
+            state  population
+    0  California    36609002
+    1       Texas    24214127
+    2    New York    19465159
+    3     Florida    18257662
+    4    Illinois    12867077
+
+
+__________________________________________________________________________________________________________________________
+
+
+From SQLAlchemy results to a Graph
+We can also take advantage of pandas and Matplotlib to build figures of our data. Remember that data visualization is essential for both exploratory data analysis and communication of your data!
+
+Instructions
+100 XP
+Import matplotlib.pyplot as plt.
+Create a DataFrame df using pd.DataFrame() on the provided results.
+Set the columns of the DataFrame df.columns to be the columns from the first result object results[0].keys().
+Print the DataFrame df.
+Use the plot.bar() method on df to create a bar plot of the results.
+Display the plot with plt.show().
+
+
+# Import pyplot as plt from matplotlib
+import matplotlib.pyplot as plt
+
+# Create a DataFrame from the results: df
+df = pd.DataFrame(results)
+
+# Set Column names
+df.columns = results[0].keys()
+
+# Print the DataFrame
+print(df)
+
+# Plot the DataFrame
+df.plot.bar()
+plt.show()
+
+<script.py> output:
+            state  population
+    0  California    36609002
+    1       Texas    24214127
+    2    New York    19465159
+    3     Florida    18257662
+    4    Illinois    12867077
+    
+    
+    
+================================================================================================
+
+3
+Advanced SQLAlchemy Queries
+
+Herein, you will learn to perform advanced - and incredibly useful - queries that will enable you to interact with your data in powerful wayss.
+
+_______________________________________________________________________________________________________________________
+Calculating
+Values
+in a
+Query
+
+Math Operators
+	● addition +
+	● subtraction -
+	● multiplication *
+	● division /
+	● modulus %
+	● Work differently on different data types
+
+
+Calculating Difference
+	In [1]: stmt = select([census.columns.age,
+	 ...: (census.columns.pop2008-
+	 ...: census.columns.pop2000).label('pop_change')
+	 ...: ])
+	In [2]: stmt = stmt.group_by(census.columns.age)
+	In [3]: stmt = stmt.order_by(desc('pop_change'))
+	In [4]: stmt = stmt.limit(5)
+	In [5]: results = connection.execute(stmt).fetchall()
+	In [6]: print(results)
+			Out[6]: [(61, 52672), (85, 51901), (54, 50808), (58, 45575), (60,
+			44915)]
+
+
+
+Case Statement
+	● Used to treat data differently based on a condition
+	● Accepts a list of conditions to match and a column
+	to return if the condition matches
+	● The list of conditions ends with an else clause to
+	determine what to do when a record doesn’t match
+	any prior conditions
+
+
+Case Example
+	In [1]: from sqlalchemy import case
+	In [2]: stmt = select([
+	 ...: func.sum(
+	 ...: case([
+	 ...: (census.columns.state == 'New York',
+	 ...: census.columns.pop2008)
+	 ...: ], else_=0))])
+	In [3]: results = connection.execute(stmt).fetchall()
+	In [4]: print(results)
+		Out[4]:[(19465159,)]
+
+
+
+
+Cast Statement
+	● Converts data to another type
+	● Useful for converting
+		● integers to floats for division
+		● strings to dates and times
+	● Accepts a column or expression and the target Type
+
+
+
+
+Percentage Example
+		In [1]: from sqlalchemy import case, cast, Float
+		In [2]: stmt = select([
+		 ...: (func.sum(
+		 ...: case([
+		 ...: (census.columns.state == 'New York',
+		 ...: census.columns.pop2008)
+		 ...: ], else_=0)) /
+		 ...: cast(func.sum(census.columns.pop2008),
+		 ...: Float) * 100).label('ny_percent')])
+		In [3]: results = connection.execute(stmt).fetchall()
+		In [4]: print(results)
+				Out[4]: [(Decimal('6.4267619765'),)]
+
+
+
+_____________________________________________________________________________________________________________
+
+
+Connecting to a MySQL Database
+Before you jump into the calculation exercises, let's begin by connecting to our database. Recall that in the last chapter you connected to a PostgreSQL database. Now, you'll connect to a MySQL database, for which many prefer to use the pymysql database driver, which, like psycopg2 for PostgreSQL, you have to install prior to use.
+
+This connection string is going to start with 'mysql+pymysql://', indicating which dialect and driver you're using to establish the connection. The dialect block is followed by the 'username:password' combo. Next, you specify the host and port with the following '@host:port/'. Finally, you wrap up the connection string with the 'database_name'.
+
+Now you'll practice connecting to a MySQL database: it will be the same census database that you have already been working with. One of the great things about SQLAlchemy is that, after connecting, it abstracts over the type of database it has connected to and you can write the same SQLAlchemy code, regardless!
+
+Instructions
+100 XP
+Import the create_engine function from the sqlalchemy library.
+Create an engine to the census database by concatenating the following strings and passing them to create_engine():
+'mysql+pymysql://' (the dialect and driver).
+'student:datacamp' (the username and password).
+'@courses.csrrinzqubik.us-east-1.rds.amazonaws.com:3306/' (the host and port).
+'census' (the database name).
+Use the .table_names() method on engine to print the table names.
+
+
+# Import create_engine function
+from sqlalchemy import create_engine
+
+# Create an engine to the census database
+engine = create_engine('mysql+pymysql://student:datacamp@courses.csrrinzqubik.us-east-1.rds.amazonaws.com:3306/census')
+
+# Print the table names
+print(engine.table_names())
+
+<script.py> output:
+    ['census', 'state_fact']
+
+
+_____________________________________________________________________________________________________________
+
+Calculating a Difference between Two Columns
+Often, you'll need to perform math operations as part of a query, such as if you wanted to calculate the change in population from 2000 to 2008. For math operations on numbers, the operators in SQLAlchemy work the same way as they do in Python.
+
+You can use these operators to perform addition (+), subtraction (-), multiplication (*), division (/), and modulus (%) operations. Note: They behave differently when used with non-numeric column types.
+
+Let's now find the top 5 states by population growth between 2000 and 2008.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Define a select statement called stmt to return:
+i) The state column of the census table (census.columns.state).
+ii) The difference in population count between 2008 (census.columns.pop2008) and 2000 (census.columns.pop2000) labeled as 'pop_change'.
+Group the statement by census.columns.state.
+Order the statement by population change ('pop_change') in descending order. Do so by passing it desc('pop_change').
+Use the .limit() method on the statement to return only 5 records.
+Execute the statement and fetchall() the records.
+The print statement has already been written for you. Hit 'Submit Answer' to view the results!
+
+# Build query to return state names by population difference from 2008 to 2000: stmt
+stmt = select([census.columns.state, (census.columns.pop2008-census.columns.pop2000).label('pop_change')])
+
+# Append group by for the state: stmt
+stmt = stmt.group_by(census.columns.state)
+
+# Append order by for pop_change descendingly: stmt
+stmt = stmt.order_by(desc('pop_change'))
+
+# Return only 5 results: stmt
+stmt = stmt.limit(5)
+
+# Use connection to execute the statement and fetch all results
+results = connection.execute(stmt).fetchall()
+
+# Print the state and population change for each record
+for result in results:
+    print('{}:{}'.format(result.state, result.pop_change))
+
+
+<script.py> output:
+    California:105705
+    Florida:100984
+    Texas:51901
+    New York:47098
+    Pennsylvania:42387
+
+_______________________________________________________________________________________________________________
+
+
+Determining the Overall Percentage of Females
+It's possible to combine functions and operators in a single select statement as well. These combinations can be exceptionally handy when we want to calculate percentages or averages, and we can also use the case() expression to operate on data that meets specific criteria while not affecting the query as a whole. The case() expression accepts a list of conditions to match and the column to return if the condition matches, followed by an else_ if none of the conditions match. We can wrap this entire expression in any function or math operation we like.
+
+Often when performing integer division, we want to get a float back. While some databases will do this automatically, you can use the cast() function to convert an expression to a particular type.
+
+Instructions
+100 XP
+Import case, cast, and Float from sqlalchemy.
+Build an expression female_pop2000to calculate female population in 2000. To achieve this:
+Use case() inside func.sum().
+The first argument of case() is a list containing a tuple of
+i) A boolean checking that census.columns.sex is equal to 'F'.
+ii) The column census.columns.pop2000.
+The second argument is the else_ condition, which should be set to 0.
+Calculate the total population in 2000 and use cast() to convert it to Float.
+Build a query to calculate the percentage of females in 2000. To do this, divide female_pop2000 by total_pop2000 and multiply by 100.
+Execute the query and print percent_female.
+
+
+# import case, cast and Float from sqlalchemy
+from sqlalchemy import case, cast, Float
+
+# Build an expression to calculate female population in 2000
+female_pop2000 = func.sum(
+    case([
+        (census.columns.sex == 'F', census.columns.pop2000)
+    ], else_=0))
+
+# Cast an expression to calculate total population in 2000 to Float
+total_pop2000 = cast(func.sum(census.columns.pop2000), Float)
+
+# Build a query to calculate the percentage of females in 2000: stmt
+stmt = select([female_pop2000 / total_pop2000* 100])
+
+# Execute the query and store the scalar result: percent_female
+percent_female = connection.execute(stmt).scalar()
+
+# Print the percentage
+print(percent_female)
+
+
+<script.py> output:
+    51.0946743229
+    
+    ______________________________________________________________________________________________________________________
+    
+ SQL
+Relationships
+
+
+Relationships
+● Allow us to avoid duplicate data
+● Make it easy to change things in one place
+● Useful to break out information from a table we
+don’t need very o"en
+
+
+Automatic Joins
+		In [1]: stmt = select([census.columns.pop2008,
+		 ...: state_fact.columns.abbreviation])
+		In [2]: results = connection.execute(stmt).fetchall()
+		In [3]: print(results)
+				Out[3]: [(95012, u'IL'),
+				 (95012, u'NJ'),
+				 (95012, u'ND'),
+				 (95012, u'OR'),
+				 (95012, u'DC'),
+				 (95012, u’WI'),
+				…
+
+
+ Join
+	● Accepts a Table and an optional expression that explains
+	how the two tables are related
+	● The expression is not needed if the relationship is
+	predefined and available via reflection
+	● Comes immediately a"er the select() clause and prior
+	to any where(), order_by or group_by() clauses   
+
+
+Select_from
+	● Used to replace the default, derived FROM clause with a join
+	● Wraps the join() clause
+
+
+Select_from Example
+	In [1]: stmt = select([func.sum(census.columns.pop2000)])
+	In [2]: stmt = stmt.select_from(census.join(state_fact))
+	In [3]: stmt = stmt.where(state_fact.columns.circuit_court
+	 == '10')
+	In [4]: result = connection.execute(stmt).scalar()
+	In [5]: print(result)
+			Out[5]: 14945252
+
+
+Joining Tables without Predefined Relationship
+	● Join accepts a Table and an optional expression that explains
+	how the two tables are related
+	● Will only join on data that match between the two columns
+	● Avoid joining on columns of different types
+
+Select_from Example
+	In [1]: stmt = select([func.sum(census.columns.pop2000)])
+	In [2]: stmt = stmt.select_from(
+	 ...: census.join(state_fact, census.columns.state
+	 ...: == state_fact.columns.name))
+	In [3]: stmt = stmt.where(
+	 ...: state_fact.columns.census_division_name ==
+	 ...: 'East South Central')
+	In [4]: result = connection.execute(stmt).scalar()
+	In [5]: print(result)
+			Out[5]: 16982311
+
+
+
+
+______________________________________________________________________________________________________________
+
+Automatic Joins with an Established Relationship
+If you have two tables that already have an established relationship, you can automatically use that relationship by just adding the columns we want from each table to the select statement. Recall that Jason constructed the following query:
+
+stmt = select([census.columns.pop2008, state_fact.columns.abbreviation])
+in order to join the census and state_fact tables and select the pop2008 column from the first and the abbreviation column from the second. In this case, the census and state_fact tables had a pre-defined relationship: the state column of the former corresponded to the name column of the latter.
+
+In this exercise, you'll use the same predefined relationship to select the pop2000 and abbreviation columns!
+
+Instructions
+100 XP
+Build a statement to join the census and state_fact tables and select the pop2000 column from the first and the abbreviation column from the second.
+Execute the statement to get the first result and save it as result.
+Hit 'Submit Answer' to loop over the keys of the result object, and print the key and value for each!
+
+
+# Build a statement to join census and state_fact tables: stmt
+stmt = select([census.columns.pop2000, state_fact.columns.abbreviation])
+
+# Execute the statement and get the first result: result
+result = connection.execute(stmt).first()
+
+# Loop over the keys in the result object and print the key and value
+for key in result.keys():
+    print(key, getattr(result, key))
+
+
+<script.py> output:
+    pop2000 89600
+    abbreviation IL
+
+
+
+______________________________________________________________________________________________________________
+
+Joins
+If you aren't selecting columns from both tables or the two tables don't have a defined relationship, you can still use the .join() method on a table to join it with another table and get extra data related to our query. The join() takes the table object you want to join in as the first argument and a condition that indicates how the tables are related to the second argument. Finally, you use the .select_from() method on the select statement to wrap the join clause. For example, in the video, Jason executed the following code to join the census table to the state_fact table such that the state column of the census table corresponded to the name column of the state_fact table.
+
+stmt = stmt.select_from(
+    census.join(
+        state_fact, census.columns.state == 
+        state_fact.columns.name)
+Instructions
+100 XP
+Build a statement to select ALL the columns from the census and state_fact tables. To select ALL the columns from two tables employees and sales, for example, you would use stmt = select([employees, sales]).
+Append a select_from to stmt to join the census table to the state_fact table by the state column in census and the name column in the state_fact table.
+Execute the statement to get the first result and save it as result. This code is already written.
+Hit 'Submit Answer' to loop over the keys of the result object, and print the key and value for each!
+
+# Build a statement to select the census and state_fact tables: stmt
+stmt = select([census, state_fact])
+
+# Add a select_from clause that wraps a join for the census and state_fact
+# tables where the census state column and state_fact name column match
+stmt = stmt.select_from(
+    census.join(state_fact, census.columns.state == state_fact.columns.name))
+
+# Execute the statement and get the first result: result
+result = connection.execute(stmt).first()
+
+# Loop over the keys in the result object and print the key and value
+for key in result.keys():
+    print(key, getattr(result, key))
+
+
+<script.py> output:
+    state Illinois
+    sex M
+    age 0
+    pop2000 89600
+    pop2008 95012
+    id 13
+    name Illinois
+    abbreviation IL
+    country USA
+    type state
+    sort 10
+    status current
+    occupied occupied
+    notes 
+    fips_state 17
+    assoc_press Ill.
+    standard_federal_region V
+    census_region 2
+    census_region_name Midwest
+    census_division 3
+    census_division_name East North Central
+    circuit_court 7
+
+
+_______________________________________________________________________________________________________________
+
+
+More Practice with Joins
+You can use the same select statement you built in the last exercise, however, let's add a twist and only return a few columns and use the other table in a group_by() clause.
+
+Instructions
+100 XP
+Build a statement to select:
+The state column from the census table.
+The sum of the pop2008 column from the census table.
+The census_division_name column from the state_fact table.
+Append a .select_from() to stmt in order to join the census and state_fact tables by the state and name columns.
+Group the statement by the name column of the state_fact table.
+Execute the statement to get all the records and save it as results.
+Hit 'Submit Answer' to loop over the results object and print each record.
+
+
+# Build a statement to select the state, sum of 2008 population and census
+# division name: stmt
+stmt = select([
+    census.columns.state,
+    func.sum(census.columns.pop2008),
+    state_fact.columns.census_division_name
+])
+
+# Append select_from to join the census and state_fact tables by the census state and state_fact name columns
+stmt = stmt.select_from(
+    census.join(state_fact, census.columns.state == state_fact.columns.name)
+)
+
+# Append a group by for the state_fact name column
+stmt = stmt.group_by(state_fact.columns.name)
+
+# Execute the statement and get the results: results
+results = connection.execute(stmt).fetchall()
+
+# Loop over the the results object and print each record.
+for record in results:
+    print(record)
+
+
+
+<script.py> output:
+    ('Alabama', 4649367, 'East South Central')
+    ('Alaska', 664546, 'Pacific')
+    ('Arizona', 6480767, 'Mountain')
+    ('Arkansas', 2848432, 'West South Central')
+    ('California', 36609002, 'Pacific')
+    ('Colorado', 4912947, 'Mountain')
+    ('Connecticut', 3493783, 'New England')
+    ('Delaware', 869221, 'South Atlantic')
+    ('Florida', 18257662, 'South Atlantic')
+    ('Georgia', 9622508, 'South Atlantic')
+    ('Hawaii', 1250676, 'Pacific')
+    ('Idaho', 1518914, 'Mountain')
+    ('Illinois', 12867077, 'East North Central')
+    ('Indiana', 6373299, 'East North Central')
+    ('Iowa', 3000490, 'West North Central')
+    ('Kansas', 2782245, 'West North Central')
+    ('Kentucky', 4254964, 'East South Central')
+    ('Louisiana', 4395797, 'West South Central')
+    ('Maine', 1312972, 'New England')
+    ('Maryland', 5604174, 'South Atlantic')
+    ('Massachusetts', 6492024, 'New England')
+    ('Michigan', 9998854, 'East North Central')
+    ('Minnesota', 5215815, 'West North Central')
+    ('Mississippi', 2922355, 'East South Central')
+    ('Missouri', 5891974, 'West North Central')
+    ('Montana', 963802, 'Mountain')
+    ('Nebraska', 1776757, 'West North Central')
+    ('Nevada', 2579387, 'Mountain')
+    ('New Hampshire', 1314533, 'New England')
+    ('New Jersey', 8670204, 'Mid-Atlantic')
+    ('New Mexico', 1974993, 'Mountain')
+    ('New York', 19465159, 'Mid-Atlantic')
+    ('North Carolina', 9121606, 'South Atlantic')
+    ('North Dakota', 634282, 'West North Central')
+    ('Ohio', 11476782, 'East North Central')
+    ('Oklahoma', 3620620, 'West South Central')
+    ('Oregon', 3786824, 'Pacific')
+    ('Pennsylvania', 12440129, 'Mid-Atlantic')
+    ('Rhode Island', 1046535, 'New England')
+    ('South Carolina', 4438870, 'South Atlantic')
+    ('South Dakota', 800997, 'West North Central')
+    ('Tennessee', 6202407, 'East South Central')
+    ('Texas', 24214127, 'West South Central')
+    ('Utah', 2730919, 'Mountain')
+    ('Vermont', 620602, 'New England')
+    ('Virginia', 7648902, 'South Atlantic')
+    ('Washington', 6502019, 'Pacific')
+    ('West Virginia', 1812879, 'South Atlantic')
+    ('Wisconsin', 5625013, 'East North Central')
+    ('Wyoming', 529490, 'Mountain')
+
+____________________________________________________________________________________________________________________________
+
+Working
+with
+Hierarchical
+Tables
+
+
+Hierarchical Tables
+● Contain a relationship with themselves
+● Commonly found in:
+● Organizational
+● Geographic
+● Network
+● Graph 
+
+
+Hierarchical Tables - alias()
+● Requires a way to view the table via multiple names
+● Creates a unique reference that we can use
+
+
+
+Querying Hierarchical Data
+	In [1]: managers = employees.alias()
+
+	In [2]: stmt = select(
+	 ...: [managers.columns.name.label('manager'),
+	 ...: employees.columns.name.label('employee')])
+	In [3]: stmt = stmt.select_from(employees.join(
+	 ...: managers, managers.columns.id ==
+	 ...: employees.columns.manager)
+	In [4]: stmt = stmt.order_by(managers.columns.name)
+	In [5]: print(connection.execute(stmt).fetchall())
+				Out[5]: [(u'FILLMORE', u'GRANT'),
+				 (u'FILLMORE', u'ADAMS'),
+				 (u'HARDING', u'TAFT'), ...
+
+
+Group_by and Func
+● It’s important to target group_by() at the right alias
+● Be careful with what you perform functions on
+● If you don’t find yourself using both the alias and the table
+name for a query, don’t create the alias at all
+
+Querying Hierarchical Data
+		In [1]: managers = employees.alias()
+
+		In [2]: stmt = select([managers.columns.name,
+		 ...: func.sum(employees.columns.sal)])
+		In [3]: stmt = stmt.select_from(employees.join(
+		 ...: managers, managers.columns.id ==
+		 ...: employees.columns.manager)
+		In [4]: stmt = stmt.group_by(managers.columns.name)
+		In [5]: print(connection.execute(stmt).fetchall())
+				Out[5]: [(u'FILLMORE', Decimal('96000.00')),
+				 (u'GARFIELD', Decimal('83500.00')),
+				 (u'HARDING', Decimal('52000.00')),
+				 (u'JACKSON', Decimal('197000.00'))] 
+
+
+
+
+______________________________________________________________________________________
+
+
+Using alias to handle same table joined queries
+Often, you'll have tables that contain hierarchical data, such as employees and managers who are also employees. For this reason, you may wish to join a table to itself on different columns. The .alias() method, which creates a copy of a table, helps accomplish this task. Because it's the same table, you only need a where clause to specify the join condition.
+
+Here, you'll use the .alias() method to build a query to join the employees table against itself to determine to whom everyone reports.
+
+Instructions
+100 XP
+Save an alias of the employees table as managers. To do so, apply the method .alias() to employees.
+Build a query to select the employee name and their manager's name. The manager's name has already been selected for you. Use label to label the name column of employees as 'employee'.
+Append a where clause to stmt to match where the id column of the managers table corresponds to the mgr column of the employees table.
+Order the statement by the name column of the managers table.
+Execute the statement and store all the results. This code is already written. Hit 'Submit Answer' to print the names of the managers and all their employees.
+
+
+# Make an alias of the employees table: managers
+managers = employees.alias('managers')
+
+# Build a query to select manager's and their employees names: stmt
+stmt = select(
+    [managers.columns.name.label('manager'),
+     employees.columns.name.label('employee')]
+)
+
+# Match managers id with employees mgr: stmt
+stmt = stmt.where(managers.columns.id == employees.columns.mgr)
+
+# Order the statement by the managers name: stmt
+stmt = stmt.order_by(managers.columns.name)
+
+# Execute statement: results
+results = connection.execute(stmt).fetchall()
+
+# Print records
+for record in results:
+    print(record)
+
+
+
+
+<script.py> output:
+    ('FILLMORE', 'GRANT')
+    ('FILLMORE', 'ADAMS')
+    ('FILLMORE', 'MONROE')
+    ('GARFIELD', 'JOHNSON')
+    ('GARFIELD', 'LINCOLN')
+    ('GARFIELD', 'POLK')
+    ('GARFIELD', 'WASHINGTON')
+    ('HARDING', 'TAFT')
+    ('HARDING', 'HOOVER')
+    ('JACKSON', 'HARDING')
+    ('JACKSON', 'GARFIELD')
+    ('JACKSON', 'FILLMORE')
+    ('JACKSON', 'ROOSEVELT')
+
+In [1]: 
+
+__________________________________________________________________________________________________________________
+
+
+Leveraging Functions and Group_bys with Hierarchical Data
+It's also common to want to roll up data which is in a hierarchical table. Rolling up data requires making sure you're careful which alias you use to perform the group_bys and which table you use for the function.
+
+Here, your job is to get a count of employees for each manager.
+
+Instructions
+100 XP
+Save an alias of the employees table as managers.
+Build a query to select the name column of the managers table and the count of the number of their employees. The function func.count() has been imported and will be useful! Use it to count the id column of the employees table.
+Using a .where() clause, filter the records where the id column of the managers table and mgr column of the employees table are equal.
+Group the query by the name column of the managers table.
+Execute the statement and store all the results. Print the names of the managers and their employees. This code has already been written so hit 'Submit Answer' and check out the results!
+
+# Make an alias of the employees table: managers
+managers = employees.alias('managers')
+
+# Build a query to select managers and counts of their employees: stmt
+stmt = select([managers.columns.name, func.count(employees.columns.id)])
+
+# Append a where clause that ensures the manager id and employee mgr are equal
+stmt = stmt.where(managers.columns.id == employees.columns.mgr)
+
+# Group by Managers Name
+stmt = stmt.group_by(managers.columns.name)
+
+# Execute statement: results
+results = connection.execute(stmt).fetchall()
+
+# print manager
+for record in results:
+    print(record)
+
+
+script.py> output:
+    ('FILLMORE', 3)
+    ('GARFIELD', 4)
+    ('HARDING', 2)
+    ('JACKSON', 4)
+    
+    _____________________________________________________________________________________________________________
+    
+   Handling
+Large
+ResultSets
+
+Dealing with Large ResultSets
+	● fetchmany() lets us specify how many rows we want to
+	act upon
+	● We can loop over fetchmany()
+	● It returns an empty list when there are no more records
+	● We have to close the ResultProxy a"erwards
+
+
+Fetching Many Rows
+		In [1]: while more_results:
+			 ...: partial_results = results_proxy.fetchmany(50)
+			 ...: if partial_results == []:
+				 ...: more_results = False
+			 ...: for row in partial_results:
+				 ...: state_count[row.state] += 1
+		In [2]: results_proxy.close()
+
+
+
+
+Working on Blocks of Records
+Fantastic work so far! As Jason discussed in the video, sometimes you may have the need to work on a large ResultProxy, and you may not have the memory to load all the results at once. To work around that issue, you can get blocks of rows from the ResultProxy by using the .fetchmany() method inside a loop. With .fetchmany(), give it an argument of the number of records you want. When you reach an empty list, there are no more rows left to fetch, and you have processed all the results of the query. Then you need to use the .close() method to close out the connection to the database.
+
+You'll now have the chance to practice this on a large ResultProxy called results_proxy that has been pre-loaded for you to work with.
+
+Instructions
+100 XP
+Use a while loop that checks if there are more_results.
+Inside the loop, apply the method .fetchmany() to results_proxy to get 50 records at a time and store those records as partial_results.
+After fetching the records, if partial_results is an empty list (that is, if it is equal to []), set more_results to False.
+Loop over the partial_results and, if row.state is a key in the state_count dictionary, increment state_count[row.state] by 1; otherwise set state_count[row.state] to 1.
+After the while loop, close the ResultProxy results_proxy using .close().
+Hit 'Submit Answer' to print state_count.
+
+______________________________________________________________________________________________________________________
+
+Working on Blocks of Records
+Fantastic work so far! As Jason discussed in the video, sometimes you may have the need to work on a large ResultProxy, and you may not have the memory to load all the results at once. To work around that issue, you can get blocks of rows from the ResultProxy by using the .fetchmany() method inside a loop. With .fetchmany(), give it an argument of the number of records you want. When you reach an empty list, there are no more rows left to fetch, and you have processed all the results of the query. Then you need to use the .close() method to close out the connection to the database.
+
+You'll now have the chance to practice this on a large ResultProxy called results_proxy that has been pre-loaded for you to work with.
+
+Instructions
+0 XP
+Use a while loop that checks if there are more_results.
+Inside the loop, apply the method .fetchmany() to results_proxy to get 50 records at a time and store those records as partial_results.
+After fetching the records, if partial_results is an empty list (that is, if it is equal to []), set more_results to False.
+Loop over the partial_results and, if row.state is a key in the state_count dictionary, increment state_count[row.state] by 1; otherwise set state_count[row.state] to 1.
+After the while loop, close the ResultProxy results_proxy using .close().
+Hit 'Submit Answer' to print state_count.
+
+# Start a while loop checking for more results
+while more_results:
+    # Fetch the first 50 results from the ResultProxy: partial_results
+    partial_results = results_proxy.fetchmany(50)
+
+    # if empty list, set more_results to False
+    if partial_results == []:
+        more_results = False
+
+    # Loop over the fetched records and increment the count for the state
+    for row in partial_results:
+        if row.state in state_count:
+            state_count[row.state] += 1
+        else:
+            state_count[row.state] = 1
+
+# Close the ResultProxy, and thus the connection
+results_proxy.close()
+
+# Print the count by state
+print(state_count)
+
+<script.py> output:
+    {'District of Columbia': 172, 'Florida': 172, 'Idaho': 172, 'Massachusetts': 16, 'New Jersey': 172, 'Maryland': 49, 'North Dakota': 75, 'Illinois': 172}
+
+
+
+============================================================================================
+
+4
+Creating and Manipulating your own Databases
+0%
+In the previous chapters, you interacted with existing databases and queried them in various different ways. Now, you will learn how to build your own databases and keep them updated!
+
+
+Creating
+Databases
+and
+Tables
+
+Creating Databases
+● Varies by the database type
+● Databases like PostgreSQL and MySQL have
+command line tools to initialize the database
+● With SQLite, the create_engine() statement will
+create the database and file is they do not already exist
+
+
+Building a Table
+	In [1]: from sqlalchemy import (Table, Column, String,
+	 ...: Integer, Decimal, Boolean)
+	 
+	In [2]: employees = Table('employees', metadata,
+		 ...: Column('id', Integer()),
+		 ...: Column('name', String(255)),
+		 ...: Column('salary', Decimal()),
+		 ...: Column('active', Boolean()))
+	In [3]: metadata.create_all(engine)
+	In [4]: engine.table_names()
+		Out[4]: [u'employees']
+
+
+Creating Tables
+		● Still uses the Table object like we did for reflection
+		● Replaces the autoload keyword arguments with
+		Column objects
+		● Creates the tables in the actual database by using
+		the create_all() method on the MetaData
+		instance
+		● You need to use other tools to handle database
+		table updates, such as Alembic or raw SQL
+
+
+Creating Tables - Additional Column Options
+		● unique forces all values for the data in a column to be
+		unique
+		● nullable determines if a column can be empty in a
+		row
+		● default sets a default value if one
+		isn’t supplied.
+
+
+
+
+Building a Table with Additional Options
+		In [1]: employees = Table('employees', metadata,
+		 ...: Column('id', Integer()),
+		 ...: Column('name', String(255), unique=True,
+		 ...: nullable=False),
+		 ...: Column('salary', Float(), default=100.00),
+		 ...: Column('active', Boolean(), default=True))
+		In [2]: employees.constraints
+		
+		Out[2]: {CheckConstraint(...
+		Column('name', String(length=255), table=<employees>,
+		 nullable=False),
+		Column('salary', Float(), table=<employees>,
+		 default=ColumnDefault(100.0)),
+		Column('active', Boolean(), table=<employees>,
+		 default=ColumnDefault(True)) ...
+		UniqueConstraint(Column('name', String(length=255),
+		 table=<employees>, nullable=False))}
+
+
+
+_______________________________________________________________________________________________
+
+
+
+Loading a CSV into a Table
+You've done a great job so far at inserting data into tables! You're now going to learn how to load the contents of a CSV file into a table.
+
+We have used the csv module to set up a csv_reader, which is just a reader object that can iterate over the lines in a given CSV file - in this case, a census CSV file. Using the enumerate() function, you can loop over the csv_reader to handle the results one at a time. Here, for example, the first line it would return is:
+
+0 ['Illinois', 'M', '0', '89600', '95012']
+
+0 is the idx - or line number - while ['Illinois', 'M', '0', '89600', '95012'] is the row, corresponding to the column names 'state' , 'sex', 'age', 'pop2000 'and 'pop2008'. 'Illinois' can be accessed with row[0], 'M' with row[1], and so on. You can create a dictionary containing this information where the keys are the column names and the values are the entries in each line. Then, by appending this dictionary to a list, you can combine it with an insert statement to load it all into a table!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Create a statement for bulk insert into the census table. To do this, just use insert() and census.
+Create an empty list called values_list and a variable called total_rowcount that is set to 0.
+Within the for loop:
+Complete the data dictionary by filling in the values for each of the keys. The values are contained in row. row[0] represents the value for 'state', row[1] represents the value for 'sex', and so on.
+Append data to values_list.
+If 51 cleanly divides into the current idx:
+Execute stmt with the values_list and save it as results.
+Hit 'Submit Answer' to print total_rowcount when done with all the records.
+
+# Create a insert statement for census: stmt
+stmt = insert(census)
+
+# Create an empty list and zeroed row count: values_list, total_rowcount
+values_list = []
+total_rowcount = 0
+
+# Enumerate the rows of csv_reader
+for idx, row in enumerate(csv_reader):
+    #create data and append to values_list
+    data = {'state': row[0], 'sex':row[1], 'age': row[2], 'pop2000': row[3],
+            'pop2008': row[4]}
+    values_list.append(data)
+
+    # Check to see if divisible by 51
+    if idx % 51 == 0:
+        results = connection.execute(stmt, values_list)
+        total_rowcount += results.rowcount
+        values_list = []
+
+# Print total rowcount
+print(total_rowcount)
+____________________________________________________________________________________________
+
+Updating Data in a Table
+● Done with the update statement
+● Similar to the insert statement but includes a where
+clause to determine what record will be updated
+● We add all the values we want to update with
+the values clause as column=value pairs
+
+
+Updating One Row
+In [1]: from sqlalchemy import update
+In [2]: stmt = update(employees)
+In [3]: stmt = stmt.where(employees.columns.id == 3)
+In [4]: stmt = stmt.values(active=True)
+In [5]: result_proxy = connection.execute(stmt)
+In [6]: print(result_proxy.rowcount)
+Out[6]: 1
+
+
+Updating Multiple Rows
+● Build a where clause that will select all the records you want
+to update
+
+
+Inserting Multiple Rows
+In [1]: stmt = update(employees)
+In [2]: stmt = stmt.where(
+ employees.columns.active == True
+ )
+In [3]: stmt = stmt.values(active=False, salary=0.00)
+In [4]: result_proxy = connection.execute(stmt)
+In [5]: print(result_proxy.rowcount)
+Out[5]: 3 
+
+
+
+Correlated Updates
+In [1]: new_salary = select([employees.columns.salary])
+In [2]: new_salary = new_salary.order_by(desc(
+ ...: employees.columns.salary)
+ )
+In [3]: new_salary = new_salary.limit(1)
+In [4]: stmt = update(employees)
+In [5]: stmt = stmt.values(salary=new_salary)
+In [6]: result_proxy = connection.execute(stmt)
+In [7]: print(result_proxy.rowcount)
+Out[7]: 3
+
+
+Correlated Updates
+● Uses a select() statement to find the value for the
+column we are updating
+● Commonly used to update records to a maximum value or
+change a string to match an abbreviation from another table
+
+
+
+________________________________________________________________________________________________
+
+Updating individual records
+The update statement is very similar to an insert statement, except that it also typically uses a where clause to help us determine what data to update. You'll be using the FIPS state code using here, which is appropriated by the U.S. government to identify U.S. states and certain other associated areas. Recall that you can update all wages in the employees table as follows:
+
+stmt = update(employees).values(wage=100.00)
+For your convenience, the names of the tables and columns of interest in this exercise are: state_fact (Table), name (Column), and fips_state (Column).
+
+Instructions
+100 XP
+Instructions
+100 XP
+Build a statement to select all columns from the state_fact table where the name column is New York. Call it select_stmt.
+Print the results of executing the select_stmt and fetching all records.
+Build an update statement to change the fips_state column code to 36, save it as stmt.
+Use a where clause to filter for states with the name of 'New York' in the state_fact table.
+Execute stmt via the connection and save the output as results.
+Hit 'Submit Answer' to print the rowcount of the results and the results of executing select_stmt. This will verify the fips_state code is now 36.
+
+
+# Build a select statement: select_stmt
+select_stmt = select([state_fact]).where(state_fact.columns.name == 'New York')
+
+# Print the results of executing the select_stmt
+print(connection.execute(select_stmt).fetchall())
+
+# Build a statement to update the fips_state to 36: stmt
+stmt = update(state_fact).values(fips_state = 36)
+
+# Append a where clause to limit it to records for New York state
+stmt = stmt.where(state_fact.columns.name == 'New York')
+
+# Execute the statement: results
+results = connection.execute(stmt)
+
+# Print rowcount
+print(results.rowcount)
+
+# Execute the select_stmt again to view the changes
+print(connection.execute(select_stmt).fetchall())
+
+
+_____________________________________________________________________________________
+
+Updating Multiple Records
+As Jason discussed in the video, by using a where clause that selects more records, you can update multiple records at once. It's time now to practice this!
+
+For your convenience, the names of the tables and columns of interest in this exercise are: state_fact (Table), notes (Column), and census_region_name (Column).
+
+Instructions
+100 XP
+Build an update statement to update the notes column in the state_fact table to 'The Wild West'. Save it as stmt.
+Use a where clause to filter for records that have 'West' in the census_region_name column of the state_fact table.
+Execute stmt via the connection and save the output as results.
+Hit 'Submit Answer' to print rowcount of the results.
+
+
+# Build a statement to update the notes to 'The Wild West': stmt
+stmt = update(state_fact).values(notes='The Wild West')
+
+# Append a where clause to match the West census region records
+stmt = stmt.where(state_fact.columns.census_region_name == 'West')
+
+# Execute the statement: results
+results = connection.execute(stmt)
+
+# Print rowcount
+print(results.rowcount)
+
+
+
+
+___________________________________________________________________________________________________________
+
+Correlated Updates
+You can also update records with data from a select statement. This is called a correlated update. It works by defining a select statement that returns the value you want to update the record with and assigning that as the value in an update statement.
+
+You'll be using a flat_census in this exercise as the target of your correlated update. The flat_census table is a summarized copy of your census table.
+
+Instructions
+100 XP
+Build a statement to select the name column from state_fact. Save the statement as fips_stmt.
+Append a where clause to fips_stmt that matches fips_state from the state_fact table with fips_code in the flat_census table.
+Build an update statement to set the state_name in flat_census to fips_stmt. Save the statement as update_stmt.
+Hit 'Submit Answer' to execute update_stmt, store the results and print the rowcount of results.
+
+# Build a statement to select name from state_fact: stmt
+fips_stmt = select([state_fact.columns.name])
+
+# Append a where clause to Match the fips_state to flat_census fips_code
+fips_stmt = fips_stmt.where(
+    state_fact.columns.fips_state == flat_census.columns.fips_code)
+
+# Build an update statement to set the name to fips_stmt: update_stmt
+update_stmt = update(flat_census).values(state_name=fips_stmt)
+
+# Execute update_stmt: results
+results = connection.execute(update_stmt)
+
+# Print rowcount
+print(results.rowcount)
+
+_____________________________________________________________________________________________________________________-
+
+Deleting Data from a Table
+● Done with the delete() statement
+● delete() takes the table we are loading data into as
+the argument
+● A where() clause is used to choose which rows to
+delete
+● Hard to undo so BE CAREFUL!!!
+
+Deleting all Data from a Table
+In [1]: from sqlalchemy import delete
+In [2]: stmt = select([
+ func.count(extra_employees.columns.id)])
+In [3]: connection.execute(stmt).scalar()
+Out[3]: 3
+In [4]: delete_stmt = delete(extra_employees)
+In [5]: result_proxy = connection.execute(delete_stmt)
+In [6]: result_proxy.rowcount
+Out[6]: 3 
+
+
+Deleting Specific Rows
+● Build a where clause that will select all the records you want
+to delete
+
+
+Deleting Specific Rows
+In [1]: stmt = delete(employees).where(
+ employees.columns.id == 3)
+In [2]: result_proxy = connection.execute(stmt)
+In [3]: result_proxy.rowcount
+Out[3]: 1
+
+
+Dropping a Table Completely
+● Uses the drop method on the table
+● Accepts the engine as an argument so it knows
+where to remove the table from
+● Won’t remove it from metadata until the python process is
+restarted
+
+
+Dropping a table
+In [1]: extra_employees.drop(engine)
+In [2]: print(extra_employees.exists(engine))
+Out[2]: False
+
+
+Dropping all the Tables
+● Uses the drop_all() method on MetaData
+
+
+Dropping all the Tables
+In [1]: metadata.drop_all(engine)
+In [2]: engine.table_names()
+Out[2]: []
+
+_________________________________________________________________________________________________-
+
+
+Deleting all the records from a table
+Often, you'll need to empty a table of all of its records so you can reload the data. You can do this with a delete statement with just the table as an argument. For example, in the video, Jason deleted the table extra_employees by executing as follows:
+
+delete_stmt = delete(extra_employees)
+result_proxy = connection.execute(delete_stmt)
+Do be careful, though, as deleting cannot be undone!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Import delete and select from sqlalchemy.
+Build a delete statement to remove all the data from the census table. Save it as stmt.
+Execute stmt via the connection and save the results.
+Hit 'Submit Answer' to select all remaining rows from the census table and print the result to confirm that the table is now empty!
+
+# Import delete, select
+from sqlalchemy import delete, select
+
+# Build a statement to empty the census table: stmt
+stmt = delete(census)
+
+# Execute the statement: results
+results = connection.execute(stmt)
+
+# Print affected rowcount
+print(results.rowcount)
+
+# Build a statement to select all records from the census table
+stmt = select([census])
+
+# Print the results of executing the statement to verify there are no rows
+print(connection.execute(stmt).fetchall())
+
+_____________________________________________________________________________________________________________
+
+
+Deleting specific records
+By using a where() clause, you can target the delete statement to remove only certain records. For example, Jason deleted all rows from the employees table that had id 3 with the following delete statement:
+
+delete(employees).where(employees.columns.id == 3) 
+Here you'll delete ALL rows which have 'M' in the sex column and 36 in the age column. We have included code at the start which computes the total number of these rows. It is important to make sure that this is the number of rows that you actually delete.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Build a delete statement to remove data from the census table. Save it as stmt_del.
+Append a where clause to stmt_del that contains an and_ to filter for rows which have 'M' in the sex column AND 36 in the age column.
+Execute the delete statement.
+Hit 'Submit Answer' to print the rowcount of the results, as well as to_delete, which returns the number of rows that should be deleted. These should match and this is an important sanity check!
+
+
+# Build a statement to count records using the sex column for Men ('M') age 36: stmt
+stmt = select([func.count(census.columns.sex)]).where(
+    and_(census.columns.sex == 'M',
+         census.columns.age == 36)
+)
+
+# Execute the select statement and use the scalar() fetch method to save the record count
+to_delete = connection.execute(stmt).scalar()
+
+# Build a statement to delete records from the census table: stmt_del
+stmt_del = delete(census)
+
+# Append a where clause to target Men ('M') age 36
+stmt_del = stmt_del.where(
+    and_(census.columns.sex == 'M',
+         census.columns.age == 36)
+)
+
+# Execute the statement: results
+results = connection.execute(stmt_del)
+
+# Print affected rowcount and to_delete record count, make sure they match
+print(results.rowcount, to_delete)
+
+
+__________________________________________________________________________________________________________________
+
+Deleting a Table Completely
+You're now going to practice dropping individual tables from a database with the .drop() method, as well as all tables in a database with the .drop_all() method!
+
+As Spider-Man's Uncle Ben (as well as Jason, in the video!) said: With great power, comes great responsibility. Do be careful when deleting tables, as it's not simple or fast to restore large databases! Remember, you can check to see if a table exists with the .exists() method.
+
+This is the final exercise in this chapter: After this, you'll be ready to apply everything you've learned to a case study in the final chapter of this course!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Drop the state_fact table by applying the method .drop() to it and passing it the argument engine (in fact, engine will be the sole argument for every function/method in this exercise!)
+Check to see if state_fact exists via print. Use the .exists() method with engine as the argument.
+Drop all the tables via the metadata using the .drop_all() method.
+Use a print statement to check if the census table exists.
+
+
+# Drop the state_fact table
+state_fact.drop(engine)
+
+# Check to see if state_fact exists
+print(state_fact.exists(engine))
+
+# Drop all tables
+metadata.drop_all(engine)
+
+# Check to see if census exists
+print(census.exists(engine))
+
+
+
+====================================================================================================
+
+5
+Putting it all together
+0%
+Here, you will bring together all of the skills you acquired in the previous chapters to work on a real life project! From connecting to a database, to populating it, to reading and querying it, you will have a chance to apply all the key concepts you learned in this course. Enjoy!
+
+
+Census Case Study
+● Preparing SQLAlchemy and the Database
+● Loading Data into the Database
+● Solving Data Science Problems with Queries
+
+
+Part 1: Preparing SQLAlchemy and the Database
+● Create an Engine and MetaData object
+In [1]: from sqlalchemy import create_engine, MetaData
+In [2]: engine = create_engine('sqlite:///census_nyc.sqlite')
+In [3]: metadata = MetaData()
+
+
+Part 1: Preparing SQLAlchemy and the Database
+● Create and save the census table
+In [4]: from sqlalchemy import (Table, Column, String,
+ ...: Integer, Decimal, Boolean)
+In [5]: employees = Table('employees', metadata,
+ ...: Column('id', Integer()),
+ ...: Column('name', String(255)),
+ ...: Column('salary', Decimal()),
+ ...: Column('active', Boolean()))
+In [6]: metadata.create_all(engine)
+
+
+______________________________________________________________________
+Setup the Engine and MetaData
+In this exercise, your job is to create an engine to the database that will be used in this chapter. Then, you need to initialize its metadata.
+
+Recall how you did this in Chapter 1 by leveraging create_engine() and MetaData.
+
+Instructions
+100 XP
+Import create_engine and MetaData from sqlalchemy.
+Create an engine to the chapter 5 database by using 'sqlite:///chapter5.sqlite' as the connection string.
+Create a MetaData object as metadata.
+
+# Import create_engine, MetaData
+from sqlalchemy import create_engine, MetaData
+
+# Define an engine to connect to chapter5.sqlite: engine
+engine = create_engine('sqlite:///chapter5.sqlite')
+
+# Initialize MetaData: metadata
+metadata = MetaData()
+
+___________________________________________________________________________________________
+
+
+Create the Table to the Database
+Having setup the engine and initialized the metadata, you will now define the census table object and then create it in the database using the metadata and engine from the previous exercise. To create it in the database, you will have to use the .create_all() method on the metadata with engine as the argument.
+
+It may help to refer back to the Chapter 4 exercise in which you learned how to create a table.
+
+Instructions
+100 XP
+Import Table, Column, String, and Integer from sqlalchemy.
+Define a census table with the following columns:
+'state' - String - length of 30
+'sex' - String - length of 1
+'age' - Integer
+'pop2000' - Integer
+'pop2008' - Integer
+Create the table in the database using the metadata and engine.
+
+# Import Table, Column, String, and Integer
+from sqlalchemy import Table, Column, String, Integer
+
+# Build a census table: census
+census = Table('census', metadata,
+               Column('state', String(30)),
+               Column('sex', String(1)),
+               Column('age', Integer()),
+               Column('pop2000', Integer()),
+               Column('pop2008', Integer()))
+
+# Create the table in the database
+metadata.create_all(engine)
+
+_________________________________________________________________________________________________________-
+
+Part 2: Populating the Database
+● Load a CSV file into a values list
+In [7]: values_list = []
+In [8]: for row in csv_reader:
+ ...: data = {'state': row[0], 'sex': row[1],
+ ...: 'age': row[2], 'pop2000': row[3],
+ ...: 'pop2008': row[4]}
+ ...: values_list.append(data)
+ 
+ 
+ 
+ Part 2: Populating the Database
+● Insert the values list into the census table
+In [9]: from sqlalchemy import insert
+In [10]: stmt = insert(employees)
+In [11]: result_proxy = connection.execute(stmt,
+ ...: values_list)
+In [12]: print(result_proxy.rowcount)
+Out[12]: 2
+
+
+
+______________________________________________________________________________________________--
+
+Reading the Data from the CSV
+Leverage the Python CSV module from the standard library and load the data into a list of dictionaries.
+
+It may help to refer back to the Chapter 4 exercise in which you did something similar.
+
+Instructions
+100 XP
+Create an empty list called values_list.
+Iterate over the rows of csv_reader with a for loop, creating a dictionary called data for each row and append it to values_list.
+Within the for loop, row will be a list whose entries are 'state' , 'sex', 'age', 'pop2000' and 'pop2008' (in that order).
+
+
+# Create an empty list: values_list
+values_list = []
+
+# Iterate over the rows
+for row in csv_reader:
+    # Create a dictionary with the values
+    data = {'state': row[0], 'sex': row[1], 'age':row[2], 'pop2000': row[3],
+            'pop2008': row[4]}
+    # Append the dictionary to the values list
+    values_list.append(data)
+
+
+_______________________________________________________________________________________________________________
+
+
+Load Data from a list into the Table
+Using the multiple insert pattern, in this exercise, you will load the data from values_list into the table.
+
+Instructions
+100 XP
+Import insert from sqlalchemy.
+Build an insert statement for the census table.
+Execute the statement stmt along with values_list. You will need to pass them both as arguments to connection.execute().
+Print the rowcount attribute of results.
+
+# Import insert
+from sqlalchemy import insert
+
+# Build insert statement: stmt
+stmt = insert(census)
+
+# Use values_list to insert data: results
+results = connection.execute(stmt, values_list)
+
+# Print rowcount
+print(results.rowcount)
+
+
+
+______________________________________________________________________________________________________________-
+
+
+Part 3: Answering Data Science Questions with Queries
+● Determine Average Age for Males and Females
+In [13]: from sqlalchemy import select
+In [14]: stmt = select([census.columns.sex,
+ ...: (func.sum(census.columns.pop2008 *
+ ...: census.columns.age) /
+ ...: func.sum(census.columns.pop2008)
+ ...: ).label('average_age')])
+In [15]: stmt = stmt.group_by('census.columns.sex')
+
+In [16]: results = connection.execute(stmt).fetchall()
+
+
+Part 3: Answering Data Science Questions with Queries
+● Determine the percentage of Females for each
+state
+In [17]: from sqlalchemy import case, cast, Float
+In [18]: stmt = select([
+ ...: (func.sum(
+ ...: case([
+ ...: (census.columns.state == 'New York',
+ ...: census.columns.pop2008)
+ ...: ], else_=0)) /
+ ...: cast(func.sum(census.columns.pop2008),
+ ...: Float) * 100).label('ny_percent')])
+ 
+ 
+ Part 3: Answering Data Science Questions with Queries
+● Determine the top 5 states by population change
+from 2000 to 2008
+In [19]: stmt = select([census.columns.age,
+ ...: (census.columns.pop2008-
+ ...: census.columns.pop2000).label('pop_change')
+ ...: ])
+In [20]: stmt = stmt.order_by('pop_change')
+In [21]: stmt = stmt.limit(5)
+
+
+__________________________________________________________________________________________________________________
+
+Build a Query to Determine the Average Age by Population
+In this exercise, you will use the func.sum() and group_by() methods to first determine the average age weighted by the population in 2008, and then group by sex.
+
+As Jason discussed in the video, a weighted average is calculated as the sum of the product of the weights and averages divided by the sum of all the weights.
+
+For example, the following statement determines the average age weighted by the population in 2000:
+
+stmt = select([census.columns.sex,
+               (func.sum(census.columns.pop2000 * census.columns.age) /
+                func.sum(census.columns.pop2000)).label('average_age')
+               ])
+Instructions
+100 XP
+Instructions
+100 XP
+Import select from sqlalchemy.
+Build a statement to:
+Select sex from the census table.
+Select the average age weighted by the population in 2008 (pop2008). See the example given in the assignment text to see how you can do this. Label this average age calculation as 'average_age'.
+Group the query by sex.
+Execute the query and store it as results.
+Loop over results and print the sex and average_age for each record.
+
+
+# Import select
+from sqlalchemy import select
+
+# Calculate weighted average age: stmt
+stmt = select([census.columns.sex,
+               (func.sum(census.columns.pop2008 * census.columns.age) /
+                func.sum(census.columns.pop2008)).label('average_age')
+               ])
+
+# Group by sex
+stmt = stmt.group_by(census.columns.sex)
+
+# Execute the query and store the results: results
+results = connection.execute(stmt).fetchall()
+
+# Print the average age by sex
+for result in results:
+    print(result.sex, result.average_age)
+
+
+
+________________________________________________________________________________________
+
+Build a Query to Determine the Percentage of Population by Gender and State
+In this exercise, you will write a query to determine the percentage of the population in 2000 that comprised of women. You will group this query by state.
+
+Instructions
+100 XP
+Import case, cast and Float from sqlalchemy.
+Define a statement to select state and the percentage of females in 2000.
+Inside func.sum(), use case() to select females (using the sex column) from pop2000. Remember to specify else_=0 if the sex is not 'F'.
+To get the percentage, divide the number of females in the year 2000 by the overall population in 2000. Cast the divisor - census.columns.pop2000 - to Float before multiplying by 100.
+Group the query by state.
+Execute the query and store it as results.
+Print state and percent_female for each record. This has been done for you, so hit 'Submit Answer' to see the result.
+
+
+
+# import case, cast and Float from sqlalchemy
+from sqlalchemy import case, cast, Float
+
+# Build a query to calculate the percentage of females in 2000: stmt
+stmt = select([census.columns.state,
+    (func.sum(
+        case([
+            (census.columns.sex == 'F', census.columns.pop2000)
+        ], else_=0)) /
+     cast(func.sum(census.columns.pop2000), Float) * 100).label('percent_female')
+])
+
+# Group By state
+stmt = stmt.group_by(census.columns.state)
+
+# Execute the query and store the results: results
+results = connection.execute(stmt).fetchall()
+
+# Print the percentage
+for result in results:
+    print(result.state, result.percent_female)
+
+
+
+<script.py> output:
+    Alabama 51.8324077702
+    Alaska 49.3014978935
+    Arizona 50.2236130306
+    Arkansas 51.2699284622
+    California 50.3523321490
+    Colorado 49.8476706030
+    Connecticut 51.6681650713
+    Delaware 51.6110973356
+    District of Columbia 53.1296261417
+    Florida 51.3648800117
+    Georgia 51.1140835034
+    Hawaii 51.1180118369
+    Idaho 49.9897262390
+    Illinois 51.1122423480
+    Indiana 50.9548031330
+    Iowa 50.9503983425
+    Kansas 50.8218641078
+    Kentucky 51.3268703693
+    Louisiana 51.7535159655
+    Maine 51.5057081342
+    Maryland 51.9357554997
+    Massachusetts 51.8430235713
+    Michigan 50.9724651832
+    Minnesota 50.4933294430
+    Mississippi 51.9222948179
+    Missouri 51.4688860264
+    Montana 50.3220269073
+    Nebraska 50.8584549336
+    Nevada 49.3673636138
+    New Hampshire 50.8580198450
+    New Jersey 51.5171395613
+    New Mexico 51.0471720798
+    New York 51.8345386515
+    North Carolina 51.4822623221
+    North Dakota 50.5006936323
+    Ohio 51.4655035002
+    Oklahoma 51.1136245708
+    Oregon 50.4294670362
+    Pennsylvania 51.7404347305
+    Rhode Island 52.0734339190
+    South Carolina 51.7307212977
+    South Dakota 50.5258358137
+    Tennessee 51.4306896994
+    Texas 50.5157216642
+    Utah 49.9729527511
+    Vermont 51.0185732099
+    Virginia 51.6572524472
+    Washington 50.5185650872
+    West Virginia 51.4004231809
+    Wisconsin 50.6148645265
+    Wyoming 49.9459554265
+    
+    
+    ____________________________________________________________________________________________
+    
+    uild a Query to Determine the Difference by State from the 2000 and 2008 Censuses
+In this final exercise, you will write a query to calculate the states that changed the most in population. You will limit your query to display only the top 10 states.
+
+Instructions
+100 XP
+Build a statement to:
+Select state.
+Calculate the difference in population between 2008 (pop2008) and 2000 (pop2000).
+Group the query by census.columns.state using the .group_by() method on stmt.
+Order by 'pop_change' in descending order using the .order_by() method with the desc() function on 'pop_change'.
+Limit the query to the top 10 states using the .limit() method.
+Execute the query and store it as results.
+Print the state and the population change for each result. This has been done for you, so hit 'Submit Answer' to see the result!
+
+# Build query to return state name and population difference from 2008 to 2000
+stmt = select([census.columns.state,
+     (census.columns.pop2008-census.columns.pop2000).label('pop_change')
+])
+
+# Group by State
+stmt = stmt.group_by(census.columns.state)
+
+# Order by Population Change
+stmt = stmt.order_by(desc('pop_change'))
+
+# Limit to top 10
+stmt = stmt.limit(10)
+
+# Use connection to execute the statement and fetch all results
+results = connection.execute(stmt).fetchall()
+
+# Print the state and population change for each record
+for result in results:
+    print('{}:{}'.format(result.state, result.pop_change))
+
+
+
+
+
+
+
+
+
+
+
+
+
+

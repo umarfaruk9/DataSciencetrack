@@ -1,0 +1,1465 @@
+Course Description
+The most successful companies today are the ones that know their customers so well that they can anticipate their needs. Customer analytics and in particular A/B Testing are crucial parts of leveraging quantitative know-how to help make business decisions that generate value. This course covers the ins and outs of how to use Python to analyze customer behavior and business trends as well as how to create, run, and analyze A/B tests to make proactive, data-driven business decisions.
+
+_____________________________________________________________________________________________________________________________________
+1
+Key Performance Indicators: Measuring Business Success
+FREE
+0%
+This chapter provides a brief introduction to the content that will be covered throughout the course before transitioning into a discussion of Key Performance Indicators or KPIs. You'll learn how to identify and define meaningful KPIs through a combination of critical thinking and leveraging Python tools. These techniques are all presented in a highly practical and generalizable way. Ultimately these topics serve as the core foundation for the A/B testing discussion that follows.
+
+
+_____________________________________________________________________________________________________________________________________
+
+Practicing aggregations
+It's time to begin exploring the in-app purchase data in more detail. Here, you will practice aggregating the dataset in various ways using the .agg() method and then examine the results to get an understanding of the overall data, as well as a feel for how to aggregate data using pandas.
+
+Loaded for you is a DataFrame named purchase_data which is the dataset of in-app purchase data merged with the user demographics data from earlier.
+
+Before getting started, it's good practice to explore this purchase_data DataFrame in the IPython Shell. In particular, notice the price column: you'll examine it further in this exercise.
+
+Instructions 1/3
+30 XP
+1
+Find the 'mean' purchase price paid across our dataset. Then examine the output before moving on.
+
+# Calculate the mean purchase price 
+purchase_price_mean = purchase_data.price.agg('mean')
+
+# Examine the output 
+print(purchase_price_mean)
+
+
+Now, use the .agg() method to find the 'mean' and 'median' prices together.
+
+# Calculate the mean and median purchase price 
+purchase_price_summary = purchase_data.price.agg(['mean', 'median'])
+
+# Examine the output 
+print(purchase_price_summary)
+
+
+Now, find the 'mean' and 'median' for both the 'price' paid and the 'age' of purchaser.
+
+# Calculate the mean and median of price and age
+purchase_summary = purchase_data.agg({'price': ['mean', 'median'], 'age': ['mean', 'median']})
+
+# Examine the output 
+print(purchase_summary)
+
+_____________________________________________________________________________________________________________________________________
+
+rouping & aggregating
+You'll be using .groupby() and .agg() a lot in this course, so it's important to become comfortable with them. In this exercise, your job is to calculate a set of summary statistics about the purchase data broken out by 'device' (Android or iOS) and 'gender' (Male or Female).
+
+Following this, you'll compare the values across these subsets, which will give you a baseline for these values as potential KPIs to optimize going forward.
+
+The purchase_data DataFrame from the previous exercise has been pre-loaded for you. As a reminder, it contains purchases merged with user demographics.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Group the purchase_data DataFrame by 'device' and 'gender' in that order.
+Aggregate grouped_purchase_data, finding the 'mean', 'median', and the standard deviation ('std') of the purchase price, in that order, across these groups.
+Examine the results. Does the mean differ drastically from the median? How much variability is in each group?
+
+# Group the data 
+grouped_purchase_data = purchase_data.groupby(by = ['device', 'gender'])
+
+# Aggregate the data
+purchase_summary = grouped_purchase_data.agg({'price': ['mean', 'median', 'std']})
+
+# Examine the results
+print(purchase_summary)
+
+
+<script.py> output:
+                        price                   
+                         mean median         std
+    device gender                               
+    and    F       400.747504    299  179.984378
+           M       416.237308    499  195.001520
+    iOS    F       404.435330    299  181.524952
+           M       405.272401    299  196.843197
+
+
+_____________________________________________________________________________________________________________________________________
+
+Average purchase price by cohort
+Building on the previous exercise, let's look at the same KPI, average purchase price, and a similar one, median purchase price, within the first 28 days. Additionally, let's look at these metrics not limited to 28 days to compare.
+
+We can calculate these metrics across a set of cohorts and see what differences emerge. This is a useful task as it can help us understand how behaviors vary across cohorts.
+
+Note that in our data the price variable is given in cents.
+
+Instructions 1/3
+0 XP
+1
+2
+3
+Instructions 1/3
+0 XP
+1
+2
+3
+Use np.where to create an array month1 containing:
+
+the price of the purchase purchase, if
+
+the user registration .reg_date occurred at most 28 days ago (i.e. before max_reg_date), and
+
+the date of purchase .date occurred within 28 days of registration date .reg_date;
+
+NaN, otherwise.
+
+Hint
+the two date conditions are:
+
+purchase_data.reg_date is less than max_reg_date
+
+purchase_data.date is less than purchase_data.reg_date plus 28 days.
+
+You can type np.where? in console to find out more about the function and how to use it.
+
+
+# Set the max registration date to be one month before today
+max_reg_date = current_date - timedelta(days=28)
+
+# Find the month 1 values
+month1 = np.where((purchase_data.reg_date < max_reg_date) &
+                 (purchase_data.date < purchase_data.reg_date + timedelta(days=28)),
+                  purchase_data.price, 
+                  np.NaN)
+                 
+# Update the value in the DataFrame
+purchase_data['month1'] = month1
+
+
+Now, group purchase_data by gender and then device using the .groupby() method.
+
+
+# Set the max registration date to be one month before today
+max_reg_date = current_date - timedelta(days=28)
+
+# Find the month 1 values
+month1 = np.where((purchase_data.reg_date < max_reg_date) &
+                 (purchase_data.date < purchase_data.reg_date + timedelta(days=28)),
+                  purchase_data.price, 
+                  np.NaN)
+                 
+# Update the value in the DataFrame
+purchase_data['month1'] = month1
+
+# Group the data by gender and device 
+purchase_data_upd = purchase_data.groupby(by=['gender', 'device'], as_index=False)
+
+
+Aggregate the "mean" and "median" of both 'month1' and'price' using the .agg() method in the listed order of aggregations and fields.
+
+# Set the max registration date to be one month before today
+max_reg_date = current_date - timedelta(days=28)
+
+# Find the month 1 values
+month1 = np.where((purchase_data.reg_date < max_reg_date) &
+                 (purchase_data.date < purchase_data.reg_date + timedelta(days=28)),
+                  purchase_data.price, 
+                  np.NaN)
+                 
+# Update the value in the DataFrame
+purchase_data['month1'] = month1
+
+# Group the data by gender and device 
+purchase_data_upd = purchase_data.groupby(by=['gender', 'device'], as_index=False) 
+
+# Aggregate the month1 and price data 
+purchase_summary = purchase_data_upd.agg(
+                        {'month1': ['mean', 'median'],
+                        'price': ['mean', 'median']})
+
+# Examine the results 
+print(purchase_summary)
+
+<script.py> output:
+      gender device      month1              price       
+                           mean median        mean median
+    0      F    and  388.204545  299.0  400.747504    299
+    1      F    iOS  432.587786  499.0  404.435330    299
+    2      M    and  413.705882  399.0  416.237308    499
+    3      M    iOS  433.313725  499.0  405.272401    299
+		
+		
+Great! This value seems relatively stable over the past 28 days. Congratulations on completing Chapter 1! In the next chapter, you'll explore and visualize customer behavior in more detail.
+
+
+_____________________________________________________________________________________________________________________________________
+
+2
+Exploring and Visualizing Customer Behavior
+0%
+This chapter teaches you how to visualize, manipulate, and explore KPIs as they change over time. Through a variety of examples, you'll learn how to work with datetime objects to calculate metrics per unit time. Then we move to the techniques for how to graph different segments of data, and apply various smoothing functions to reveal hidden trends. Finally we walk through a complete example of how to pinpoint issues through exploratory data analysis of customer data. Throughout this chapter various functions are introduced and explained in a highly generalizable way.
+
+
+_____________________________________________________________________________________________________________________________________
+Using the Timedelta Class
+current_date = pd.to_datetime('2018-03-17')
+max_lapse_date = current_date - timedelta(days=14)
+conv_sub_data = sub_data_demo[sub_data_demo.lapse_date < max_lapse_date]
+
+
+
+Date Differences
+sub_time = (conv_sub_data.subscription_date
+- conv_sub_data.lapse_date)
+conv_sub_data['sub_time'] = sub_time
+
+Date Components
+conv_sub_data['sub_time'] = conv_sub_data.sub_time.dt.days
+
+
+
+Conversion Rate Calculation
+conv_base = conv_sub_data[(conv_sub_data.sub_time.notnull()) | (conv_sub_data.sub_time > 7)]
+total_users = len(conv_base)
+2086
+
+
+total_subs = np.where(conv_sub_data.sub_time.notnull() & (conv_base.sub_time <= 14), 1, 0)
+total_subs = sum(total_subs)
+20
+
+
+
+conversion_rate = total_subs / total_users
+0.0095877277085330784
+
+Parsing Dates - On Import
+pandas.read_csv(...,
+parse_dates=False,
+infer_datetime_format=False,
+keep_date_col=False,
+date_parser=None,
+dayfirst=False,...)
+
+
+customer_demographics = pd.read_csv('customer_demographics.csv',
+parse_dates=True,
+infer_datetime_format=True)
+
+
+uid reg_date device gender country age
+0 54030035.0 2017-06-29 and M USA 19
+1 72574201.0 2018-03-05 iOS F TUR 22
+2 64187558.0 2016-02-07 iOS M USA 16
+
+
+Parsing Dates - Manually
+pandas.to_datetime(arg, errors=
+'raise'
+, ..., format=None, ...)
+strftime
+1993-01-27 -- "%Y-%m-%d"
+05/13/2017 05:45:37 -- "%m/%d/%Y %H:%M:%S"
+September 01, 2017 -- "%B %d, %Y"
+
+_____________________________________________________________________________________________________________________________________
+
+Creating time series
+graphs With
+matplotlib
+CUS TOMER AN A LYTICS & A /B TES TIN G IN PYTH ON
+
+
+Conversion Rate by Day
+current_date = pd.to_datetime('2018-03-17')
+max_lapse_date = current_date - timedelta(days=7)
+conv_sub_data = sub_data_demo[sub_data_demo.lapse_date
+< max_lapse_date]
+sub_time = (conv_sub_data.subscription_date -
+conv_sub_data.lapse_date).dt.days
+conv_sub_data['sub_time'] = sub_time
+
+Conversion Rate by Day
+conversion_data = conv_sub_data.groupby(by=['lapse_date'],
+as_index=False)
+conversion_data = conversion_data.agg({'sub_time': [gc7]})
+conversion_data.columns = conversion_data.columns.droplevel(
+level=1)
+conversion_data.head()
+lapse_date sub_time
+0 2017-09-01 0.224775
+1 2017-09-02 0.223749
+2 2017-09-03 0.222948
+3 2017-09-04 0.222222
+4 2017-09-05 0.229401
+
+Plotting Daily Conversion Rate
+conversion_data.lapse_date =
+pd.to_datetime(conversion_data.lapse_date)
+conversion_data.plot(x=
+'lapse_date'
+, y=
+'sub_time')
+
+
+Plotting Daily Conversion Rate
+plt.show()
+
+
+Trends in Different Cohorts
+conversion_data.head()
+lapse_date country sub_time
+0 2017-09-01 BRA 0.184000
+1 2017-09-01 CAN 0.285714
+2 2017-09-01 DEU 0.276119
+3 2017-09-01 FRA 0.240506
+4 2017-09-01 TUR 0.161905
+
+
+
+`
+.pivot_table()`
+Pivot Table Method
+pandas.pivot_table(
+data, values=None, index=None, columns=None,
+aggfunc=
+'mean'
+, fill_value=None, margins=False,
+dropna=True, margins_name=
+'All')
+
+
+
+`
+.pivot_table()`
+reformatted_cntry_data =pd.pivot_table(conversion_data, ...)
+reformatted_cntry_data =pd.pivot_table(conversion_data,
+values=['sub_time'],...)
+reformatted_cntry_data =pd.pivot_table(conversion_data,
+values=['sub_time'], columns=['country'],
+...)
+reformatted_cntry_data =pd.pivot_table(conversion_data,
+values=['sub_time'],columns=['country'],
+index=['reg_date'],fill_value=0 )
+
+
+`
+.pivot_table()`
+reformatted_cntry_data.columns
+reformatted_cntry_data.columns.droplevel(level=[0])
+reformatted_cntry_data.reset_index(inplace=True)
+reformatted_cntry_data.head()
+
+
+lapse_date BRA CAN DEU
+2017-09-01 0.184000 0.285714 0.276119 ...
+2017-09-02 0.171296 0.244444 0.276190 ...
+2017-09-03 0.177305 0.295082 0.266055 ...
+
+
+Plotting Trends in Different Cohorts
+reformatted_cntry_data.plot(
+x=
+'reg_date'
+,
+y=['BRA'
+,
+'FRA'
+,
+'DEU'
+,
+'TUR'
+,
+'USA'
+,
+'CAN']
+)
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+
+Understanding and
+visualizing trends in
+customer data
+
+
+
+Subscribers Per Day
+usa_subscriptions = pd.read_csv('usa_subscribers.csv',
+parse_dates=True,
+infer_datetime_format=True)
+usa_subscriptions['sub_day'] = (usa_subscriptions.sub_date -
+usa_subscriptions.lapse_date).dt.days
+usa_subscriptions = usa_subscriptions[usa_subscriptions.sub_day <= 7]
+usa_subscriptions = usa_subscriptions.groupby(by=['sub_date'], as_index = False)
+usa_subscriptions = usa_subscriptions.agg({'subs': ['sum']})
+usa_subscriptions.columns = usa_subscriptions.columns.droplevel(level=[1])
+usa_subscriptions.head()
+
+
+
+
+sub_date subs
+0 2016-09-02 37
+1 2016-09-03 50
+2 2016-09-04 59
+
+
+Subscribers Per Day
+usa_subscriptions.plot(x=
+'sub_date'
+, y=
+'subs')
+plt.show()
+
+
+Calculating Trailing Averages
+rolling_subs = usa_subscriptions.subs.rolling(...)
+rolling_subs = usa_subscriptions.subs.rolling(window=7, ...)
+In [10]: rolling_subs = usa_subscriptions.subs.rolling(
+window=7, center=False)
+
+
+Calculating Trailing Averages
+rolling_subs = rolling_subs.mean()
+usa_subscriptions['rolling_subs'] = rolling_subs
+usa_subscriptions.tail()
+sub_date subs rolling_subs
+2018-03-14 89 94.714286
+2018-03-15 96 95.428571
+2018-03-16 102 96.142857
+2018-03-17 102 96.142857
+2018-03-18 115 98.714286
+
+
+
+
+
+Noisy Data
+high_sku_purchases = pd.read_csv('high_sku_purchases.csv'
+,
+parse_dates=True,
+infer_datetime_format=True)
+high_sku_purchases.plot(x=
+'date'
+, y=
+'purchases')
+plt.show()
+
+
+
+
+Calculating an Exponential Moving Average
+exp_mean = high_sku_purchases.purchases.ewm(span=30)
+exp_mean = exp_mean.mean()
+high_sku_purchases['exp_mean'] = exp_mean
+
+
+Calculating an Exponential Moving Average
+high_sku_purchases.plot(x=
+'date'
+, y=
+'exp_mean')
+
+_____________________________________________________________________________________________________________________________________
+
+Exploratory data
+analysis with time
+series data
+
+
+Drop in New User Retention
+current_date = pd.to_datetime('2018-03-17')
+max_lapse_date = current_date - timedelta(days=7)
+conv_sub_data = sub_data_demo[sub_data_demo.lapse_date
+<= max_lapse_date]
+sub_time = (conv_sub_data.subscription_date -
+conv_sub_data.lapse_date).dt.days
+conv_sub_data['sub_time'] = sub_time
+conversion_data = conv_sub_data.groupby(by=['lapse_date'],
+as_index=False)
+conversion_data = conversion_data.agg({'sub_time': [gc7]})
+conversion_data.columns = conversion_data.columns.droplevel(level=1)
+
+
+conversion_data.plot()
+plt.show()
+
+
+Limiting our View
+current_date = pd.to_datetime('2018-03-17')
+start_date = current_date - timedelta(days=(6*28))
+conv_filter = ((conversion_data.lapse_date >= start_date) &
+(conversion_data.lapse_date <= current_date))
+conversion_data_filt = conversion_data[conv_filter]
+conversion_data_filt.plot(x=
+'lapse_date'
+, y=
+'sub_time')
+
+plt.show()
+
+
+
+Splitting by Country & Device
+conv_filter = ((conv_sub_data.lapse_date >= start_date) &
+(conv_sub_data.lapse_date <= current_date))
+conv_data = conv_sub_data[conv_filter]
+conv_data_cntry = conv_data.groupby(by=['lapse_date', 'country'],
+as_index=False)
+conv_data_cntry = conv_data_cntry.agg({'sub_time': [gc7]})
+conv_data_cntry.columns = conv_data_cntry.columns.droplevel(level=1)
+conv_data_cntry = pd.pivot_table(conv_data_cntry,
+values=['sub_time'],
+columns=['country'],
+index=['lapse_date'],fill_value=0 )
+conv_data_cntry.columns = conv_data_cntry.columns.droplevel(
+level=0)
+conv_data_cntry.reset_index(inplace=True)
+conv_data_cntry.plot(x=['lapse_date'],
+y=['BRA', 'CAN', 'DEU', 'FRA', 'TUR', 'USA'])
+plt.show()
+
+
+
+
+Splitting by Country & Device
+conv_filter = ((conv_sub_data.lapse_date >= start_date) &
+(conv_sub_data.lapse_date <= current_date))
+conv_data = conv_sub_data[conv_filter]
+conv_data_dev = conv_data.groupby(by=['lapse_date',
+'device'], as_index=False)
+conv_data_dev = conv_data_dev.agg({'sub_time': [gc7]})
+conv_data_dev.columns = conv_data_dev.columns.droplevel(level=1)
+conv_data_dev = pd.pivot_table(conv_data_dev,
+values=['sub_time'],
+columns=['device'],
+index=['lapse_date'],fill_value=0 )
+conv_data_dev.columns = conv_data_dev.columns.droplevel(level=[0])
+conv_data_dev.reset_index(inplace=True)
+conv_data_dev.plot(x=['lapse_date'],
+y=['iOS', 'and'])
+plt.show()
+
+
+Annotation Datasets
+events = pd.read_csv('events.csv')
+events.head()
+
+Date Event
+2018-01-01 NYD
+2017-01-01 NYD
+2016-01-01 NYD
+2015-01-01 NYD
+2014-01-01 NYD
+
+
+releases = pd.read_csv('releases.csv')
+releases.head()
+
+Date Event
+2018-03-14 iOS Release
+2018-03-03 Android Release
+2018-01-13 iOS Release
+2018-01-15 Android Release
+2017-11-03 Android Release
+
+
+
+
+
+Plotting Annotations
+conv_data_dev.plot(x=['lapse_date'], y=['iOS'
+,
+'and'])
+
+events.Date = pd.to_datetime(events.Date)
+
+for row in events.iterrows():
+tmp = row[1]
+plt.axvline(x=tmp.Date, color=
+'k'
+, linestyle=
+'--')
+
+
+
+Plotting Annotations
+releases.Date = pd.to_datetime(releases.Date)
+for row in releases.iterrows():
+tmp = row[1]
+if tmp.Event ==
+'iOS Release':
+plt.axvline(x=tmp.Date, color=
+'b'
+, linestyle=
+'--')
+else:
+plt.axvline(x=tmp.Date, color=
+'r'
+, linestyle=
+'--')
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Parsing dates
+In this exercise you will practice parsing dates in Python. While often data pulled from a database will be correctly formatted, other data sources can be less nice. Knowing how to properly parse dates is crucial to get the data in a workable format. For reference refer to http://strftime.org/ throughout this exercise to see date format to use.
+
+Instructions 1/4
+25 XP
+1
+2
+3
+4
+Provide the correct format for the following date:
+
+Saturday January 27, 2017
+
+# Provide the correct format for the date
+date_data_one = pd.to_datetime(date_data_one, format='%A %B %d, %Y')
+print(date_data_one)
+
+
+# Provide the correct format for the following date:
+
+2017-08-01
+
+# Provide the correct format for the date
+date_data_two = pd.to_datetime(date_data_two, format='%Y-%m-%d')
+print(date_data_two)
+
+
+Provide the correct format for the following date.
+
+08/17/1978
+
+# Provide the correct format for the date
+date_data_three = pd.to_datetime(date_data_three, format='%m/%d/%Y')
+print(date_data_three)
+
+
+Provide the correct format for the following date:
+
+2016 March 01 01:56
+
+# Provide the correct format for the date
+date_data_four = pd.to_datetime(date_data_four, format='%Y %B %d %H:%M')
+print(date_data_four)
+
+_____________________________________________________________________________________________________________________________________
+
+Plotting time series data
+In trying to boost purchases, we have made some changes to our introductory in-app purchase pricing. In this exercise, you will check if this is having an impact on the number of purchases made by purchasing users during their first week.
+
+The dataset user_purchases has been joined to the demographics data and properly filtered. The column 'first_week_purchases' that is 1 for a first week purchase and 0 otherwise has been added. This column is converted to the average number of purchases made per day by users in their first week.
+
+We will try to view the impact of this change by looking at a graph of purchases as described in the instructions.
+
+Instructions
+100 XP
+Read through and understand code shown and then plot the user_purchases data with 'reg_date' on the x-axis and 'first_week_purchases' on the y-axis.
+
+
+# Group the data and aggregate first_week_purchases
+user_purchases = user_purchases.groupby(by=['reg_date', 'uid']).agg({'first_week_purchases': ['sum']})
+
+# Reset the indexes
+user_purchases.columns = user_purchases.columns.droplevel(level=1)
+user_purchases.reset_index(inplace=True)
+
+# Find the average number of purchases per day by first-week users
+user_purchases = user_purchases.groupby(by=['reg_date']).agg({'first_week_purchases': ['mean']})
+user_purchases.columns = user_purchases.columns.droplevel(level=1)
+user_purchases.reset_index(inplace=True)
+
+# Plot the results
+user_purchases.plot(x='reg_date', y='first_week_purchases')
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Pivoting our data
+As you saw, there does seem to be an increase in the number of purchases by purchasing users within their first week. Let's now confirm that this is not driven only by one segment of users. We'll do this by first pivoting our data by 'country' and then by 'device'. Our change is designed to impact all of these groups equally.
+
+The user_purchases data from before has been grouped and aggregated by the 'country' and 'device' columns. These objects are available in your workspace as user_purchases_country and user_purchases_device.
+
+As a reminder, .pivot_table() has the following signature:
+
+pd.pivot_table(data, values, columns, index)
+
+
+1) Pivot the user_purchases_country table such that we have our first_week_purchases as our values, the country as the column, and our reg_date as the row.
+
+# Pivot the data
+country_pivot = pd.pivot_table(user_purchases_country, values=['first_week_purchases'], columns=['country'], index=['reg_date'])
+print(country_pivot.head())
+
+
+
+<script.py> output:
+               first_week_purchases                                             
+    country                     BRA  CAN       DEU       FRA       TUR       USA
+    reg_date                                                                    
+    2017-06-01             1.500000  NaN  1.000000  0.000000  0.333333  1.200000
+    2017-06-02             2.000000  NaN  0.500000       NaN  1.000000  1.428571
+    2017-06-03             1.000000  2.0  1.500000  1.333333  3.000000  1.200000
+    2017-06-04             4.000000  NaN  1.333333  4.000000       NaN  1.166667
+    2017-06-05             1.666667  NaN       NaN       NaN  2.000000  1.000000
+    
+    
+
+2) Now lets look at our device data. Let us pivot the user_purchases_device table such that we have our first_week_purchases as our values, the device as the column, and our reg_date as the row.
+
+# Pivot the data
+device_pivot = pd.pivot_table(user_purchases_device, values=['first_week_purchases'], columns=['device'], index=['reg_date'])
+print(device_pivot.head())
+
+<script.py> output:
+               first_week_purchases          
+    device                      and       iOS
+    reg_date                                 
+    2017-06-01             0.714286  1.000000
+    2017-06-02             1.400000  1.285714
+    2017-06-03             1.545455  1.000000
+    2017-06-04             1.600000  1.833333
+    2017-06-05             1.625000  2.000000
+    
+_____________________________________________________________________________________________________________________________________
+
+Examining the different cohorts
+To finish this lesson, you're now going to plot by 'country' and then by 'device' and examine the results. Hopefully you will see the observed lift across all groups as designed. This would point to the change being the cause of the lift, not some other event impacting the purchase rate.
+
+Instructions 1/2
+50 XP
+1
+Plot the average first week purchases for each country by registration date ('reg_date'). There are 6 countries here: 'USA', 'CAN', 'FRA', 'BRA', 'TUR', and 'DEU'. Plot them in the order shown.
+
+# Plot the average first week purchases for each country by registration date
+country_pivot.plot(x='reg_date', y=['USA', 'CAN', 'FRA', 'BRA', 'TUR', 'DEU'])
+plt.show()
+
+2
+Now, plot the average first week purchases for each device ('and' and 'iOS') by registration date ('reg_date'). Plot the devices in the order listed.
+
+
+# Plot the average first week purchases for each device by registration date
+device_pivot.plot(x='reg_date', y=['and', 'iOS'])
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Seasonality and moving averages
+Stepping back, we will now look at the overall revenue data for our meditation app. We saw strong purchase growth in one of our products, and now we want to see if that is leading to a corresponding rise in revenue. As you may expect, revenue is very seasonal, so we want to correct for that and unlock macro trends.
+
+In this exercise, we will correct for weekly, monthly, and yearly seasonality and plot these over our raw data. This can reveal trends in a very powerful way.
+
+The revenue data is loaded for you as daily_revenue.
+
+Instructions
+100 XP
+Using the .rolling() method, find the rolling average of the data with a 7 day window and store it in a column 7_day_rev.
+Find the monthly (28 days) rolling average and store it in a column 28_day_rev.
+Find the yearly (365 days) rolling average and store it in a column 365_day_rev.
+Hit 'Submit Answer' to plot the three calculated rolling averages together along with the raw data.
+
+# Compute 7_day_rev
+daily_revenue['7_day_rev'] = daily_revenue.revenue.rolling(window=7,center=False).mean()
+
+# Compute 28_day_rev
+daily_revenue['28_day_rev'] = daily_revenue.revenue.rolling(window=28,center=False).mean()
+    
+# Compute 365_day_rev
+daily_revenue['365_day_rev'] = daily_revenue.revenue.rolling(window=365,center=False).mean()
+    
+# Plot date, and revenue, along with the 3 rolling functions (in order)    
+daily_revenue.plot(x='date', y=['revenue', '7_day_rev', '28_day_rev', '365_day_rev', ])
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Exponential rolling average & over/under smoothing
+In the previous exercise, we saw that our revenue is somewhat flat over time. In this exercise we will dive deeper into the data to see if we can determine why this is the case. We will look at the revenue for a single in-app purchase product we are selling to see if this potentially reveals any trends. As this will have less data then looking at our overall revenue it will be much noisier. To account for this we will smooth the data using an exponential rolling average.
+
+A new daily_revenue dataset has been provided for us, containing the revenue for this product.
+
+Instructions
+100 XP
+Using the .ewm() method, calculate the exponential rolling average with a span of 10 and store it in a column small_scale.
+Repeat the previous step, now with a span of 100 and store it in a column medium_scale.
+Finally, calculate the exponential rolling average with a span of 500 and store it in a column large_scale.
+Plot the three averages, along with the raw data. Examine how clear the trend of the data is.
+
+
+# Calculate 'small_scale'
+daily_revenue['small_scale'] = daily_revenue.revenue.ewm(span=10).mean()
+
+# Calculate 'medium_scale'
+daily_revenue['medium_scale'] = daily_revenue.revenue.ewm(span=100).mean()
+
+# Calculate 'large_scale'
+daily_revenue['large_scale'] = daily_revenue.revenue.ewm(span=500).mean()
+
+# Plot 'date' on the x-axis and, our three averages and 'revenue'
+# on the y-axis
+daily_revenue.plot(x = 'date', y =['revenue', 'small_scale', 'medium_scale', 'large_scale'])
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Visualizing user spending
+Recently, the Product team made some big changes to both the Android & iOS apps. They do not have any direct concerns about the impact of these changes, but want you to monitor the data to make sure that the changes don't hurt company revenue. Additionally, the product team believes that some of these changes may impact female users more than male users.
+
+In this exercise you're going to plot the monthly revenue for one of the updated products and evaluate the results.
+
+The dataset user_revenue containing the 'device', 'gender', 'country', 'date', and 'revenue' has been loaded. It has been grouped by month, device, and gender. Note that here, a 'month' column has been extracted from the 'date' column.
+
+Instructions
+100 XP
+Pivot user_revenue such that we have the 'month' as the rows (index),'device' and 'gender' as our columns and 'revenue' as our values.
+Remove the first and last row of the DataFrame once pivoted to prevent discontinuities from distorting the results. This has been done for you.
+Plot pivoted_data using its .plot() method.
+Take Hint (-30 XP)
+
+
+# Pivot user_revenue
+pivoted_data = pd.pivot_table(user_revenue, values ='revenue', columns=['device', 'gender'], index='month')
+pivoted_data = pivoted_data[1:(len(pivoted_data) -1 )]
+
+# Create and show the plot
+pivoted_data.plot()
+plt.show()
+
+
+_____________________________________________________________________________________________________________________________________
+
+3
+The Design and Application of A/B Testing
+0%
+In this chapter you will dive fully into A/B testing. You will learn the mathematics and knowledge needed to design and successfully plan an A/B test from determining an experimental unit to finding how large a sample size is needed. Accompanying this will be an introduction to the functions and code needed to calculate the various quantities associated with a statistical test of this type.
+
+_____________________________________________________________________________________________________________________________________
+
+Experimental units: Revenue per user day
+We are going to check what happens when we add a consumable paywall to our app. A paywall is a feature of a website or other technology that requires payment from users in order to access additional content or services.
+
+Here, you'll practice calculating experimental units and baseline values related to our consumable paywall. Both measure revenue only among users who viewed a paywall. Your job is to calculate revenue per user-day, with user-day as the experimental unit.
+
+The purchase_data dataset has been loaded for you.
+
+Instructions
+100 XP
+Extract the 'day' value from the date timestamp as you saw in the video: Using .date.dt.floor('d').
+To make the calculations easier, replace the NaN purchase_data.price values with 0 by using the np.where() method.
+Finally, find the mean amount paid per user-day among paywall viewers. To do this, you need to first aggregate the data by 'uid' and 'date', which has been done for you.
+
+
+
+# Extract the 'day'; value from the timestamp
+purchase_data.date = purchase_data.date.dt.floor('d')
+
+# Replace the NaN price values with 0 
+purchase_data.price = np.where(np.isnan(purchase_data.price),0, purchase_data.price)
+
+# Aggregate the data by 'uid' & 'date'
+purchase_data_agg = purchase_data.groupby(by=['uid', 'date'], as_index=False)
+revenue_user_day = purchase_data_agg.sum()
+
+# Calculate the final average
+revenue_user_day = revenue_user_day.price.mean()
+print(revenue_user_day)
+
+_____________________________________________________________________________________________________________________________________
+
+Conversion rate sensitivities
+To mix things up, we will spend the next few exercises working with the conversion rate metric we explored in Chapter One. Specifically you will work to examine what that value becomes under different percentage lifts and look at how many more conversions per day this change would result in. First you will find the average number of paywall views and purchases that were made per day in our observed sample. Good luck!
+
+Instructions
+100 XP
+Merge the paywall_views with demographics_data tables using an 'inner' join. This will limit the result to only include users who appear in both and will remove everyone who did not view a paywall, which is what we want in this scenario.
+Group purchase_data by 'date'. The result of this is then aggregated for you by summing over the purchase field to find the total number of purchases and counting over it to find the total number of paywall views.
+Average each of the resulting sum and count fields to find the average number of purchases and paywall views per day.
+The results reflect a sample of 0.1% of our overall population for ease of use. Multiply each of daily_purchases and daily_paywall_views by 1000 so our result reflects the magnitude change if we had been observing the entire population.
+
+# Merge and group the datasets
+purchase_data = demographics_data.merge(paywall_views,  how='inner', on=['uid'])
+purchase_data.date = purchase_data.date.dt.floor('d')
+
+# Group and aggregate our combined dataset 
+daily_purchase_data = purchase_data.groupby(by=['date'], as_index=False)
+daily_purchase_data = daily_purchase_data.agg({'purchase': ['sum', 'count']})
+
+# Find the mean of each field and then multiply by 1000 to scale the result
+daily_purchases = daily_purchase_data.purchase['sum'].mean()
+daily_paywall_views = daily_purchase_data.purchase['count'].mean()
+daily_purchases = daily_purchases * 1000
+daily_paywall_views = daily_paywall_views * 1000
+
+print(daily_purchases)
+print(daily_paywall_views)
+
+<script.py> output:
+    3181.8181818181815
+    91731.86409550045
+
+_____________________________________________________________________________________________________________________________________
+
+Sensitivity
+Continuing with the conversion rate metric, you will now utilize the results from the previous exercise to evaluate a few potential sensitivities that we could make use of in planning our experiment. The baseline conversion_rate has been loaded for you, calculated in the same way we saw in Chapter One. Additionally the daily_paywall_views and daily_purchases values you calculated previously have been loaded.
+
+Instructions 1/3
+30 XP
+1
+Using the proposed small_sensitivity of 0.1, find the lift in conversion rate and purchasers that would result by applying this sensitivity. Are these resulting values reasonable?
+
+
+small_sensitivity = 0.1 
+
+# Find the conversion rate when increased by the percentage of the sensitivity above
+small_conversion_rate = conversion_rate * (1 + small_sensitivity) 
+
+# Apply the new conversion rate to find how many more users per day that translates to
+small_purchasers = daily_paywall_views * small_conversion_rate
+
+# Subtract the initial daily_purcahsers number from this new value to see the lift
+purchaser_lift = small_purchasers - daily_purchases
+
+print(small_conversion_rate)
+print(small_purchasers)
+print(purchaser_lift)
+
+
+
+<script.py> output:
+    0.03814800000000001
+    3499.384706400001
+    317.58470640000087
+    
+    
+  2  
+  Now repeating the steps from before, find the lift in conversion rate and purchasers using the medium_sensitivity. In this exercise you are additionally asked to complete the step to find the increase in purchasers based on this new conversion rate.
+  
+  medium_sensitivity = 0.2
+
+# Find the conversion rate when increased by the percentage of the sensitivity above
+medium_conversion_rate = conversion_rate * (1 + medium_sensitivity) 
+
+# Apply the new conversion rate to find how many more users per day that translates to
+medium_purchasers = daily_paywall_views * medium_conversion_rate
+
+# Subtract the initial daily_purcahsers number from this new value to see the lift
+purchaser_lift = medium_purchasers - daily_purchases
+
+print(medium_conversion_rate)
+print(medium_purchasers)
+print(purchaser_lift)
+
+<script.py> output:
+    0.041616
+    3817.5105888000003
+    635.7105888000001
+    
+    
+    
+    3
+    Finally repeat the steps from before to find the increase in conversion rate and purchasers when using the very large sensitivity of 0.5. The steps required are the same as the previous exercise. How do the results compare those returned in the previous two exercises?
+    
+    
+    large_sensitivity = 0.5
+
+# Find the conversion rate lift with the sensitivity above
+large_conversion_rate = conversion_rate * (1 + large_sensitivity)
+
+# Find how many more users per day that translates to
+large_purchasers = daily_paywall_views * large_conversion_rate
+purchaser_lift = large_purchasers - daily_purchases
+
+print(large_conversion_rate)
+print(large_purchasers)
+print(purchaser_lift)
+
+<script.py> output:
+    0.052020000000000004
+    4771.888236000001
+    1590.0882360000005
+
+
+Awesome! While it seems that a 50% increase may be too drastic and unreasonable to expect, the small and medium sensitivities both seem very reasonable.
+_____________________________________________________________________________________________________________________________________
+
+
+Standard error
+Previously we observed how to calculate the standard deviation using the .std() method. In this exercise, you will explore how to calculate standard deviation for a conversion rate, which requires a slightly different procedure. You will calculate this step by step in this exercise.
+
+Loaded for you is our inner merged dataset purchase_data as well as the computed conversion_rate value.
+
+Instructions
+100 XP
+Find the number of paywall views in the dataset using .count(). Store this in n.
+Calculate a quantity we will call v by finding the conversion_rate times the rate of not converting.
+Now find our variance, var, by dividing v by n. This is the variance of our conversion rate estimate.
+Finally the square root of var has been taken and stored as the variable se for you. This is the standard error of our estimate.
+
+
+# Find the number of paywall views 
+n = purchase_data.purchase.count()
+
+# Calculate the quantitiy "v"
+v = conversion_rate * (1 - conversion_rate) 
+
+# Calculate the variance and standard error of the estimate
+var = v / n 
+se = var**0.5
+
+print(var)
+print(se)
+
+<script.py> output:
+    3.351780834114284e-07
+    0.0005789456653360731
+
+_____________________________________________________________________________________________________________________________________
+
+
+Exploring the power calculation
+As discussed, power is the probability of rejecting the null hypothesis when the alternative hypothesis is true. Here you will explore some properties of the power function and see how it relates to sample size among other parameters. The get_power() function has been included and takes the following arguments in the listed order n for sample size, p1 as the baseline value, p2 as the value with lift included, and cl as the confidence level.
+
+Instructions
+100 XP
+Calculate the power using n = 1000 and n = 2000 in that order, along with the pre-loaded parameters, p1, p2, and cl.
+Using the variable n1 for the sample size, find the power with a confidence level of cl = 0.8 and cl = 0.95 in that order.
+Hit 'Submit Answer' to compare the ratios. Which change has the bigger impact, increasing the confidence level or the sample size?
+
+
+# Look at the impact of sample size increase on power
+n_param_one = get_power(n=1000, p1=p1, p2=p2, cl=cl)
+n_param_two = get_power(n=2000, p1=p1, p2=p2, cl=cl)
+
+# Look at the impact of confidence level increase on power
+alpha_param_one = get_power(n=n1, p1=p1, p2=p2, cl=0.8)
+alpha_param_two = get_power(n=n1, p1=p1, p2=p2, cl=0.95)
+    
+# Compare the ratios
+print(n_param_two / n_param_one)
+print(alpha_param_one / alpha_param_two)
+
+
+<script.py> output:
+    1.7596440001351992
+    1.8857367092232278
+    
+    Great Job! With these particular values it looks like decreasing our confidence level has a slightly larger impact on the power than increasing our sample size
+    
+  _____________________________________________________________________________________________________________________________________  
+   Calculating the sample size
+You're now going to utilize the sample size function to determine how many users you need for the test and control groups under various circumstances.
+
+Included is the get_sample_size() function you viewed previously, which takes four primary arguments, power, p1, p2 and cl as described before:
+
+def get_sample_size(power, p1, p2, cl, max_n=1000000):
+    n = 1 
+    while n <= max_n:
+        tmp_power = get_power(n, p1, p2, cl)
+
+        if tmp_power >= power: 
+            return n 
+        else: 
+            n = n + 100
+
+    return "Increase Max N Value"
+You will continue working with the paywall conversion rate data for this exercise, which has been pre-loaded as purchase_data.
+
+Instructions 1/3
+30 XP
+1
+2
+3
+Calculate the baseline conversion_rate per paywall view by dividing the total amount spent across all purchase_data.purchase values by the count of purchase_data.purchase values in the dataset.
+
+
+# Merge the demographics and purchase data to only include paywall views
+purchase_data = demographics_data.merge(paywall_views, how='inner', on=['uid'])
+                            
+# Find the conversion rate
+conversion_rate = (sum(purchase_data.purchase) / purchase_data.purchase.count())
+            
+print(conversion_rate)
+
+
+<script.py> output:
+    0.03468607351645712
+    
+    
+    
+    
+    Great! Using the conversion_rate value you found, calculate p2, the baseline increased by the percent lift listed.
+
+Calculate the sample size needed using the parameters provided in the code comments. Remember the order of the arguments for get_sample_size is power, baseline conversion rate, lifted conversion rate and confidence level.
+
+# Merge the demographics and purchase data to only include paywall views
+purchase_data = demographics_data.merge(paywall_views, how='inner', on=['uid'])
+                            
+# Find the conversion rate
+conversion_rate = (sum(purchase_data.purchase) / purchase_data.purchase.count())
+            
+# Desired Power: 0.8
+# CL: 0.90
+# Percent Lift: 0.1
+p2 = conversion_rate * (1 + 0.1)
+sample_size = get_sample_size(0.8, conversion_rate, p2, 0.90)
+print(sample_size)
+
+<script.py> output:
+    36101
+    
+    
+    
+    Repeat the steps in the previous exercise only now with the new power parameter provided. How does increasing our desired power impact the outputed sample size?
+    
+    
+    # Merge the demographics and purchase data to only include paywall views
+purchase_data = demographics_data.merge(paywall_views, how='inner', on=['uid'])
+                            
+# Find the conversion rate
+conversion_rate = (sum(purchase_data.purchase) / purchase_data.purchase.count())
+
+# Desired Power: 0.95
+# CL 0.90
+# Percent Lift: 0.1
+p2 = conversion_rate * (1 + 0.1)
+sample_size = get_sample_size(0.95, conversion_rate, p2, 0.90)
+print(sample_size)
+
+
+<script.py> output:
+    63201
+
+   _____________________________________________________________________________________________________________________________________
+   
+   Confirming our test results
+To begin this chapter, you will confirm that everything ran correctly for an A/B test similar to that shown in the lesson. Like the A/B test in the lesson this one consists of trying to boost consumable sales through making changes to a paywall.
+
+The data from the test is loaded for you as "ab_test_results" and it has already been merged with the relevant demographics data. The checks you will perform will allow you to confidently report any results you uncover.
+
+Instructions 1/3
+30 XP
+1
+2
+3
+As discussed we created our test and control groups by assigning unique users to each. Confirm the size the groups are similar by grouping by group and aggregating to find the number of unique uid in each with the pd.Series.nunique() method.
+
+
+# Compute and print the results
+results = ab_test_results.groupby('group').agg({'uid':pd.Series.nunique}) 
+print(results)
+
+
+<script.py> output:
+              uid
+    group        
+    C      2825.0
+    V      2834.0
+    
+    
+    
+    
+    Great! Now convert this number to the percentage of overall users in each group. This will help in presenting the result and speaking about it precisely. To do this, use the len() function and unique()method to find the number of unique uid in ab_test_results and to then divide by this result.
+
+
+
+# Find the unique users in each group 
+results = ab_test_results.groupby('group').agg({'uid': pd.Series.nunique}) 
+
+# Find the overall number of unique users using "len" and "unique"
+unique_users = len(ab_test_results.uid.unique()) 
+
+# Find the percentage in each group
+results = results / unique_users * 100
+print(results)
+
+
+
+<script.py> output:
+                 uid
+    group           
+    C      49.920481
+    V      50.079519
+    
+    
+    
+Finally, additionally group by 'device' and 'gender' when finding the number of users in each group. This will let us compute our percentage calculation broken out by 'device' and 'gender' to confirm our result is truly random across cohorts.
+
+
+# Find the unique users in each group, by device and gender
+results = ab_test_results.groupby(by=['group', 'device', 'gender']).agg({'uid': pd.Series.nunique}) 
+
+# Find the overall number of unique users using "len" and "unique"
+unique_users = len(ab_test_results.uid.unique())
+
+# Find the percentage in each group
+results = results / unique_users * 100
+print(results)
+
+
+group device gender           
+    C     and    F       14.896625
+                 M       13.518289
+          iOS    F       11.309419
+                 M       10.196148
+    V     and    F       14.861283
+                 M       13.659657
+          iOS    F       10.920657
+                 M       10.637922
+		 
+		 
+		 
+	_____________________________________________________________________________________________________________________________________
+	
+	Thinking critically about p-values
+Below are four statements about p-values. It is up to you to identify which one is true. This is important because p-values are an unintuitive concept and being able to reason about them correctly is extremely important in most statistical work.
+
+
+The p-value is the probability of observing a value as or more extreme than the one observed under the Null Hypothesis.
+		 
+ 
+_____________________________________________________________________________________________________________________________________
+
+4
+Analyzing A/B Testing Results
+0%
+After running an A/B test, you must analyze the data and then effectively communicate the results. This chapter begins by interleaving the theory of statistical significance and confidence intervals with the tools you need to calculate them yourself from the data. Next we discuss how to effectively visualize and communicate these results. This chapter is the culmination of all the knowledge built over the entire course.
+_____________________________________________________________________________________________________________________________________
+
+
+Intuition behind statistical significance
+In this exercise you will work to gain an intuitive understanding of statistical significance. You will do this by utilizing the get_pvalue() function on a variety of parameter sets that could reasonably arise or be chosen during the course of an A/B test. While doing this you should observing how statistical significance results vary as you change the parameters. This will help build your intuition surrounding this concept, and reveal some of the subtle pitfalls of p-values. As a reminder, this is the get_pvalue() function signature:
+
+def get_pvalue(con_conv, test_conv, con_size, test_size):  
+    lift =  - abs(test_conv - con_conv)
+
+    scale_one = con_conv * (1 - con_conv) * (1 / con_size)
+    scale_two = test_conv * (1 - test_conv) * (1 / test_size)
+    scale_val = (scale_one + scale_two)**0.5
+
+    p_value = 2 * stats.norm.cdf(lift, loc = 0, scale = scale_val )
+
+    return p_value
+Instructions 1/3
+30 XP
+1
+Find the p-value with initial conversion rate of 0.1, test conversion rate of 0.17, and 1000 observations in each group.
+
+
+# Get the p-value
+p_value = get_pvalue(con_conv=0.1, test_conv=0.17, con_size=1000, test_size=1000)
+print(p_value)
+
+
+Find the p-value with control conversion of 0.1, test conversion of 0.15, and 100 observations in each group.
+
+
+# Get the p-value
+p_value = get_pvalue(con_conv=0.1, test_conv=0.15, con_size=100, test_size=100)
+print(p_value)
+
+
+Now find the p-value with control conversion of 0.48, test conversion of 0.50, and 1000 observations in each group.
+
+# Get the p-value
+p_value = get_pvalue(con_conv=0.48, test_conv=0.5, con_size=1000, test_size=1000)
+print(p_value)
+
+<script.py> output:
+    0.370901935824383
+    
+    
+    Great Work! To recap we observed that a large lift makes us confident in our observed result, while a small sample size makes us less so, and ultimately high variance can lead to a high p-value!
+
+
+_____________________________________________________________________________________________________________________________________
+
+
+Checking for statistical significance
+Now that you have an intuitive understanding of statistical significance and p-values, you will apply it to your test result data.
+
+The four parameters needed for the p-value function are the two conversion rates - cont_conv and test_conv and the two group sizes - cont_size and test_size. These are available in your workspace, so you have everything you need to check for statistical significance in our experiment results.
+
+Instructions
+100 XP
+Find the p-value of our experiment using the loaded variables cont_conv, test_conv, cont_size, test_size calculated from our data. Then determine if our result is statistically significant by running the second section of code.
+
+
+# Compute the p-value
+p_value = get_pvalue(con_conv=cont_conv, test_conv=test_conv, con_size=cont_size, test_size=test_size)
+print(p_value)
+
+# Check for statistical significance
+if p_value >= 0.05:
+    print("Not Significant")
+else:
+    print("Significant Result")
+    
+    
+    
+<script.py> output:
+    0.04900185792087508
+    Significant Result
+    
+    
+    _____________________________________________________________________________________________________________________________________
+
+
+Understanding confidence intervals
+In this exercise, you'll develop your intuition for how various parameter values impact confidence intervals. Specifically, you will explore through the get_ci() function how changes widen or tighten the confidence interval. This is the function signature, where cl is the confidence level and sd is the standard deviation.
+
+def get_ci(value, cl, sd):
+  loc = sci.norm.ppf(1 - cl/2)
+  rng_val = sci.norm.cdf(loc - value/sd)
+
+  lwr_bnd = value - rng_val
+  upr_bnd = value + rng_val 
+
+  return_val = (lwr_bnd, upr_bnd)
+  return(return_val)
+Instructions 1/3
+30 XP
+1
+Find the confidence interval with a value of 1, a confidence level of 0.975 and a standard deviation of 0.5.
+
+# Compute and print the confidence interval
+confidence_interval  = get_ci(1, 0.975, 0.5)
+print(confidence_interval)
+
+
+Repeat the calculation, updating the confidence level to 0.95 and the standard deviation to 2. Leave the value as 1
+
+# Compute and print the confidence interval
+confidence_interval  = get_ci(1, 0.95, 2)
+print(confidence_interval)
+
+
+Finally, update your code such that the standard deviation is 0.001 while leaving the confidence level and value the same as the previous exercise part. Compare the three confidence intervals outputted. How do they seem to relate to the parameters used?
+
+# Compute and print the confidence interval
+confidence_interval  = get_ci(1, 0.95, 0.001)
+print(confidence_interval)
+
+
+
+<script.py> output:
+    (0.9755040421682947, 1.0244959578317054)
+
+<script.py> output:
+    (0.6690506448818785, 1.3309493551181215)
+
+<script.py> output:
+    (1.0, 1.0)
+    
+    
+    _____________________________________________________________________________________________________________________________________
+    
+    
+    Calculating confidence intervals
+Now you will calculate the confidence intervals for the A/B test results.
+
+The four values that have been calculated previously have been loaded for you (cont_conv, test_conv, test_size, cont_size) as variables with those names.
+
+Instructions
+100 XP
+Calculate the mean of the distribution of our lift by subtracting cont_conv from test_conv.
+Calculate the variance of our lift distribution by completing the calculation. You must complete the control portion of the variance.
+Find the standard deviation of our lift distribution by taking the square root of the lift_variance
+Find the confidence bounds for our A/B test with a value equal to our lift_mean, a 0.95 confidence level, and our calculated lift_sd. Pass the arguments in that order.
+
+
+# Calculate the mean of our lift distribution 
+lift_mean = test_conv - cont_conv 
+
+# Calculate variance and standard deviation 
+lift_variance = (1 - test_conv) * test_conv /test_size + (1 - cont_conv) * cont_conv / cont_size
+lift_sd = lift_variance**0.5
+
+# Find the confidence intervals with cl = 0.95
+confidence_interval = get_ci(lift_mean, 0.95, lift_sd)
+print(confidence_interval)
+
+
+<script.py> output:
+    (0.011039999822042502, 0.011040000177957487)
+    
+    
+    Awesome, this really provides great context to our results! Notice that our interval is very narrow thanks to our substantial lift and large sample size.
+
+    _____________________________________________________________________________________________________________________________________
+    
+    
+    
+    Plotting the distribution
+In this exercise, you will visualize the test and control conversion rates as distributions. It is helpful to practice what was covered in the example, as this may be something you have not applied before. Additionally, viewing the data in this way can give a sense of the variability inherent in our estimation.
+
+Four variables, the test and control variances (test_var, cont_var), and the test and control conversion rates (test_conv and cont_conv) have been loaded for you.
+
+Instructions
+100 XP
+Using the calculated control_sd and test_sd create the range of x values to plot over. It should be 3 standard deviations in either direction from the cont_conv and test_conv respectively.
+Plot the Normal pdf of the test and control groups by specifying the conversion rate as the mean and the standard deviation in that order in mlab.normpdf()
+
+
+# Compute the standard deviations
+control_sd = cont_var**0.5
+test_sd = test_var**0.5
+
+# Create the range of x values 
+control_line = np.linspace( cont_conv - 3 * control_sd, cont_conv + 3 * control_sd , 100)
+test_line = np.linspace( test_conv - 3 * test_sd,  test_conv + 3 * test_sd , 100)
+
+# Plot the distribution 
+plt.plot(control_line, mlab.normpdf(control_line, cont_conv, control_sd))
+plt.plot(test_line, mlab.normpdf(test_line,test_conv, test_sd))
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+
+Plotting the difference distribution
+Now lets plot the difference distribution of our results that is, the distribution of our lift.
+
+The cont_var and test_var as well as the cont_conv and test_conv have been loaded for you. Additionally the upper and lower confidence interval bounds of this distribution have been provided as lwr_ci and upr_ci respectively.
+
+Instructions
+100 XP
+Calculate mean of the lift distribution by subtracting the control conversion rate (cont_conv) from the test conversion rate (test_conv)
+Generate the range of x-values for the difference distribution, making it 3 standard deviations wide.
+Plot a normal distribution by specifying the calculated lift_mean and lift_sd.
+Plot a green vertical line at the distributions mean, and a red vertical lines at each of the lower and upper confidence interval bounds. This has been done for you, so hit 'Submit Answer' to see the result!
+
+
+# Find the lift mean and standard deviation
+lift_mean = test_conv - cont_conv
+lift_sd = (test_var + cont_var) ** 0.5
+
+# Generate the range of x-values
+lift_line = np.linspace(lift_mean - 3 * lift_sd, lift_mean + 3 * lift_sd, 100)
+
+# Plot the lift distribution
+plt.plot(lift_line, mlab.normpdf(lift_line, lift_mean, lift_sd))
+
+# Add the annotation lines
+plt.axvline(x = lift_mean, color = 'green')
+plt.axvline(x = lwr_ci, color = 'red')
+plt.axvline(x = upr_ci, color = 'red')
+plt.show()
+
+Amazing work! This really contextualizes the lift we observed and provides more information than reporting the numerical point estimate alone would.
+
+
+
+
+    
+    
+    
+    
+    
+    
+    

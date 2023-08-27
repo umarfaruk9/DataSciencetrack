@@ -1,0 +1,1360 @@
+Analyzing Police Activity with pandas
+
+
+Course Description
+Now that you have learned the foundations of pandas, this course will give you the chance to apply that knowledge by answering interesting questions about a real dataset! You will explore the Stanford Open Policing Project dataset and analyze the impact of gender on police behavior. During the course, you will gain more practice cleaning messy data, creating visualizations, combining and reshaping datasets, and manipulating time series data. Analyzing Police Activity with pandas will give you valuable experience analyzing a dataset from start to finish, preparing you for your data science career!
+
+=======================================================================================================================================
+
+1
+Preparing the data for analysis
+FREE
+0%
+Before beginning your analysis, it is critical that you first examine and clean the dataset, to make working with it a more efficient process. In this chapter, you will practice fixing data types, handling missing values, and dropping columns and rows while learning about the Stanford Open Policing Project dataset.
+
+_____________________________________________________________________________________________________________________________________
+
+Dropping rows
+When you know that a specific column will be critical to your analysis, and only a small fraction of rows are missing a value in that column, it often makes sense to remove those rows from the dataset.
+
+During this course, the driver_gender column will be critical to many of your analyses. Because only a small fraction of rows are missing driver_gender, we'll drop those rows from the dataset.
+
+Instructions
+100 XP
+Count the number of missing values in each column.
+Drop all rows that are missing driver_gender by passing the column name to the subset parameter of .dropna().
+Count the number of missing values in each column again, to verify that none of the remaining rows are missing driver_gender.
+Examine the DataFrame's .shape to see how many rows and columns remain.
+
+# Count the number of missing values in each column
+print(ri.isnull().sum())
+
+# Drop all rows that are missing 'driver_gender'
+ri.dropna(subset=['driver_gender'], inplace=True)
+
+# Count the number of missing values in each column (again)
+print(ri.isnull().sum())
+
+# Examine the shape of the DataFrame
+print(ri.shape)
+
+<script.py> output:
+    stop_date                 0
+    stop_time                 0
+    driver_gender          5205
+    driver_race            5202
+    violation_raw          5202
+    violation              5202
+    search_conducted          0
+    search_type           88434
+    stop_outcome           5202
+    is_arrested            5202
+    stop_duration          5202
+    drugs_related_stop        0
+    district                  0
+    dtype: int64
+    stop_date                 0
+    stop_time                 0
+    driver_gender             0
+    driver_race               0
+    violation_raw             0
+    violation                 0
+    search_conducted          0
+    search_type           83229
+    stop_outcome              0
+    is_arrested               0
+    stop_duration             0
+    drugs_related_stop        0
+    district                  0
+    dtype: int64
+    (86536, 13)
+    
+    
+    _____________________________________________________________________________________________________________________________________
+    
+ Fixing a data type
+We saw in the previous exercise that the is_arrested column currently has the object data type. In this exercise, we'll change the data type to bool, which is the most suitable type for a column containing True and False values.
+
+Fixing the data type will enable us to use mathematical operations on the is_arrested column that would not be possible otherwise.
+
+Instructions
+100 XP
+Examine the head of the is_arrested column to verify that it contains True and False values.
+Check the current data type of is_arrested.
+Use the .astype() method to convert is_arrested to a bool column.
+Check the new data type of is_arrested, to confirm that it is now a bool column.
+
+
+# Examine the head of the 'is_arrested' column
+print(ri.is_arrested.head())
+
+# Check the data type of 'is_arrested'
+print(ri.is_arrested.dtype)
+
+# Change the data type of 'is_arrested' to 'bool'
+ri['is_arrested'] = ri.is_arrested.astype(bool)
+
+# Check the data type of 'is_arrested' (again)
+print(ri.is_arrested.dtype)
+
+
+<script.py> output:
+    0    False
+    1    False
+    2    False
+    3     True
+    4    False
+    Name: is_arrested, dtype: object
+    object
+    bool
+_____________________________________________________________________________________________________________________________________
+
+Combining object columns
+Currently, the date and time of each traffic stop are stored in separate object columns: stop_date and stop_time.
+
+In this exercise, you'll combine these two columns into a single column, and then convert it to datetime format. This will enable convenient date-based attributes that we'll use later in the course.
+
+Instructions
+100 XP
+Use a string method to concatenate stop_date and stop_time (separated by a space), and store the result in combined.
+Convert combined to datetime format, and store the result in a new column named stop_datetime.
+Examine the DataFrame .dtypes to confirm that stop_datetime is a datetime column.
+
+
+# Concatenate 'stop_date' and 'stop_time' (separated by a space)
+combined = ri.stop_date.str.cat(ri.stop_time,sep=' ')
+
+# Convert 'combined' to datetime format
+ri['stop_datetime'] = pd.to_datetime(combined)
+
+# Examine the data types of the DataFrame
+print(ri.dtypes)
+    
+<script.py> output:
+    stop_date                     object
+    stop_time                     object
+    driver_gender                 object
+    driver_race                   object
+    violation_raw                 object
+    violation                     object
+    search_conducted                bool
+    search_type                   object
+    stop_outcome                  object
+    is_arrested                     bool
+    stop_duration                 object
+    drugs_related_stop              bool
+    district                      object
+    stop_datetime         datetime64[ns]
+    dtype: object
+
+
+_____________________________________________________________________________________________________________________________________
+
+Setting the index
+The last step that you'll take in this chapter is to set the stop_datetime column as the DataFrame's index. By replacing the default index with a DatetimeIndex, you'll make it easier to analyze the dataset by date and time, which will come in handy later in the course!
+
+Instructions
+100 XP
+Set stop_datetime as the DataFrame index.
+Examine the index to verify that it is a DatetimeIndex.
+Examine the DataFrame columns to confirm that stop_datetime is no longer one of the columns.
+
+# Set 'stop_datetime' as the index
+ri.set_index('stop_datetime', inplace=True)
+
+# Examine the index
+print(ri.index)
+
+# Examine the columns
+print(ri.columns)
+
+<script.py> output:
+    DatetimeIndex(['2005-01-04 12:55:00', '2005-01-23 23:15:00',
+                   '2005-02-17 04:15:00', '2005-02-20 17:15:00',
+                   '2005-02-24 01:20:00', '2005-03-14 10:00:00',
+                   '2005-03-29 21:55:00', '2005-04-04 21:25:00',
+                   '2005-07-14 11:20:00', '2005-07-14 19:55:00',
+                   ...
+                   '2015-12-31 13:23:00', '2015-12-31 18:59:00',
+                   '2015-12-31 19:13:00', '2015-12-31 20:20:00',
+                   '2015-12-31 20:50:00', '2015-12-31 21:21:00',
+                   '2015-12-31 21:59:00', '2015-12-31 22:04:00',
+                   '2015-12-31 22:09:00', '2015-12-31 22:47:00'],
+                  dtype='datetime64[ns]', name='stop_datetime', length=86536, freq=None)
+    Index(['stop_date', 'stop_time', 'driver_gender', 'driver_race',
+           'violation_raw', 'violation', 'search_conducted', 'search_type',
+           'stop_outcome', 'is_arrested', 'stop_duration', 'drugs_related_stop',
+           'district'],
+          dtype='object')
+         
+
+=======================================================================================================================================
+
+
+2
+Exploring the relationship between gender and policing
+0%
+Does the gender of a driver have an impact on police behavior during a traffic stop? In this chapter, you will explore that question while practicing filtering, grouping, method chaining, Boolean math, string methods, and more!
+
+_____________________________________________________________________________________________________________________________________
+
+Examining traffic violations
+Before comparing the violations being committed by each gender, you should examine the violations committed by all drivers to get a baseline understanding of the data.
+
+In this exercise, you'll count the unique values in the violation column, and then separately express those counts as proportions.
+
+Instructions
+100 XP
+Count the unique values in the violation column of the ri DataFrame, to see what violations are being committed by all drivers.
+Express the violation counts as proportions of the total.
+
+# Count the unique values in 'violation'
+print(ri.violation.value_counts())
+
+# Express the counts as proportions
+print(ri.violation.value_counts(normalize=True))
+
+<script.py> output:
+    Speeding               48423
+    Moving violation       16224
+    Equipment              10921
+    Other                   4409
+    Registration/plates     3703
+    Seat belt               2856
+    Name: violation, dtype: int64
+    Speeding               0.559571
+    Moving violation       0.187483
+    Equipment              0.126202
+    Other                  0.050950
+    Registration/plates    0.042791
+    Seat belt              0.033004
+    Name: violation, dtype: float64
+
+
+_____________________________________________________________________________________________________________________________________
+
+Comparing violations by gender
+The question we're trying to answer is whether male and female drivers tend to commit different types of traffic violations.
+
+In this exercise, you'll first create a DataFrame for each gender, and then analyze the violations in each DataFrame separately.
+
+Instructions
+100 XP
+Create a DataFrame, female, that only contains rows in which driver_gender is 'F'.
+Create a DataFrame, male, that only contains rows in which driver_gender is 'M'.
+Count the violations committed by female drivers and express them as proportions.
+Count the violations committed by male drivers and express them as proportions.
+
+
+# Create a DataFrame of female drivers
+female = ri[ri.driver_gender=='F']
+
+# Create a DataFrame of male drivers
+male = ri[ri.driver_gender=='M']
+
+# Compute the violations by female drivers (as proportions)
+print(female.violation.value_counts(normalize=True))
+
+# Compute the violations by male drivers (as proportions)
+print(male.violation.value_counts(normalize=True))
+
+
+<script.py> output:
+    Speeding               0.658114
+    Moving violation       0.138218
+    Equipment              0.105199
+    Registration/plates    0.044418
+    Other                  0.029738
+    Seat belt              0.024312
+    Name: violation, dtype: float64
+    Speeding               0.522243
+    Moving violation       0.206144
+    Equipment              0.134158
+    Other                  0.058985
+    Registration/plates    0.042175
+    Seat belt              0.036296
+    Name: violation, dtype: float64
+    
+    
+_____________________________________________________________________________________________________________________________________
+
+Comparing speeding outcomes by gender
+When a driver is pulled over for speeding, many people believe that gender has an impact on whether the driver will receive a ticket or a warning. Can you find evidence of this in the dataset?
+
+First, you'll create two DataFrames of drivers who were stopped for speeding: one containing females and the other containing males.
+
+Then, for each gender, you'll use the stop_outcome column to calculate what percentage of stops resulted in a "Citation" (meaning a ticket) versus a "Warning".
+
+Instructions
+100 XP
+Create a DataFrame, female_and_speeding, that only includes female drivers who were stopped for speeding.
+Create a DataFrame, male_and_speeding, that only includes male drivers who were stopped for speeding.
+Count the stop outcomes for the female drivers and express them as proportions.
+Count the stop outcomes for the male drivers and express them as proportions.
+
+
+# Create a DataFrame of female drivers stopped for speeding
+female_and_speeding = ri[(ri.driver_gender =='F')&(ri.violation=='Speeding')]
+
+# Create a DataFrame of male drivers stopped for speeding
+male_and_speeding = ri[(ri.driver_gender=='M')&(ri.violation=='Speeding')]
+
+# Compute the stop outcomes for female drivers (as proportions)
+print(female_and_speeding.stop_outcome.value_counts(normalize=True))
+
+# Compute the stop outcomes for male drivers (as proportions)
+print(male_and_speeding.stop_outcome.value_counts(normalize=True))
+
+
+<script.py> output:
+    Citation            0.952192
+    Warning             0.040074
+    Arrest Driver       0.005752
+    N/D                 0.000959
+    Arrest Passenger    0.000639
+    No Action           0.000383
+    Name: stop_outcome, dtype: float64
+    Citation            0.944595
+    Warning             0.036184
+    Arrest Driver       0.015895
+    Arrest Passenger    0.001281
+    No Action           0.001068
+    N/D                 0.000976
+    Name: stop_outcome, dtype: float64
+
+_____________________________________________________________________________________________________________________________________
+
+Calculating the search rate
+During a traffic stop, the police officer sometimes conducts a search of the vehicle. In this exercise, you'll calculate the percentage of all stops that result in a vehicle search, also known as the search rate.
+
+Instructions
+100 XP
+Check the data type of search_conducted to confirm that it's a Boolean Series.
+Calculate the search rate by counting the Series values and expressing them as proportions.
+Calculate the search rate by taking the mean of the Series. (It should match the proportion of True values calculated above.)
+
+# Check the data type of 'search_conducted'
+print(ri.search_conducted.dtype)
+
+# Calculate the search rate by counting the values
+print(ri.search_conducted.value_counts(normalize=True))
+
+# Calculate the search rate by taking the mean
+print(ri.search_conducted.mean())
+
+
+<script.py> output:
+    bool
+    False    0.961785
+    True     0.038215
+    Name: search_conducted, dtype: float64
+    0.0382153092354627
+    
+_____________________________________________________________________________________________________________________________________
+
+Comparing search rates by gender
+In this exercise, you'll compare the rates at which female and male drivers are searched during a traffic stop. Remember that the vehicle search rate across all stops is about 3.8%.
+
+First, you'll filter the DataFrame by gender and calculate the search rate for each group separately. Then, you'll perform the same calculation for both genders at once using a .groupby().
+
+Instructions 1/3
+35 XP
+1
+2
+3
+Filter the DataFrame to only include female drivers, and then calculate the search rate by taking the mean of search_conducted.
+
+# Calculate the search rate for female drivers
+print(ri[ri.driver_gender=='F'].search_conducted.mean())
+
+Filter the DataFrame to only include male drivers, and then repeat the search rate calculation.
+
+# Calculate the search rate for male drivers
+print(ri[ri.driver_gender=='M'].search_conducted.mean())
+
+Group by driver gender to calculate the search rate for both groups simultaneously. (It should match the previous results.)
+
+# Calculate the search rate for both groups simultaneously
+print(ri.groupby('driver_gender').search_conducted.mean())
+
+
+<script.py> output:
+    0.019180617481282074
+
+<script.py> output:
+    0.04542557598546892
+
+<script.py> output:
+    0.04542557598546892
+
+<script.py> output:
+    driver_gender
+    F    0.019181
+    M    0.045426
+    Name: search_conducted, dtype: float64
+    
+    _____________________________________________________________________________________________________________________________________
+    
+Adding a second factor to the analysis
+Even though the search rate for males is much higher than for females, it's possible that the difference is mostly due to a second factor.
+
+For example, you might hypothesize that the search rate varies by violation type, and the difference in search rate between males and females is because they tend to commit different violations.
+
+You can test this hypothesis by examining the search rate for each combination of gender and violation. If the hypothesis was true, you would find that males and females are searched at about the same rate for each violation. Find out below if that's the case!
+
+Instructions 1/2
+50 XP
+1
+2
+Use a .groupby() to calculate the search rate for each combination of gender and violation. Are males and females searched at about the same rate for each violation?
+
+# Calculate the search rate for each combination of gender and violation
+print(ri.groupby(['driver_gender','violation']).search_conducted.mean())
+
+
+Reverse the ordering to group by violation before gender. The results may be easier to compare when presented this way.
+
+# Reverse the ordering to group by violation before gender
+print(ri.groupby(['violation','driver_gender']).search_conducted.mean())
+_____________________________________________________________________________________________________________________________________
+
+Counting protective frisks
+During a vehicle search, the police officer may pat down the driver to check if they have a weapon. This is known as a "protective frisk."
+
+In this exercise, you'll first check to see how many times "Protective Frisk" was the only search type. Then, you'll use a string method to locate all instances in which the driver was frisked.
+
+Instructions
+100 XP
+Count the search_type values to see how many times "Protective Frisk" was the only search type.
+Create a new column, frisk, that is True if search_type contains the string "Protective Frisk" and False otherwise.
+Check the data type of frisk to confirm that it's a Boolean Series.
+Take the sum of frisk to count the total number of frisks.
+
+
+# Count the 'search_type' values
+print(ri.search_type.value_counts())
+
+# Check if 'search_type' contains the string 'Protective Frisk'
+ri['frisk'] = ri.search_type.str.contains('Protective Frisk', na=False)
+
+# Check the data type of 'frisk'
+print(ri.frisk.dtype)
+
+# Take the sum of 'frisk'
+print(ri.frisk.sum())
+
+<script.py> output:
+    Incident to Arrest                                          1290
+    Probable Cause                                               924
+    Inventory                                                    219
+    Reasonable Suspicion                                         214
+    Protective Frisk                                             164
+    Incident to Arrest,Inventory                                 123
+    Incident to Arrest,Probable Cause                            100
+    Probable Cause,Reasonable Suspicion                           54
+    Probable Cause,Protective Frisk                               35
+    Incident to Arrest,Inventory,Probable Cause                   35
+    Incident to Arrest,Protective Frisk                           33
+    Inventory,Probable Cause                                      25
+    Protective Frisk,Reasonable Suspicion                         19
+    Incident to Arrest,Inventory,Protective Frisk                 18
+    Incident to Arrest,Probable Cause,Protective Frisk            13
+    Inventory,Protective Frisk                                    12
+    Incident to Arrest,Reasonable Suspicion                        8
+    Incident to Arrest,Probable Cause,Reasonable Suspicion         5
+    Probable Cause,Protective Frisk,Reasonable Suspicion           5
+    Incident to Arrest,Inventory,Reasonable Suspicion              4
+    Inventory,Reasonable Suspicion                                 2
+    Incident to Arrest,Protective Frisk,Reasonable Suspicion       2
+    Inventory,Probable Cause,Protective Frisk                      1
+    Inventory,Protective Frisk,Reasonable Suspicion                1
+    Inventory,Probable Cause,Reasonable Suspicion                  1
+    Name: search_type, dtype: int64
+    bool
+    303
+    
+_____________________________________________________________________________________________________________________________________
+
+Comparing frisk rates by gender
+In this exercise, you'll compare the rates at which female and male drivers are frisked during a search. Are males frisked more often than females, perhaps because police officers consider them to be higher risk?
+
+Before doing any calculations, it's important to filter the DataFrame to only include the relevant subset of data, namely stops in which a search was conducted.
+
+Instructions
+100 XP
+Create a DataFrame, searched, that only contains rows in which search_conducted is True.
+Take the mean of the frisk column to find out what percentage of searches included a frisk.
+Calculate the frisk rate for each gender using a .groupby().
+
+# Create a DataFrame of stops in which a search was conducted
+searched = ri[ri.search_conducted == True]
+
+# Calculate the overall frisk rate by taking the mean of 'frisk'
+print(searched.frisk.mean())
+
+# Calculate the frisk rate for each gender
+print(searched.groupby('driver_gender').frisk.mean())
+
+<script.py> output:
+    0.09162382824312065
+    driver_gender
+    F    0.074561
+    M    0.094353
+    Name: frisk, dtype: float64
+    
+    
+    
+
+=======================================================================================================================================
+
+3
+Visual exploratory data analysis
+0%
+Are you more likely to get arrested at a certain time of day? Are drug-related stops on the rise? In this chapter, you will answer these and other questions by analyzing the dataset visually, since plots can help you to understand trends in a way that examining the raw data cannot.
+
+_____________________________________________________________________________________________________________________________________
+
+Calculating the hourly arrest rate
+When a police officer stops a driver, a small percentage of those stops ends in an arrest. This is known as the arrest rate. In this exercise, you'll find out whether the arrest rate varies by time of day.
+
+First, you'll calculate the arrest rate across all stops. Then, you'll calculate the hourly arrest rate by using the hour attribute of the index. The hour ranges from 0 to 23, in which:
+
+0 = midnight
+12 = noon
+23 = 11 PM
+Instructions
+100 XP
+Take the mean of the is_arrested column to calculate the overall arrest rate.
+Group by the hour attribute of the DataFrame index to calculate the hourly arrest rate.
+Save the hourly arrest rate Series as a new object, hourly_arrest_rate.
+
+
+# Calculate the overall arrest rate
+print(ri.is_arrested.mean())
+
+# Calculate the hourly arrest rate
+print(ri.groupby(ri.index.hour).is_arrested.mean())
+
+# Save the hourly arrest rate
+hourly_arrest_rate = ri.groupby(ri.index.hour).is_arrested.mean()
+
+
+
+<script.py> output:
+    0.0355690117407784
+    stop_datetime
+    0     0.051431
+    1     0.064932
+    2     0.060798
+    3     0.060549
+    4     0.048000
+    5     0.042781
+    6     0.013813
+    7     0.013032
+    8     0.021854
+    9     0.025206
+    10    0.028213
+    11    0.028897
+    12    0.037399
+    13    0.030776
+    14    0.030605
+    15    0.030679
+    16    0.035281
+    17    0.040619
+    18    0.038204
+    19    0.032245
+    20    0.038107
+    21    0.064541
+    22    0.048666
+    23    0.047592
+    Name: is_arrested, dtype: float64
+    
+    _____________________________________________________________________________________________________________________________________
+    
+    Plotting the hourly arrest rate
+In this exercise, you'll create a line plot from the hourly_arrest_rate object. A line plot is appropriate in this case because you're showing how a quantity changes over time.
+
+This plot should help you to spot some trends that may not have been obvious when examining the raw numbers!
+
+Instructions
+100 XP
+Import matplotlib.pyplot using the alias plt.
+Create a line plot of hourly_arrest_rate using the .plot() method.
+Label the x-axis as 'Hour', label the y-axis as 'Arrest Rate', and title the plot 'Arrest Rate by Time of Day'.
+Display the plot using the .show() function.
+
+# Import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+# Create a line plot of 'hourly_arrest_rate'
+hourly_arrest_rate.plot()
+
+# Add the xlabel, ylabel, and title
+plt.xlabel('Hour')
+plt.ylabel('Arrest Rate')
+plt.title('Arrest Rate by Time of Day')
+
+# Display the plot
+plt.show()
+
+
+_____________________________________________________________________________________________________________________________________
+
+Plotting drug-related stops
+In a small portion of traffic stops, drugs are found in the vehicle during a search. In this exercise, you'll assess whether these drug-related stops are becoming more common over time.
+
+The Boolean column drugs_related_stop indicates whether drugs were found during a given stop. You'll calculate the annual drug rate by resampling this column, and then you'll use a line plot to visualize how the rate has changed over time.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Calculate the annual rate of drug-related stops by resampling the drugs_related_stop column (on the 'A' frequency) and taking the mean.
+Save the annual drug rate Series as a new object, annual_drug_rate.
+Create a line plot of annual_drug_rate using the .plot() method.
+Display the plot using the .show() function.
+Take Hint (-30 XP)
+
+
+# Calculate the annual rate of drug-related stops
+print(ri.drugs_related_stop.resample('A').mean())
+
+# Save the annual rate of drug-related stops
+annual_drug_rate = ri.drugs_related_stop.resample('A').mean()
+
+# Create a line plot of 'annual_drug_rate'
+annual_drug_rate.plot()
+
+# Display the plot
+plt.show()
+
+<script.py> output:
+    stop_datetime
+    2005-12-31    0.006501
+    2006-12-31    0.007258
+    2007-12-31    0.007970
+    2008-12-31    0.007505
+    2009-12-31    0.009889
+    2010-12-31    0.010081
+    2011-12-31    0.009731
+    2012-12-31    0.009921
+    2013-12-31    0.013094
+    2014-12-31    0.013826
+    2015-12-31    0.012266
+    Freq: A-DEC, Name: drugs_related_stop, dtype: float64
+    
+    
+  _____________________________________________________________________________________________________________________________________
+  
+  Comparing drug and search rates
+As you saw in the last exercise, the rate of drug-related stops increased significantly between 2005 and 2015. You might hypothesize that the rate of vehicle searches was also increasing, which would have led to an increase in drug-related stops even if more drivers were not carrying drugs.
+
+You can test this hypothesis by calculating the annual search rate, and then plotting it against the annual drug rate. If the hypothesis is true, then you'll see both rates increasing over time.
+
+Instructions
+100 XP
+Calculate the annual search rate by resampling the search_conducted column, and save the result as annual_search_rate.
+Concatenate annual_drug_rate and annual_search_rate along the columns axis, and save the result as annual.
+Create subplots of the drug and search rates from the annual DataFrame.
+Display the subplots.
+Take Hint (-30 XP)
+
+    # Calculate and save the annual search rate
+annual_search_rate = ri.search_conducted.resample('A').mean()
+
+# Concatenate 'annual_drug_rate' and 'annual_search_rate'
+annual = pd.concat([annual_drug_rate,annual_search_rate], axis='columns')
+
+# Create subplots from 'annual'
+annual.plot(subplots=True)
+
+# Display the subplots
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Tallying violations by district
+The state of Rhode Island is broken into six police districts, also known as zones. How do the zones compare in terms of what violations are caught by police?
+
+In this exercise, you'll create a frequency table to determine how many violations of each type took place in each of the six zones. Then, you'll filter the table to focus on the "K" zones, which you'll examine further in the next exercise.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Create a frequency table from the district and violation columns using the pd.crosstab() function.
+Save the frequency table as a new object, all_zones.
+Select rows 'Zone K1' through 'Zone K3' from all_zones using the .loc[] accessor.
+Save the smaller table as a new object, k_zones.
+
+
+# Create a frequency table of districts and violations
+print(pd.crosstab(ri.district, ri.violation))
+
+# Save the frequency table as 'all_zones'
+all_zones = pd.crosstab(ri.district, ri.violation)
+
+# Select rows 'Zone K1' through 'Zone K3'
+print(all_zones.loc['Zone K1':'Zone K3'])
+
+# Save the smaller table as 'k_zones'
+k_zones = all_zones.loc['Zone K1':'Zone K3']
+
+
+<script.py> output:
+    violation  Equipment  Moving violation  Other  Registration/plates  Seat belt  \
+    district                                                                        
+    Zone K1          672              1254    290                  120          0   
+    Zone K2         2061              2962    942                  768        481   
+    Zone K3         2302              2898    705                  695        638   
+    Zone X1          296               671    143                   38         74   
+    Zone X3         2049              3086    769                  671        820   
+    Zone X4         3541              5353   1560                 1411        843   
+    
+    violation  Speeding  
+    district             
+    Zone K1        5960  
+    Zone K2       10448  
+    Zone K3       12322  
+    Zone X1        1119  
+    Zone X3        8779  
+    Zone X4        9795  
+    violation  Equipment  Moving violation  Other  Registration/plates  Seat belt  \
+    district                                                                        
+    Zone K1          672              1254    290                  120          0   
+    Zone K2         2061              2962    942                  768        481   
+    Zone K3         2302              2898    705                  695        638   
+    
+    violation  Speeding  
+    district             
+    Zone K1        5960  
+    Zone K2       10448  
+    Zone K3       12322
+
+_____________________________________________________________________________________________________________________________________
+
+Plotting violations by district
+Now that you've created a frequency table focused on the "K" zones, you'll visualize the data to help you compare what violations are being caught in each zone.
+
+First you'll create a bar plot, which is an appropriate plot type since you're comparing categorical data. Then you'll create a stacked bar plot in order to get a slightly different look at the data. Which plot do you find to be more insightful?
+
+Instructions 1/2
+50 XP
+1
+2
+Create a bar plot of k_zones.
+Display the plot and examine it. What do you notice about each of the zones?
+
+# Create a bar plot of 'k_zones'
+k_zones.plot(kind='bar')
+
+# Display the plot
+plt.show()
+
+Create a stacked bar plot of k_zones.
+Display the plot and examine it. Do you notice anything different about the data than you did previously?
+
+# Create a stacked bar plot of 'k_zones'
+k_zones.plot(kind='bar',stacked=True)
+
+# Display the plot
+plt.show()
+_____________________________________________________________________________________________________________________________________
+
+Converting stop durations to numbers
+In the traffic stops dataset, the stop_duration column tells you approximately how long the driver was detained by the officer. Unfortunately, the durations are stored as strings, such as '0-15 Min'. How can you make this data easier to analyze?
+
+In this exercise, you'll convert the stop durations to integers. Because the precise durations are not available, you'll have to estimate the numbers using reasonable values:
+
+Convert '0-15 Min' to 8
+Convert '16-30 Min' to 23
+Convert '30+ Min' to 45
+Instructions
+100 XP
+Instructions
+100 XP
+Print the unique values in the stop_duration column. (This has been done for you.)
+Create a dictionary called mapping that maps the stop_duration strings to the integers specified above.
+Convert the stop_duration strings to integers using the mapping, and store the results in a new column called stop_minutes.
+Print the unique values in the stop_minutes column, to verify that the durations were properly converted to integers.
+
+
+# Print the unique values in 'stop_duration'
+print(ri.stop_duration.unique())
+
+# Create a dictionary that maps strings to integers
+mapping = {'0-15 Min':8,'16-30 Min':23,'30+ Min':45}
+
+# Convert the 'stop_duration' strings to integers using the 'mapping'
+ri['stop_minutes'] = ri.stop_duration.map(mapping)
+
+# Print the unique values in 'stop_minutes'
+print(ri.stop_minutes.unique())
+
+<script.py> output:
+    ['0-15 Min' '16-30 Min' '30+ Min']
+    [ 8 23 45]
+    
+ _____________________________________________________________________________________________________________________________________
+ 
+ Plotting stop length
+If you were stopped for a particular violation, how long might you expect to be detained?
+
+In this exercise, you'll visualize the average length of time drivers are stopped for each type of violation. Rather than using the violation column in this exercise, you'll use violation_raw since it contains more detailed descriptions of the violations.
+
+Instructions
+100 XP
+For each value in the violation_raw column, calculate the mean number of stop_minutes that a driver is detained.
+Save the resulting Series as a new object, stop_length.
+Sort stop_length by its values, and then visualize it using a horizontal bar plot.
+Display the plot.
+
+
+ # Calculate the mean 'stop_minutes' for each value in 'violation_raw'
+print(ri.groupby('violation_raw').stop_minutes.mean())
+
+# Save the resulting Series as 'stop_length'
+stop_length = ri.groupby('violation_raw').stop_minutes.mean()
+
+# Sort 'stop_length' by its values and create a horizontal bar plot
+stop_length.sort_values().plot(kind='barh')
+
+# Display the plot
+plt.show()
+   
+<script.py> output:
+    violation_raw
+    APB                                 17.967033
+    Call for Service                    22.124371
+    Equipment/Inspection Violation      11.445655
+    Motorist Assist/Courtesy            17.741463
+    Other Traffic Violation             13.844490
+    Registration Violation              13.736970
+    Seatbelt Violation                   9.662815
+    Special Detail/Directed Patrol      15.123632
+    Speeding                            10.581562
+    Suspicious Person                   14.910714
+    Violation of City/Town Ordinance    13.254144
+    Warrant                             24.055556
+    Name: stop_minutes, dtype: float64
+    
+ 
+ 
+ 
+    
+
+=======================================================================================================================================
+
+4
+Analyzing the effect of weather on policing
+0%
+In this chapter, you will use a second dataset to explore the impact of weather conditions on police behavior during traffic stops. You will practice merging and reshaping datasets, assessing whether a data source is trustworthy, working with categorical data, and other advanced skills.
+
+_____________________________________________________________________________________________________________________________________
+
+Plotting the temperature
+In this exercise, you'll examine the temperature columns from the weather dataset to assess whether the data seems trustworthy. First you'll print the summary statistics, and then you'll visualize the data using a box plot.
+
+When deciding whether the values seem reasonable, keep in mind that the temperature is measured in degrees Fahrenheit, not Celsius!
+
+Instructions
+100 XP
+Instructions
+100 XP
+Read weather.csv into a DataFrame named weather.
+Select the temperature columns (TMIN, TAVG, TMAX) and print their summary statistics using the .describe() method.
+Create a box plot to visualize the temperature columns.
+Display the plot.
+
+
+# Read 'weather.csv' into a DataFrame named 'weather'
+weather = pd.read_csv('weather.csv')
+
+# Describe the temperature columns
+print(weather[['TMIN','TAVG','TMAX']].describe())
+
+# Create a box plot of the temperature columns
+weather[['TMIN','TAVG','TMAX']].plot(kind='box')
+
+# Display the plot
+plt.show()
+
+
+<script.py> output:
+                  TMIN         TAVG         TMAX
+    count  4017.000000  1217.000000  4017.000000
+    mean     43.484441    52.493016    61.268608
+    std      17.020298    17.830714    18.199517
+    min      -5.000000     6.000000    15.000000
+    25%      30.000000    39.000000    47.000000
+    50%      44.000000    54.000000    62.000000
+    75%      58.000000    68.000000    77.000000
+    max      77.000000    86.000000   102.000000
+    
+    
+ _____________________________________________________________________________________________________________________________________
+ 
+ 
+Plotting the temperature difference
+In this exercise, you'll continue to assess whether the dataset seems trustworthy by plotting the difference between the maximum and minimum temperatures.
+
+What do you notice about the resulting histogram? Does it match your expectations, or do you see anything unusual?
+
+Instructions
+100 XP
+Create a new column in the weather DataFrame named TDIFF that represents the difference between the maximum and minimum temperatures.
+Print the summary statistics for TDIFF using the .describe() method.
+Create a histogram with 20 bins to visualize TDIFF.
+Display the plot.
+
+
+# Create a 'TDIFF' column that represents temperature difference
+weather['TDIFF'] = weather.TMAX - weather.TMIN
+
+
+# Describe the 'TDIFF' column
+print(weather['TDIFF'].describe())
+
+# Create a histogram with 20 bins to visualize 'TDIFF'
+weather.TDIFF.plot(kind='hist',bins=20)
+
+# Display the plot
+plt.show()
+
+
+<script.py> output:
+    count    4017.000000
+    mean       17.784167
+    std         6.350720
+    min         2.000000
+    25%        14.000000
+    50%        18.000000
+    75%        22.000000
+    max        43.000000
+    Name: TDIFF, dtype: float64
+    
+    
+    _____________________________________________________________________________________________________________________________________
+    
+    Counting bad weather conditions
+The weather DataFrame contains 20 columns that start with 'WT', each of which represents a bad weather condition. For example:
+
+WT05 indicates "Hail"
+WT11 indicates "High or damaging winds"
+WT17 indicates "Freezing rain"
+For every row in the dataset, each WT column contains either a 1 (meaning the condition was present that day) or NaN (meaning the condition was not present).
+
+In this exercise, you'll quantify "how bad" the weather was each day by counting the number of 1 values in each row.
+
+Instructions
+100 XP
+Instructions
+100 XP
+Copy the columns WT01 through WT22 from weather to a new DataFrame named WT.
+Calculate the sum of each row in WT, and store the results in a new weather column named bad_conditions.
+Replace any missing values in bad_conditions with a 0. (This has been done for you.)
+Create a histogram to visualize bad_conditions, and then display the plot.
+
+
+# Copy 'WT01' through 'WT22' to a new DataFrame
+WT = weather.loc[:,'WT01':'WT22']
+
+# Calculate the sum of each row in 'WT'
+weather['bad_conditions'] = WT.sum(axis='columns')
+
+# Replace missing values in 'bad_conditions' with '0'
+weather['bad_conditions'] = weather.bad_conditions.fillna(0).astype('int')
+
+# Create a histogram to visualize 'bad_conditions'
+weather.bad_conditions.plot(kind='hist',bins=20)
+
+# Display the plot
+plt.show()
+
+_____________________________________________________________________________________________________________________________________
+
+Rating the weather conditions
+In the previous exercise, you counted the number of bad weather conditions each day. In this exercise, you'll use the counts to create a rating system for the weather.
+
+The counts range from 0 to 9, and should be converted to ratings as follows:
+
+Convert 0 to 'good'
+Convert 1 through 4 to 'bad'
+Convert 5 through 9 to 'worse'
+Instructions
+100 XP
+Count the unique values in the bad_conditions column and sort the index. (This has been done for you.)
+Create a dictionary called mapping that maps the bad_conditions integers to strings as specified above.
+Convert the bad_conditions integers to strings using the mapping and store the results in a new column called rating.
+Count the unique values in rating to verify that the integers were properly converted to strings.
+
+# Count the unique values in 'bad_conditions' and sort the index
+print(weather.bad_conditions.value_counts().sort_index())
+
+# Create a dictionary that maps integers to strings
+mapping = {0:'good', 1:'bad', 2:'bad', 3:'bad', 4:'bad',5:'worse',6:'worse',7:'worse',8:'worse',9:'worse'}
+
+# Convert the 'bad_conditions' integers to strings using the 'mapping'
+weather['rating'] = weather.bad_conditions.map(mapping)
+
+# Count the unique values in 'rating'
+print(weather.rating.value_counts())
+
+<script.py> output:
+    0    1749
+    1     613
+    2     367
+    3     380
+    4     476
+    5     282
+    6     101
+    7      41
+    8       4
+    9       4
+    Name: bad_conditions, dtype: int64
+    bad      1836
+    good     1749
+    worse     432
+    Name: rating, dtype: int64
+    
+  
+  
+    _____________________________________________________________________________________________________________________________________
+    
+    Changing the data type to category
+Since the rating column only has a few possible values, you'll change its data type to category in order to store the data more efficiently. You'll also specify a logical order for the categories, which will be useful for future exercises.
+
+Instructions
+100 XP
+Create a list object called cats that lists the weather ratings in a logical order: 'good', 'bad', 'worse'.
+Change the data type of the rating column from object to category. Make sure to use the cats list to define the category ordering.
+Examine the head of the rating column to confirm that the categories are logically ordered.
+
+
+# Create a list of weather ratings in logical order
+cats = ['good','bad','worse']
+
+# Change the data type of 'rating' to category
+weather['rating'] = weather.rating.astype('category',ordered=True,categories=cats)
+
+# Examine the head of 'rating'
+print(weather.rating.head())
+
+<script.py> output:
+    0    bad
+    1    bad
+    2    bad
+    3    bad
+    4    bad
+    Name: rating, dtype: category
+    Categories (3, object): [good < bad < worse]
+    
+    
+    
+_____________________________________________________________________________________________________________________________________
+
+Preparing the DataFrames
+In this exercise, you'll prepare the traffic stop and weather rating DataFrames so that they're ready to be merged:
+
+With the ri DataFrame, you'll move the stop_datetime index to a column since the index will be lost during the merge.
+With the weather DataFrame, you'll select the DATE and rating columns and put them in a new DataFrame.
+Instructions
+100 XP
+Reset the index of the ri DataFrame.
+Examine the head of ri to verify that stop_datetime is now a DataFrame column, and the index is now the default integer index.
+Create a new DataFrame named weather_rating that contains only the DATE and rating columns from the weather DataFrame.
+Examine the head of weather_rating to verify that it contains the proper columns.
+
+# Reset the index of 'ri'
+ri.reset_index(inplace=True)
+
+# Examine the head of 'ri'
+print(ri.head())
+
+# Create a DataFrame from the 'DATE' and 'rating' columns
+weather_rating = weather[['DATE','rating']]
+
+# Examine the head of 'weather_rating'
+print(weather_rating.head())
+
+
+<script.py> output:
+            stop_datetime   stop_date stop_time driver_gender driver_race  \
+    0 2005-01-04 12:55:00  2005-01-04     12:55             M       White   
+    1 2005-01-23 23:15:00  2005-01-23     23:15             M       White   
+    2 2005-02-17 04:15:00  2005-02-17     04:15             M       White   
+    3 2005-02-20 17:15:00  2005-02-20     17:15             M       White   
+    4 2005-02-24 01:20:00  2005-02-24     01:20             F       White   
+    
+                        violation_raw  violation  search_conducted search_type  \
+    0  Equipment/Inspection Violation  Equipment             False         NaN   
+    1                        Speeding   Speeding             False         NaN   
+    2                        Speeding   Speeding             False         NaN   
+    3                Call for Service      Other             False         NaN   
+    4                        Speeding   Speeding             False         NaN   
+    
+        stop_outcome  is_arrested stop_duration  drugs_related_stop district  \
+    0       Citation        False      0-15 Min               False  Zone X4   
+    1       Citation        False      0-15 Min               False  Zone K3   
+    2       Citation        False      0-15 Min               False  Zone X4   
+    3  Arrest Driver         True     16-30 Min               False  Zone X1   
+    4       Citation        False      0-15 Min               False  Zone X3   
+    
+       frisk  stop_minutes  
+    0  False             8  
+    1  False             8  
+    2  False             8  
+    3  False            23  
+    4  False             8  
+             DATE rating
+    0  2005-01-01    bad
+    1  2005-01-02    bad
+    2  2005-01-03    bad
+    3  2005-01-04    bad
+    4  2005-01-05    bad
+
+<script.py> output:
+            stop_datetime   stop_date stop_time driver_gender driver_race  \
+    0 2005-01-04 12:55:00  2005-01-04     12:55             M       White   
+    1 2005-01-23 23:15:00  2005-01-23     23:15             M       White   
+    2 2005-02-17 04:15:00  2005-02-17     04:15             M       White   
+    3 2005-02-20 17:15:00  2005-02-20     17:15             M       White   
+    4 2005-02-24 01:20:00  2005-02-24     01:20             F       White   
+    
+                        violation_raw  violation  search_conducted search_type  \
+    0  Equipment/Inspection Violation  Equipment             False         NaN   
+    1                        Speeding   Speeding             False         NaN   
+    2                        Speeding   Speeding             False         NaN   
+    3                Call for Service      Other             False         NaN   
+    4                        Speeding   Speeding             False         NaN   
+    
+        stop_outcome  is_arrested stop_duration  drugs_related_stop district  \
+    0       Citation        False      0-15 Min               False  Zone X4   
+    1       Citation        False      0-15 Min               False  Zone K3   
+    2       Citation        False      0-15 Min               False  Zone X4   
+    3  Arrest Driver         True     16-30 Min               False  Zone X1   
+    4       Citation        False      0-15 Min               False  Zone X3   
+    
+       frisk  stop_minutes  
+    0  False             8  
+    1  False             8  
+    2  False             8  
+    3  False            23  
+    4  False             8  
+             DATE rating
+    0  2005-01-01    bad
+    1  2005-01-02    bad
+    2  2005-01-03    bad
+    3  2005-01-04    bad
+    4  2005-01-05    bad
+    
+    
+    _____________________________________________________________________________________________________________________________________
+    
+    Merging the DataFrames
+In this exercise, you'll merge the ri and weather_rating DataFrames into a new DataFrame, ri_weather.
+
+The DataFrames will be joined using the stop_date column from ri and the DATE column from weather_rating. Thankfully the date formatting matches exactly, which is not always the case!
+
+Once the merge is complete, you'll set stop_datetime as the index, which is the column you saved in the previous exercise.
+
+Instructions
+100 XP
+Examine the shape of the ri DataFrame.
+Merge the ri and weather_rating DataFrames using a left join.
+Examine the shape of ri_weather to confirm that it has two more columns but the same number of rows as ri.
+Replace the index of ri_weather with the stop_datetime column.
+
+
+
+# Examine the shape of 'ri'
+print(ri.shape)
+
+# Merge 'ri' and 'weather_rating' using a left join
+ri_weather = pd.merge(left=ri, right=weather_rating, left_on='stop_date', right_on='DATE', how='left')
+
+# Examine the shape of 'ri_weather'
+print(ri_weather.shape)
+
+# Set 'stop_datetime' as the index of 'ri_weather'
+ri_weather.set_index('stop_datetime', inplace=True)
+
+<script.py> output:
+    (86536, 16)
+    (86536, 18)
+    
+    _____________________________________________________________________________________________________________________________________
+    
+  Comparing arrest rates by weather rating
+Do police officers arrest drivers more often when the weather is bad? Find out below!
+
+First, you'll calculate the overall arrest rate.
+Then, you'll calculate the arrest rate for each of the weather ratings you previously assigned.
+Finally, you'll add violation type as a second factor in the analysis, to see if that accounts for any differences in the arrest rate.
+Since you previously defined a logical order for the weather categories, good < bad < worse, they will be sorted that way in the results.
+
+Instructions 1/3
+35 XP
+1
+Calculate the overall arrest rate by taking the mean of the is_arrested Series.
+
+
+
+
+# Calculate the overall arrest rate
+print(ri_weather.is_arrested.mean())
+
+
+# Calculate the arrest rate for each 'rating'
+print(ri_weather.groupby('rating').is_arrested.mean())
+
+
+# Calculate the arrest rate for each 'violation' and 'rating'
+print(ri_weather.groupby(['violation','rating']).is_arrested.mean())
+
+
+<script.py> output:
+    0.0355690117407784
+    
+ <script.py> output:
+    rating
+    good     0.033715
+    bad      0.036261
+    worse    0.041667
+    Name: is_arrested, dtype: float64
+
+<script.py> output:
+    violation            rating
+    Equipment            good      0.059007
+                         bad       0.066311
+                         worse     0.097357
+    Moving violation     good      0.056227
+                         bad       0.058050
+                         worse     0.065860
+    Other                good      0.076966
+                         bad       0.087443
+                         worse     0.062893
+    Registration/plates  good      0.081574
+                         bad       0.098160
+                         worse     0.115625
+    Seat belt            good      0.028587
+                         bad       0.022493
+                         worse     0.000000
+    Speeding             good      0.013405
+                         bad       0.013314
+                         worse     0.016886
+    Name: is_arrested, dtype: float64
+    
+    
+    _____________________________________________________________________________________________________________________________________
+    
+    
+   Selecting from a multi-indexed Series
+The output of a single .groupby() operation on multiple columns is a Series with a MultiIndex. Working with this type of object is similar to working with a DataFrame:
+
+The outer index level is like the DataFrame rows.
+The inner index level is like the DataFrame columns.
+In this exercise, you'll practice accessing data from a multi-indexed Series using the .loc[] accessor.
+
+Instructions
+100 XP
+Save the output of the .groupby() operation from the last exercise as a new object, arrest_rate. (This has been done for you.)
+Print the arrest_rate Series and examine it.
+Print the arrest rate for moving violations in bad weather.
+Print the arrest rates for speeding violations in all three weather conditions.
+
+
+# Save the output of the groupby operation from the last exercise
+arrest_rate = ri_weather.groupby(['violation', 'rating']).is_arrested.mean()
+
+# Print the 'arrest_rate' Series
+print(arrest_rate)
+
+# Print the arrest rate for moving violations in bad weather
+print(arrest_rate.loc['Moving violation','bad'])
+
+# Print the arrest rates for speeding violations in all three weather conditions
+print(arrest_rate.loc['Speeding'])
+
+
+<script.py> output:
+    violation            rating
+    Equipment            good      0.059007
+                         bad       0.066311
+                         worse     0.097357
+    Moving violation     good      0.056227
+                         bad       0.058050
+                         worse     0.065860
+    Other                good      0.076966
+                         bad       0.087443
+                         worse     0.062893
+    Registration/plates  good      0.081574
+                         bad       0.098160
+                         worse     0.115625
+    Seat belt            good      0.028587
+                         bad       0.022493
+                         worse     0.000000
+    Speeding             good      0.013405
+                         bad       0.013314
+                         worse     0.016886
+    Name: is_arrested, dtype: float64
+    0.05804964058049641
+    rating
+    good     0.013405
+    bad      0.013314
+    worse    0.016886
+    Name: is_arrested, dtype: float64
+    
+    
+   _____________________________________________________________________________________________________________________________________
+   
+   
+Reshaping the arrest rate data
+In this exercise, you'll start by reshaping the arrest_rate Series into a DataFrame. This is a useful step when working with any multi-indexed Series, since it enables you to access the full range of DataFrame methods.
+
+Then, you'll create the exact same DataFrame using a pivot table. This is a great example of how pandas often gives you more than one way to reach the same result!
+
+Instructions
+100 XP
+Unstack the arrest_rate Series to reshape it into a DataFrame.
+Create the exact same DataFrame using a pivot table! Each of the three .pivot_table() parameters should be specified as one of the ri_weather columns.
+
+# Unstack the 'arrest_rate' Series into a DataFrame
+print(arrest_rate.unstack())
+
+# Create the same DataFrame using a pivot table
+print(ri_weather.pivot_table(index='violation', columns='rating', values='is_arrested'))
+
+
+<script.py> output:
+    rating                   good       bad     worse
+    violation                                        
+    Equipment            0.059007  0.066311  0.097357
+    Moving violation     0.056227  0.058050  0.065860
+    Other                0.076966  0.087443  0.062893
+    Registration/plates  0.081574  0.098160  0.115625
+    Seat belt            0.028587  0.022493  0.000000
+    Speeding             0.013405  0.013314  0.016886
+    
+    
+    
+    <script.py> output:
+    rating                   good       bad     worse
+    violation                                        
+    Equipment            0.059007  0.066311  0.097357
+    Moving violation     0.056227  0.058050  0.065860
+    Other                0.076966  0.087443  0.062893
+    Registration/plates  0.081574  0.098160  0.115625
+    Seat belt            0.028587  0.022493  0.000000
+    Speeding             0.013405  0.013314  0.016886
+    rating                   good       bad     worse
+    violation                                        
+    Equipment            0.059007  0.066311  0.097357
+    Moving violation     0.056227  0.058050  0.065860
+    Other                0.076966  0.087443  0.062893
+    Registration/plates  0.081574  0.098160  0.115625
+    Seat belt            0.028587  0.022493  0.000000
+    Speeding             0.013405  0.013314  0.016886
+
+_____________________________________________________________________________________________________________________________________
+https://campus.datacamp.com/courses/analyzing-police-activity-with-pandas/analyzing-the-effect-of-weather-on-policing?ex=15
